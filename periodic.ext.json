@@ -1,7 +1,4 @@
 {
   "name": "periodicjs.ext.login",
   "periodicCompatibility":"0.0.2",
-  "periodicDependencies":[{
-    "extname":"periodicjs.ext.admin",
-    "extver":"0.0.2"}]
 }
