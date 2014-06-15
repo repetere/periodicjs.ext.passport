@@ -8,25 +8,25 @@
 
 var should = require('chai').should(),
 	expect = require('chai').expect,
-	Linotype = require('../lib/domhelper'),
-	Browser = require("zombie"),
+	// Linotype = require('../lib/domhelper'),
+	// Browser = require("zombie"),
 	path = require("path");
 
 
 describe('DOM Manipulation', function () {
 
 	describe('Initializing Page Settings', function () {
-		var linotypeTest;
-		before(function(){
-			this.browser = new Browser();
-			this.browser.on("error",function(error){
-				console.error(error);
-			});
-		});
+		// var linotypeTest;
+		// before(function(){
+		// 	this.browser = new Browser();
+		// 	this.browser.on("error",function(error){
+		// 		console.error(error);
+		// 	});
+		// });
 
-		before(function(done){
-			this.browser.visit("file://"+path.resolve(__dirname,"../example/ssmaster/examples/index.html"),done);
-		});
+		// before(function(done){
+		// 	this.browser.visit("file://"+path.resolve(__dirname,"../example/ssmaster/examples/index.html"),done);
+		// });
 
 		it('should set the css of the linotype element', function () {
 			// linotypeTest = new this.browser.window.linotype();
