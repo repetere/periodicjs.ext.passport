@@ -1,7 +1,7 @@
 {
   "name": "periodicjs.ext.login",
   "description": "Login for periodicjs",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "index.js",
   "engines": {
     "node": ">=0.10.x"
@@ -17,15 +17,13 @@
   },
   "scripts": {},
   "dependencies": {
-    "passport": "~0.2.0",
-    "passport-local": "~1.0.0",
-    "passport-facebook": "~1.0.3",
-    "passport-twitter": "~1.0.2",
-    "passport-google": "~0.3.0",
-    "bcrypt": "^0.7.8"
+    "passport": "0.2.0",
+    "passport-local": "1.0.0",
+    "passport-facebook": "1.0.3",
+    "passport-twitter": "1.0.2",
+    "passport-google": "0.3.0"
   },
   "devDependencies": {
-    "browserify": ">=3.46.0",
     "chai": "1.5.0",
     "grunt": "0.4.1",
     "grunt-contrib-jshint": "0.4.3",
@@ -42,5 +40,15 @@
   },
   "keywords": [
     "periodicjs"
-  ]
+  ],
+  "readme": "periodicjs.ext.login\n====================\n\nperiodicjs login extension\n",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/typesettin/periodicjs.ext.login/issues"
+  },
+  "homepage": "https://github.com/typesettin/periodicjs.ext.login",
+  "_id": "periodicjs.ext.login@0.0.1",
+  "_shasum": "c2b9e8284f11f899e726ae5b3c3d253082f27935",
+  "_from": "https://github.com/typesettin/periodicjs.ext.login/archive/master.tar.gz",
+  "_resolved": "https://github.com/typesettin/periodicjs.ext.login/archive/master.tar.gz"
 }
