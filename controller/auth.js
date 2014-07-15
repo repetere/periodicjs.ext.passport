@@ -60,7 +60,7 @@ var facebook = function(req, res, next) {
 };
 
 var facebookcallback = function(req, res, next) {
-	var loginUrl = (req.session.return_url) ? req.session.return_url : '/admin';
+	var loginUrl = (req.session.return_url) ? req.session.return_url : '/p-admin';
 	var loginFailureUrl = (req.session.return_url) ? req.session.return_url : '/auth/login?return_url='+req.session.return_url;
 	passport.authenticate('facebook', {
 		successRedirect: loginUrl,
@@ -88,7 +88,7 @@ var ensureAuthenticated = function(req, res, next) {
             });
         }
         else {
-            logger.verbose("controller - user.js - " + req.originalUrl);
+            logger.verbose("controller - login/user.js - " + req.originalUrl);
             if (req.originalUrl) {
                 req.session.return_url = req.originalUrl;
                 res.redirect('/auth/login?return_url=' + req.originalUrl);
@@ -260,101 +260,3 @@ passport.deserializeUser(function(token, done) {
 });
 
 module.exports = controller;
-
-
-
-/*
-exports.
-exports.
-exports.requestCSRF = function(req, res){
-	User.validApiKey(req.body.userid,req.body.apikey,function(err,user){
-		if (err) {
-			logger.error(err);
-			res.send({
-				"result": "error",
-				"data": err
-			});
-		}
-		else{
-			res.send({
-				"result": "success",
-				data:{
-					_csrf: req.session._csrf					
-				}
-			});		
-		}
-	})
-}
-exports.mobileLogin = function(req, res, next) {
-	var userdata = req.query;
-	console.log(userdata)
-	logger.verbose("controller - auth.js - mobile login");
-	passport.authenticate('local', function(err, user, info) {
-
-		// console.log("in callback returnf rom auth")
-		console.log(err)
-
-		if (err) {
-			logger.error(err);
-			res.send({
-				"result": "error",
-				"data": err
-			});
-		}
-		else if (!user) {
-			logger.verbose("controller - auth.js - no user")
-			if(application_controller.is_valid_email(userdata.username)){
-					User.fastRegisterUser(userdata,function(err,returnedUser){
-					if(err){
-						console.log(err.toString())
-						res.send({
-							"result": "error-auth",
-							"data": err.toString()
-						});
-					}
-					else{
-						res.send({
-							"result": "success-register",
-							"data": {
-								user: returnedUser,
-								_csrf: req.session._csrf
-							}
-						});
-					}
-				})
-			}
-			else{
-				res.send({
-					"result": "register-error",
-					"data": "invalid email"
-				});
-			}
-		}
-		else{
-			User.findOne({_id:user._id}).populate("profileimage").exec(function(err,loggedInUser){
-				if (err) {
-					logger.error(err);
-					res.send({
-						"result": "error",
-						"data": err
-					});
-				}
-				else{
-
-					if(loggedInUser.password){
-						loggedInUser.password = null;
-						delete loggedInUser.password;
-					}
-					res.send({
-						"result": "success",
-						"data": {
-							user: loggedInUser,
-							_csrf: req.session._csrf
-						}
-					});
-				}
-			})
-		}
-	})(req, res, next);
-};
- */
