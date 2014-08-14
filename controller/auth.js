@@ -1,11 +1,14 @@
 'use strict';
 
-var path = require('path'),
-	passport = require('passport'),
+var passport = require('passport'),
 	LocalStrategy = require('passport-local').Strategy,
 	FacebookStrategy = require('passport-facebook').Strategy,
-	appController = require(path.join(process.cwd(),'app/controller/application')),
-	applicationController,
+	// appController = require(path.join(process.cwd(),'app/controller/application')),
+  Utilities = require('periodicjs.core.utilities'),
+  ControllerHelper = require('periodicjs.core.controllerhelper'),
+  CoreUtilities,
+  CoreController,
+	// applicationController,
 	appSettings,
 	mongoose,
 	User,
@@ -13,12 +16,13 @@ var path = require('path'),
 
 var login = function(req, res, next) {
 	passport.authenticate('local', function(err, user, info) {
+		logger.silly('info',info);
 		if (err) {
 			logger.error(err);
 			return next(err);
 		}
 		if (!user) {
-			req.flash('error',"invalid credentials, did you forget your password?");
+			req.flash('error','invalid credentials, did you forget your password?');
 			return res.redirect('/auth/login');
 		}
 		req.logIn(user, function(err) {
@@ -79,16 +83,16 @@ var ensureAuthenticated = function(req, res, next) {
         }
     }
     else {
-        if (req.query.format === "json"){
+        if (req.query.format === 'json'){
             res.send({
-                "result": "error",
-                "data": {
-                    error: "authentication requires "
+                'result': 'error',
+                'data': {
+                    error: 'authentication requires '
                 }
             });
         }
         else {
-            logger.verbose("controller - login/user.js - " + req.originalUrl);
+            logger.verbose('controller - login/user.js - ' + req.originalUrl);
             if (req.originalUrl) {
                 req.session.return_url = req.originalUrl;
                 res.redirect('/auth/login?return_url=' + req.originalUrl);
@@ -104,15 +108,18 @@ var controller = function(resources){
 	logger = resources.logger;
 	mongoose = resources.mongoose;
 	appSettings = resources.settings;
-	applicationController = new appController(resources);
-	User = mongoose.model('User');
+	// applicationController = new appController(resources);
+	User = mongoose.model('User');	
+  CoreController = new ControllerHelper(resources);
+  CoreUtilities = new Utilities(resources);
+
 
 	passport.use(new LocalStrategy(function(username, password, done) {
 		User.findOne({
 			$or: [{
-				username:  { $regex : new RegExp(username, "i") }
+				username:  { $regex : new RegExp(username, 'i') }
 			}, {
-				email:  { $regex : new RegExp(username, "i") }
+				email:  { $regex : new RegExp(username, 'i') }
 			}]
 		}, function(err, user) {
 			if (err) {
@@ -132,7 +139,7 @@ var controller = function(resources){
 					return done(null, user);
 				}
 				else {
-					logger.verbose(" in passport callback when no password");
+					logger.verbose(' in passport callback when no password');
 					return done(null, false, {
 						message: 'Invalid password'
 					});
@@ -147,9 +154,9 @@ var controller = function(resources){
 			callbackURL: appSettings.oauth.facebook.callbackurl
 		},
 		function(accessToken, refreshToken, profile, done) {
-			// console.log("accessToken:" +accessToken);
-			// console.log("refreshToken:" +refreshToken);
-			// console.log("profile:",profile);
+			// console.log('accessToken:' +accessToken);
+			// console.log('refreshToken:' +refreshToken);
+			// console.log('profile:',profile);
 			// var newUser = new User;
 			var facebookdata = profile._json;
 			User.findOne({
@@ -172,7 +179,7 @@ var controller = function(resources){
 									return done(err);
 								}
 								else if (existingUser) {
-									logger.info("model - user.js - already has an account, trying to connect account");
+									logger.info('model - user.js - already has an account, trying to connect account');
 									existingUser.facebookid = facebookdata.id;
 									existingUser.facebookaccesstoken = accessToken;
 									existingUser.facebookusername = facebookdata.username;
@@ -180,14 +187,14 @@ var controller = function(resources){
 									existingUser.save(done);
 								}
 								else {
-								    logger.info("model - user.js - creating new facebook user");
+								    logger.info('model - user.js - creating new facebook user');
 								    User.create({
 								        email: facebookdata.email,
 								        facebookid: facebookdata.id,
 								        facebookaccesstoken: accessToken,
 								        facebookusername: facebookdata.username,
 								        activated: true,
-								        accounttype: "regular",
+								        accounttype: 'regular',
 								        firstname: facebookdata.first_name,
 								        lastname: facebookdata.last_name
 								    }, done);
@@ -210,7 +217,7 @@ var controller = function(resources){
 
 
 passport.serializeUser(function(user, done) {
-	logger.verbose("controller - auth.js - serialize user");
+	logger.verbose('controller - auth.js - serialize user');
 
 	done(null, user._id);
 	// var createAccessToken = function() {
@@ -225,13 +232,13 @@ passport.serializeUser(function(user, done) {
 	// 			createAccessToken(); // Run the function again - the token has to be unique!
 	// 		} else {
 	// 			user.set('accessToken', token);
-	// 			console.log("pre save - user.get('accessToken')",user.get('accessToken'));
+	// 			console.log('pre save - user.get('accessToken')',user.get('accessToken'));
 	// 			user.save(function(err) {
 	// 				if (err) {
 	// 					return done(err);
 	// 				}
 	// 				else{
-	// 					console.log("user.get('accessToken')",user.get('accessToken'));
+	// 					console.log('user.get('accessToken')',user.get('accessToken'));
 	// 					return done(null, user.get('accessToken'));
 	// 				}
 	// 			});
@@ -245,14 +252,14 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(token, done) {
-	logger.verbose("controller - auth.js - deserialize user");
+	logger.verbose('controller - auth.js - deserialize user');
 	User.findById(token, function(err, user) {
 		done(err, user);
 	});
 	// User.findOne({
 	// 	accessToken: token
 	// })
-	// .populate("profileimage")
+	// .populate('profileimage')
 	// .exec(function(err, user) {
 	// 	// console.log(user)
 	// 	done(err, user);
