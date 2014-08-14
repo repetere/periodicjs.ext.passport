@@ -2,26 +2,30 @@
 
 var path = require('path'),
     bcrypt = require('bcrypt'),
-	passport = require('passport'),
-	LocalStrategy = require('passport-local').Strategy,
-	FacebookStrategy = require('passport-facebook').Strategy,
-    appController = require(path.join(process.cwd(),'app/controller/application')),
+    passport = require('passport'),
+    LocalStrategy = require('passport-local').Strategy,
+    FacebookStrategy = require('passport-facebook').Strategy,
     userHelper,
-	applicationController,
-	appSettings,
-	mongoose,
-	User,
-	logger;
+    appSettings,
+    mongoose,
+    User,
+    logger,
+    Extensions = require('periodicjs.core.extensions'),
+    Utilities = require('periodicjs.core.utilities'),
+    ControllerHelper = require('periodicjs.core.controllerhelper'),
+    CoreExtension,
+    CoreUtilities,
+    CoreController;
 
 var login = function(req,res,next) {
-    applicationController.getPluginViewDefaultTemplate(
+    CoreController.getPluginViewDefaultTemplate(
         {
             viewname:'user/login',
             themefileext:appSettings.templatefileextension,
             extname: 'periodicjs.ext.login'
         },
         function(err,templatepath){
-            applicationController.handleDocumentQueryRender({
+            CoreController.handleDocumentQueryRender({
                 res:res,
                 req:req,
                 renderView:templatepath,
@@ -37,14 +41,14 @@ var login = function(req,res,next) {
 };
 
 var newuser = function(req, res, next) {
-    applicationController.getPluginViewDefaultTemplate(
+    CoreController.getPluginViewDefaultTemplate(
         {
             viewname:'user/new',
             themefileext:appSettings.templatefileextension,
             extname: 'periodicjs.ext.login'
         },
         function(err,templatepath){
-            applicationController.handleDocumentQueryRender({
+            CoreController.handleDocumentQueryRender({
                 res:res,
                 req:req,
                 renderView:templatepath,
@@ -60,25 +64,25 @@ var newuser = function(req, res, next) {
 };
 
 var create = function(req, res ,next) {
-    var userdata = applicationController.removeEmptyObjectValues(req.body);
+    var userdata = CoreUtilities.removeEmptyObjectValues(req.body);
     userHelper.createNewUser({
         userdata:userdata,
         User:User,
         res:res,
         req:req,
-        applicationController:applicationController
+        applicationController:CoreController
     });
 };
 
 var finishregistration = function(req, res, next) {
-    applicationController.getPluginViewDefaultTemplate(
+    CoreController.getPluginViewDefaultTemplate(
         {
             viewname:'user/finishregistration',
             themefileext:appSettings.templatefileextension,
             extname: 'periodicjs.ext.login'
         },
         function(err,templatepath){
-            applicationController.handleDocumentQueryRender({
+            CoreController.handleDocumentQueryRender({
                 res:res,
                 req:req,
                 renderView:templatepath,
@@ -102,7 +106,7 @@ var updateuserregistration = function(req, res, next) {
         function(err, userToUpdate) {
             if (err) {
                 userError = err;
-                applicationController.handleDocumentQueryErrorResponse({
+                CoreController.handleDocumentQueryErrorResponse({
                     err:userError,
                     res:res,
                     req:req,
@@ -112,7 +116,7 @@ var updateuserregistration = function(req, res, next) {
             }
             else if (!userToUpdate) {
                 userError = new Error("could not find user, couldn't complate registration");
-                applicationController.handleDocumentQueryErrorResponse({
+                CoreController.handleDocumentQueryErrorResponse({
                     err:userError,
                     res:res,
                     req:req,
@@ -125,7 +129,7 @@ var updateuserregistration = function(req, res, next) {
                 userToUpdate.save(function(err, userSaved) {
                     if (err) {
                         userError =err;
-                        applicationController.handleDocumentQueryErrorResponse({
+                        CoreController.handleDocumentQueryErrorResponse({
                             err:userError,
                             res:res,
                             req:req,
@@ -146,20 +150,23 @@ var updateuserregistration = function(req, res, next) {
 };
 
 var controller = function(resources){
-	logger = resources.logger;
-	mongoose = resources.mongoose;
-	appSettings = resources.settings;
-	applicationController = new appController(resources);
+    logger = resources.logger;
+    mongoose = resources.mongoose;
+    appSettings = resources.settings;
+    // applicationController = new appController(resources);
     userHelper = require(path.join(process.cwd(),'app/controller/helpers/user'))(resources);
-	User = mongoose.model('User');
+    User = mongoose.model('User');
+    CoreController = new ControllerHelper(resources);
+    CoreExtension = new Extensions(appSettings);
+    CoreUtilities = new Utilities(resources);
 
     return{
         login:login,
         newuser:newuser,
-		create:create,
+        create:create,
         finishregistration:finishregistration,
         updateuserregistration:updateuserregistration
-	};
+    };
 };
 
 module.exports = controller;
