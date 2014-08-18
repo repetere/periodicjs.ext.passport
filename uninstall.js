@@ -7,6 +7,7 @@ var path = require('path'),
 	packagejsonFileJSON = fs.readJSONSync(path.resolve('./package.json')),
 	extname = packagejsonFileJSON.name,
 	extpublicdir = path.resolve(__dirname,'../../public/extensions/', extname),
+	extconfigdir = path.resolve(__dirname,'../../content/config/extensions/', extname),
 	Extensions= require('periodicjs.core.extensions'),
 	ExtensionCore = new Extensions({
 		extensionFilePath: extensionFilePath 
@@ -15,6 +16,7 @@ var path = require('path'),
 ExtensionCore.uninstall({
 		extname:extname,
 		extpublicdir:extpublicdir,
+		extconfigdir:extconfigdir,
 		extensionFileJson:extensionFileJson
 	},
 	function(err,status){

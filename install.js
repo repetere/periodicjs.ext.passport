@@ -2,7 +2,6 @@
 
 var path = require('path'),
 	fs = require('fs-extra'),
-	async = require('async'),
 	Extensions = require('periodicjs.core.extensions'),
 	ExtensionCore = new Extensions({
 		extensionFilePath: path.resolve(__dirname,'../../content/extensions/extensions.json') 
