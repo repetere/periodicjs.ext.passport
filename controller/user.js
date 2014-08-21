@@ -3,11 +3,14 @@
 var path = require('path'),
     Utilities = require('periodicjs.core.utilities'),
     ControllerHelper = require('periodicjs.core.controllerhelper'),
+    CoreMailer = require('periodicjs.core.mailer'),
     userHelper,
     appSettings,
     mongoose,
     User,
     logger,
+    welcomeemailtemplate,
+    emailtransport,
     CoreUtilities,
     CoreController;
 
@@ -136,7 +139,24 @@ var updateuserregistration = function(req, res) {
                         req.flash('info', 'updated user account');
                         res.redirect(forwardUrl);
 
-                        User.sendAsyncWelcomeEmail(userSaved, function() {});
+                        if(welcomeemailtemplate && emailtransport){
+                            User.sendWelcomeUserEmail({
+                                subject: appSettings.name+' New User Registration',
+                                user:userSaved,
+                                hostname:req.headers.host,
+                                appname:appSettings.name,
+                                emailtemplate:welcomeemailtemplate,
+                                // bcc:'yje2@cornell.edu',
+                                mailtransport:emailtransport
+                            },function(err,status){
+                                if(err){
+                                    console.log(err);
+                                }
+                                else{
+                                    console.info('email status',status);
+                                }
+                            });
+                        }
                     }
                 });
             }
@@ -151,6 +171,33 @@ var controller = function(resources){
     User = mongoose.model('User');
     CoreController = new ControllerHelper(resources);
     CoreUtilities = new Utilities(resources);
+    CoreController.getPluginViewDefaultTemplate(
+        {
+            viewname:'email/user/welcome',
+            themefileext:appSettings.templatefileextension
+        },
+        function(err,templatepath){
+            if(templatepath ==='email/user/welcome'){
+                templatepath = path.resolve(process.cwd(),'app/views',templatepath+'.'+appSettings.templatefileextension);
+            }
+            User.getWelcomeEmailTemplate({templatefile:templatepath},function(err,emailtemplate){
+                if(err){
+                    console.error(err);
+                }
+                else{
+                    welcomeemailtemplate = emailtemplate;                                   
+                }
+            });
+        }
+    );
+    CoreMailer.getTransport({appenvironment : appSettings.application.environment},function(err,transport){
+        if(err){
+            console.error(err);
+        }
+        else{
+            emailtransport = transport;                                 
+        }
+    });
 
     return{
         login:login,
