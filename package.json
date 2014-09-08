@@ -1,7 +1,7 @@
 {
   "name": "periodicjs.ext.login",
   "description": "Login for periodicjs",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "main": "index.js",
   "engines": {
     "node": ">=0.10.x"
@@ -34,7 +34,7 @@
     "periodicjs.core.mailer": "~1.2.0"
   },
   "peerDependencies": {
-    "periodicjs.ext.mailer": "~1.5.10"
+    "periodicjs.ext.mailer": "~1.5.11"
   },
   "devDependencies": {
     "chai": "1.5.0",
