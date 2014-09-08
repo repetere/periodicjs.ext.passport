@@ -22,7 +22,7 @@ var path = require('path'),
 // $ npm install --skip-install-periodic-ext
 
 ExtensionCore.install({
-		enabled:true,
+		enabled:false,
 		extname:extname,
 		extdir:extdir,
 		skipconffile:skipconffile,
