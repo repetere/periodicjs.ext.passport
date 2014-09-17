@@ -253,17 +253,14 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(token, done) {
 	logger.verbose('controller - auth.js - deserialize user');
-	User.findById(token, function(err, user) {
-		done(err, user);
+	User.findOne({
+	 	_id: token
+	 })
+	 .populate('userroles primaryasset')
+	 .exec(function(err, user) {
+	 	// console.log(user)
+	 	done(err, user);
 	});
-	// User.findOne({
-	// 	accessToken: token
-	// })
-	// .populate('profileimage')
-	// .exec(function(err, user) {
-	// 	// console.log(user)
-	// 	done(err, user);
-	// });
 });
 
 module.exports = controller;
