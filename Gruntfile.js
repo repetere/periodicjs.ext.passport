@@ -1,6 +1,6 @@
 /*
  * domhelper
- * http://github.com/typesettin/periodicjs.ext.login
+ * http://github.com/yawetse/domhelper
  *
  * Copyright (c) 2014 Yaw Joseph Etse. All rights reserved.
  */
@@ -28,7 +28,7 @@ module.exports = function (grunt) {
 			all: [
 				'Gruntfile.js',
 				'index.js',
-				'contoller/**/*.js',
+				'controller/**/*.js',
 				'resources/**/*.js',
 				'test/**/*.js',
 			]
@@ -102,11 +102,11 @@ module.exports = function (grunt) {
 				files: [
 					'Gruntfile.js',
 					'index.js',
-					'contoller/**/*.js',
+					'controller/**/*.js',
 					'resources/**/*.js',
 					'test/**/*.js',
 				],
-				tasks: ['lint', 'packagejs', /*'doc',*/ 'test'],
+				tasks: ['lint', 'packagejs', 'copy', /*'doc',*/ 'test'],
 				options: {
 					interrupt: true
 				}

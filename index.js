@@ -2,7 +2,7 @@
 
 var passport = require('passport');
 
-module.exports = function(periodic){
+module.exports = function (periodic) {
 	// express,app,logger,config,db,mongoose
 	var authRouter = periodic.express.Router(),
 		authController = require('./controller/auth')(periodic),
@@ -24,6 +24,6 @@ module.exports = function(periodic){
 	periodic.app.use(authController.rememberme);
 	periodic.app.use(passport.initialize());
 	periodic.app.use(passport.session());
-	periodic.app.use('/auth',authRouter);
-	periodic.app.use('/user',userRouter);
+	periodic.app.use('/auth', authRouter);
+	periodic.app.use('/user', userRouter);
 };
