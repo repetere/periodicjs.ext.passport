@@ -11,6 +11,7 @@ var passport = require('passport'),
 	CoreExtension = new Extensions({
 		extensionFilePath: path.resolve(process.cwd(), './content/extensions/extensions.json')
 	}),
+	authLoginPath='/auth/login/',
 	CoreUtilities,
 	CoreController,
 	appSettings,
@@ -29,7 +30,7 @@ var login = function (req, res, next) {
 		}
 		if (!user) {
 			req.flash('error', 'invalid credentials, did you forget your password?');
-			return res.redirect('/auth/login');
+			return res.redirect(authLoginPath);
 		}
 		req.logIn(user, function (err) {
 			if (err) {
@@ -48,7 +49,9 @@ var login = function (req, res, next) {
 
 var logout = function (req, res) {
 	req.logout();
-	res.redirect('/');
+	req.session.destroy(function(err) {
+		res.redirect('/');
+	});
 };
 
 var rememberme = function (req, res, next) {
@@ -82,7 +85,11 @@ var facebookcallback = function (req, res, next) {
 
 var ensureAuthenticated = function (req, res, next) {
 	if (req.isAuthenticated()) {
-		if (!req.user.username) {
+
+		if(loginExtSettings && loginExtSettings.settings.requireusername===false){
+			return next();
+		}
+		else if (!req.user.username) {
 			res.redirect('/user/finishregistration');
 		}
 		else {
@@ -102,10 +109,10 @@ var ensureAuthenticated = function (req, res, next) {
 			logger.verbose('controller - login/user.js - ' + req.originalUrl);
 			if (req.originalUrl) {
 				req.session.return_url = req.originalUrl;
-				res.redirect('/auth/login?return_url=' + req.originalUrl);
+				res.redirect(authLoginPath+'?return_url=' + req.originalUrl);
 			}
 			else {
-				res.redirect('/auth/login');
+				res.redirect(authLoginPath);
 			}
 		}
 	}
@@ -132,25 +139,31 @@ var usePassport = function () {
 					message: 'Unknown user ' + username
 				});
 			}
-			user.comparePassword(password, function (err, isMatch) {
-				if (err) {
-					return done(err);
-				}
+			if(loginExtSettings && loginExtSettings.settings.usepassword===false){
+				return done(null, user);
+			}
+			else{
+				user.comparePassword(password, function (err, isMatch) {
+					if (err) {
+						return done(err);
+					}
 
-				if (isMatch) {
-					return done(null, user);
-				}
-				else {
-					logger.verbose(' in passport callback when no password');
-					return done(null, false, {
-						message: 'Invalid password'
-					});
-				}
-			});
+					if (isMatch) {
+						return done(null, user);
+					}
+					else {
+						logger.verbose(' in passport callback when no password');
+						return done(null, false, {
+							message: 'Invalid password'
+						});
+					}
+				});
+			}
 		});
 	}));
 
-	passport.use(new FacebookStrategy({
+	if(loginExtSettings && loginExtSettings.passport && loginExtSettings.passport.oauth.facebook.appid){
+		passport.use(new FacebookStrategy({
 			clientID: loginExtSettings.passport.oauth.facebook.appid,
 			clientSecret: loginExtSettings.passport.oauth.facebook.appsecret,
 			callbackURL: loginExtSettings.passport.oauth.facebook.callbackurl
@@ -205,6 +218,7 @@ var usePassport = function () {
 				}
 			});
 		}));
+	}
 };
 
 var controller = function (resources) {
@@ -217,24 +231,34 @@ var controller = function (resources) {
 	loginExtSettingsFile = path.resolve(CoreExtension.getconfigdir({
 		extname: 'periodicjs.ext.login'
 	}), './settings.json');
+	authLoginPath = (appSettings.authLoginPath)? appSettings.authLoginPath : authLoginPath;
 
 	var appenvironment = appSettings.application.environment;
-	fs.readJson(loginExtSettingsFile, function (err, settingJSON) {
-		if (err) {
-			throw new Error(err);
-		}
-		else {
-			console.log('settingJSON', settingJSON);
-
-			if (settingJSON[appenvironment]) {
-				loginExtSettings = settingJSON[appenvironment];
-				usePassport();
+	if(appSettings.loginExtSettings){
+		loginExtSettings = appSettings.loginExtSettings;
+	}
+	if(appSettings.authskipconfload){
+		usePassport();
+	}
+	else{
+		fs.readJson(loginExtSettingsFile, function (err, settingJSON) {
+			if (err) {
+				throw new Error(err);
 			}
 			else {
-				throw new Error('Invalid login configuration, no transport for env: ' + appenvironment);
+				// console.log('settingJSON', settingJSON);
+				if (settingJSON[appenvironment]) {
+					loginExtSettings = settingJSON[appenvironment];
+					authLoginPath = (loginExtSettings.authLoginPath)? loginExtSettings.authLoginPath : authLoginPath;
+					// console.log('settings file authLoginPath',authLoginPath);
+					usePassport();
+				}
+				else {
+					throw new Error('Invalid login configuration, no transport for env: ' + appenvironment);
+				}
 			}
-		}
-	});
+		});
+	}
 
 
 	return {
@@ -249,7 +273,6 @@ var controller = function (resources) {
 
 passport.serializeUser(function (user, done) {
 	logger.verbose('controller - auth.js - serialize user');
-
 	done(null, user._id);
 	// var createAccessToken = function() {
 	// 	var token = user.generateRandomToken();
@@ -287,11 +310,11 @@ passport.deserializeUser(function (token, done) {
 	User.findOne({
 		_id: token
 	})
-		.populate('userroles primaryasset')
-		.exec(function (err, user) {
-			// console.log(user)
-			done(err, user);
-		});
+	.populate('userroles primaryasset')
+	.exec(function (err, user) {
+		// console.log(user)
+		done(err, user);
+	});
 });
 
 module.exports = controller;

@@ -1,7 +1,7 @@
 {
   "name": "periodicjs.ext.login",
   "description": "Login for periodicjs",
-  "version": "1.5.4",
+  "version": "1.6.0",
   "main": "index.js",
   "engines": {
     "node": ">=0.10.x"
@@ -59,14 +59,29 @@
   "keywords": [
     "periodicjs"
   ],
-  "readme": "periodicjs.ext.login\n====================\n\nperiodicjs login extension\n",
-  "readmeFilename": "README.md",
   "bugs": {
     "url": "https://github.com/typesettin/periodicjs.ext.login/issues"
   },
   "homepage": "https://github.com/typesettin/periodicjs.ext.login",
-  "_id": "periodicjs.ext.login@0.0.1",
-  "_shasum": "c2b9e8284f11f899e726ae5b3c3d253082f27935",
-  "_from": "https://github.com/typesettin/periodicjs.ext.login/archive/master.tar.gz",
-  "_resolved": "https://github.com/typesettin/periodicjs.ext.login/archive/master.tar.gz"
+  "_id": "periodicjs.ext.login@1.5.4",
+  "_shasum": "c2c86b8a963aebf4846f09b894164fbc279ac507",
+  "_from": "periodicjs.ext.login@1.5.4",
+  "_resolved": "https://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-1.5.4.tgz",
+  "gitHead": "4664b50397714fe9aad5c9b1e77d1707525c107c",
+  "_npmVersion": "1.5.0-alpha-4",
+  "_npmUser": {
+    "name": "yawetse",
+    "email": "yaw.etse@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "yawetse",
+      "email": "yaw.etse@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "c2c86b8a963aebf4846f09b894164fbc279ac507",
+    "tarball": "http://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-1.5.4.tgz"
+  },
+  "directories": {}
 }

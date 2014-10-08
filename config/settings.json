@@ -1,0 +1,17 @@
+{
+	"development":{
+		"settings":{
+			"usepassword":true,
+			"requireusername":true
+		},
+		"passport":{
+			"oauth":{
+				"facebook":{
+					"appid": "NEEDFBAPPID",
+					"appsecret": "NEEDFBAPPSECRET",
+					"callbackurl": "http://local.getperiodic.com:8080/auth/facebook/callback"
+				}
+			}
+		}
+	}
+}
