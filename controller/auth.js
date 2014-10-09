@@ -243,6 +243,7 @@ var controller = function (resources) {
 	else{
 		fs.readJson(loginExtSettingsFile, function (err, settingJSON) {
 			if (err) {
+				usePassport();
 				throw new Error(err);
 			}
 			else {
