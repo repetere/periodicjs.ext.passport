@@ -250,7 +250,7 @@ var controller = function (resources) {
 				// console.log('settingJSON', settingJSON);
 				if (settingJSON[appenvironment]) {
 					loginExtSettings = settingJSON[appenvironment];
-					authLoginPath = (loginExtSettings.authLoginPath)? loginExtSettings.authLoginPath : authLoginPath;
+					authLoginPath = (loginExtSettings.settings.authLoginPath)? loginExtSettings.settings.authLoginPath : authLoginPath;
 					// console.log('settings file authLoginPath',authLoginPath);
 					usePassport();
 				}
