@@ -1,6 +1,7 @@
 {
 	"development":{
 		"settings":{
+			"authLoginPath":"/auth/login",
 			"usepassword":true,
 			"requireusername":true
 		},
