@@ -6,12 +6,14 @@ var passport = require('passport'),
 	FacebookStrategy = require('passport-facebook').Strategy,
 	fs = require('fs-extra'),
 	Utilities = require('periodicjs.core.utilities'),
-	ControllerHelper = require('periodicjs.core.controllerhelper'),
+	ControllerHelper = require('periodicjs.core.controller'),
 	Extensions = require('periodicjs.core.extensions'),
 	CoreExtension = new Extensions({
 		extensionFilePath: path.resolve(process.cwd(), './content/extensions/extensions.json')
 	}),
 	authLoginPath='/auth/login/',
+	authLogoutPath='/',
+	authLoggedInHomepage='/p-admin',
 	CoreUtilities,
 	CoreController,
 	appSettings,
@@ -21,6 +23,12 @@ var passport = require('passport'),
 	loginExtSettingsFile,
 	loginExtSettings;
 
+/**
+ * logins a user using passport's local strategy, if a user is passed to this function, then the user will be logged in and req.user will be populated
+ * @param  {object} req 
+ * @param  {object} res 
+ * @return {object} reponds with an error page or sends user to authenicated in resource
+ */
 var login = function (req, res, next) {
 	passport.authenticate('local', function (err, user, info) {
 		logger.silly('info', info);
@@ -47,16 +55,31 @@ var login = function (req, res, next) {
 	})(req, res, next);
 };
 
+/**
+ * logs user out and destroys user session
+ * @param  {object} req 
+ * @param  {object} res 
+ * @return {object} sends user to logout resource
+ */
 var logout = function (req, res) {
 	req.logout();
 	req.session.destroy(function(err) {
-		res.redirect('/');
+		if(err){
+			logger.error(err);
+		}
+		res.redirect(authLogoutPath);
 	});
 };
 
+/**
+ * keep a user logged in for 30 days
+ * @param  {object} req 
+ * @param  {object} res 
+ * @return {Function} next() callback
+ */
 var rememberme = function (req, res, next) {
 	// console.log('using remember me');
-	if (req.method === 'POST' && req.url === '/login') {
+	if (req.method === 'POST' && req.url === authLoginPath) {
 		if (req.body.rememberme) {
 			req.session.cookie.maxAge = 2592000000; // 30*24*60*60*1000 Rememeber 'me' for 30 days
 		}
@@ -67,22 +90,40 @@ var rememberme = function (req, res, next) {
 	next();
 };
 
+/**
+ * logs user in via facebook oauth2 
+ * @param  {object} req 
+ * @param  {object} res 
+ * @return {Function} next() callback
+ */
 var facebook = function (req, res, next) {
 	passport.authenticate('facebook', {
-		scope: ['email', 'publish_actions', 'offline_access', 'user_status', 'user_likes', 'user_checkins', 'user_about_me', 'read_stream']
+		scope: loginExtSettings.passport.oauth.facebook.scope
 	})(req, res, next);
 };
 
+/**
+ * facebook oauth callback
+ * @param  {object} req 
+ * @param  {object} res 
+ * @return {Function} next() callback
+ */
 var facebookcallback = function (req, res, next) {
-	var loginUrl = (req.session.return_url) ? req.session.return_url : '/p-admin';
-	var loginFailureUrl = (req.session.return_url) ? req.session.return_url : '/auth/login?return_url=' + req.session.return_url;
+	var loginUrl = (req.session.return_url) ? req.session.return_url : authLoggedInHomepage;
+	var loginFailureUrl = (req.session.return_url) ? req.session.return_url : authLoginPath+'?return_url=' + req.session.return_url;
 	passport.authenticate('facebook', {
 		successRedirect: loginUrl,
 		failureRedirect: loginFailureUrl,
-		failureFlash: 'Invalid username or password.'
+		failureFlash: 'Invalid facebook authentication credentials username or password.'
 	})(req, res, next);
 };
 
+/**
+ * make sure a user is authenticated, if not logged in, send them to login page and return them to original resource after login
+ * @param  {object} req 
+ * @param  {object} res 
+ * @return {Function} next() callback
+ */
 var ensureAuthenticated = function (req, res, next) {
 	if (req.isAuthenticated()) {
 
@@ -118,6 +159,12 @@ var ensureAuthenticated = function (req, res, next) {
 	}
 };
 
+/**
+ * uses passport to log users in, calls done(err,user) when complete, can define what credentials to check here
+ * @param  {object} req 
+ * @param  {object} res 
+ * @return {Function} done(err,user) callback
+ */
 var usePassport = function () {
 	passport.use(new LocalStrategy(function (username, password, done) {
 		User.findOne({
@@ -221,6 +268,24 @@ var usePassport = function () {
 	}
 };
 
+/**
+ * login controller
+ * @module authController
+ * @{@link https://github.com/typesettin/periodic}
+ * @author Yaw Joseph Etse
+ * @copyright Copyright (c) 2014 Typesettin. All rights reserved.
+ * @license MIT
+ * @requires module:passport
+ * @requires module:path
+ * @requires module:passport-local
+ * @requires module:passport-facebook
+ * @requires module:fs-extra
+ * @requires module:periodicjs.core.utilities
+ * @requires module:periodicjs.core.controller
+ * @requires module:periodicjs.core.extensions
+ * @param  {object} resources variable injection from current periodic instance with references to the active logger and mongo session
+ * @return {object}           sendmail
+ */
 var controller = function (resources) {
 	logger = resources.logger;
 	mongoose = resources.mongoose;
@@ -232,6 +297,8 @@ var controller = function (resources) {
 		extname: 'periodicjs.ext.login'
 	}), './settings.json');
 	authLoginPath = (appSettings.authLoginPath)? appSettings.authLoginPath : authLoginPath;
+	authLogoutPath = (appSettings.authLogoutPath)? appSettings.authLogoutPath : authLogoutPath;
+	authLoggedInHomepage = (appSettings.authLoggedInHomepage)? appSettings.authLoggedInHomepage : authLoggedInHomepage;
 
 	var appenvironment = appSettings.application.environment;
 	if(appSettings.loginExtSettings){
@@ -251,6 +318,9 @@ var controller = function (resources) {
 				if (settingJSON[appenvironment]) {
 					loginExtSettings = settingJSON[appenvironment];
 					authLoginPath = (loginExtSettings.settings.authLoginPath)? loginExtSettings.settings.authLoginPath : authLoginPath;
+					authLogoutPath = (loginExtSettings.settings.authLogoutPath)? loginExtSettings.settings.authLogoutPath : authLogoutPath;
+					authLoggedInHomepage = (loginExtSettings.settings.authLoggedInHomepage)? loginExtSettings.settings.authLoggedInHomepage : authLoggedInHomepage;
+					 
 					// console.log('settings file authLoginPath',authLoginPath);
 					usePassport();
 				}
@@ -272,40 +342,24 @@ var controller = function (resources) {
 	};
 };
 
+
+/**
+ * store user id in session
+ * @param  {object} req 
+ * @param  {object} res 
+ * @return {Function} next() callback
+ */
 passport.serializeUser(function (user, done) {
 	logger.verbose('controller - auth.js - serialize user');
 	done(null, user._id);
-	// var createAccessToken = function() {
-	// 	var token = user.generateRandomToken();
-	// 	User.findOne({
-	// 		accessToken: token
-	// 	}, function(err, existingUser) {
-	// 		if (err) {
-	// 			return done(err);
-	// 		}
-	// 		if (existingUser) {
-	// 			createAccessToken(); // Run the function again - the token has to be unique!
-	// 		} else {
-	// 			user.set('accessToken', token);
-	// 			console.log('pre save - user.get('accessToken')',user.get('accessToken'));
-	// 			user.save(function(err) {
-	// 				if (err) {
-	// 					return done(err);
-	// 				}
-	// 				else{
-	// 					console.log('user.get('accessToken')',user.get('accessToken'));
-	// 					return done(null, user.get('accessToken'));
-	// 				}
-	// 			});
-	// 		}
-	// 	});
-	// };
-
-	// if (user._id) {
-	// 	createAccessToken();
-	// }
 });
 
+/**
+ * retrieves user data 
+ * @param  {object} req 
+ * @param  {object} res 
+ * @return {Function} next() callback
+ */
 passport.deserializeUser(function (token, done) {
 	logger.verbose('controller - auth.js - deserialize user');
 	User.findOne({
