@@ -1,10 +1,9 @@
 {
-	"name": "periodicjs.ext.login",
 	"periodicCompatibility":"1.90.0",
 	"periodicDependencies": [
     {
       "extname":"periodicjs.ext.mailer",
-      "version":"~1.90.20"
+      "version":"~1.90.26"
     }
   ]
 }
