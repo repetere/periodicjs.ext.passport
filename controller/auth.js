@@ -20,6 +20,7 @@ var passport = require('passport'),
 	mongoose,
 	User,
 	logger,
+	configError,
 	loginExtSettingsFile,
 	loginExtSettings;
 
@@ -30,29 +31,34 @@ var passport = require('passport'),
  * @return {object} reponds with an error page or sends user to authenicated in resource
  */
 var login = function (req, res, next) {
-	passport.authenticate('local', function (err, user, info) {
-		logger.silly('info', info);
-		if (err) {
-			logger.error(err);
-			return next(err);
-		}
-		if (!user) {
-			req.flash('error', 'invalid credentials, did you forget your password?');
-			return res.redirect(authLoginPath);
-		}
-		req.logIn(user, function (err) {
+	if(configError){
+		next(configError);
+	}
+	else{
+		passport.authenticate('local', function (err, user, info) {
+			logger.silly('info', info);
 			if (err) {
 				logger.error(err);
 				return next(err);
 			}
-			if (req.session.return_url) {
-				return res.redirect(req.session.return_url);
+			if (!user) {
+				req.flash('error', 'invalid credentials, did you forget your password?');
+				return res.redirect(authLoginPath);
 			}
-			else {
-				return res.redirect('/');
-			}
-		});
-	})(req, res, next);
+			req.logIn(user, function (err) {
+				if (err) {
+					logger.error(err);
+					return next(err);
+				}
+				if (req.session.return_url) {
+					return res.redirect(req.session.return_url);
+				}
+				else {
+					return res.redirect('/');
+				}
+			});
+		})(req, res, next);	
+	}
 };
 
 /**
@@ -97,9 +103,14 @@ var rememberme = function (req, res, next) {
  * @return {Function} next() callback
  */
 var facebook = function (req, res, next) {
-	passport.authenticate('facebook', {
-		scope: loginExtSettings.passport.oauth.facebook.scope
-	})(req, res, next);
+	if(configError){
+		next(configError);
+	}
+	else{
+		passport.authenticate('facebook', {
+			scope: loginExtSettings.passport.oauth.facebook.scope
+		})(req, res, next);	
+	}
 };
 
 /**
@@ -125,35 +136,40 @@ var facebookcallback = function (req, res, next) {
  * @return {Function} next() callback
  */
 var ensureAuthenticated = function (req, res, next) {
-	if (req.isAuthenticated()) {
-
-		if(loginExtSettings && loginExtSettings.settings.requireusername===false){
-			return next();
-		}
-		else if (!req.user.username) {
-			res.redirect('/user/finishregistration');
-		}
-		else {
-			return next();
-		}
+	if(configError){
+		next(configError);
 	}
-	else {
-		if (req.query.format === 'json') {
-			res.send({
-				'result': 'error',
-				'data': {
-					error: 'authentication requires '
-				}
-			});
-		}
-		else {
-			logger.verbose('controller - login/user.js - ' + req.originalUrl);
-			if (req.originalUrl) {
-				req.session.return_url = req.originalUrl;
-				res.redirect(authLoginPath+'?return_url=' + req.originalUrl);
+	else{
+		if (req.isAuthenticated()) {
+
+			if(loginExtSettings && loginExtSettings.settings.requireusername===false){
+				return next();
+			}
+			else if (!req.user.username) {
+				res.redirect('/user/finishregistration');
 			}
 			else {
-				res.redirect(authLoginPath);
+				return next();
+			}
+		}
+		else {
+			if (req.query.format === 'json') {
+				res.send({
+					'result': 'error',
+					'data': {
+						error: 'authentication requires '
+					}
+				});
+			}
+			else {
+				logger.verbose('controller - login/user.js - ' + req.originalUrl);
+				if (req.originalUrl) {
+					req.session.return_url = req.originalUrl;
+					res.redirect(authLoginPath+'?return_url=' + req.originalUrl);
+				}
+				else {
+					res.redirect(authLoginPath);
+				}
 			}
 		}
 	}
@@ -325,7 +341,8 @@ var controller = function (resources) {
 					usePassport();
 				}
 				else {
-					throw new Error('Invalid login configuration, no transport for env: ' + appenvironment);
+					configError = new Error('Invalid login configuration, no transport for env: ' + appenvironment);
+					throw configError;
 				}
 			}
 		});
