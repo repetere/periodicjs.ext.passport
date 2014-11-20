@@ -19,6 +19,11 @@ module.exports = function (periodic) {
 		userRouter = periodic.express.Router(),
 		userController = require('./controller/user')(periodic);
 
+	authRouter.get('*', global.CoreCache.disableCache);
+	authRouter.post('*', global.CoreCache.disableCache);
+	userRouter.get('*', global.CoreCache.disableCache);
+	userRouter.post('*', global.CoreCache.disableCache);
+
 	authRouter.get('/login', userController.login);
 	authRouter.post('/login', authController.login);
 	authRouter.get('/logout', authController.logout);

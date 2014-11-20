@@ -324,6 +324,8 @@ var controller = function (resources) {
 		usePassport();
 	}
 	else{
+
+
 		fs.readJson(loginExtSettingsFile, function (err, settingJSON) {
 			if (err) {
 				usePassport();
@@ -345,6 +347,8 @@ var controller = function (resources) {
 					throw configError;
 				}
 			}
+
+
 		});
 	}
 
