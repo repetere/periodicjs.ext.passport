@@ -9,7 +9,7 @@ var passport = require('passport'),
 	ControllerHelper = require('periodicjs.core.controller'),
 	Extensions = require('periodicjs.core.extensions'),
 	CoreExtension = new Extensions({
-		extensionFilePath: path.resolve(process.cwd(), './content/extensions/extensions.json')
+		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
 	}),
 	authLoginPath='/auth/login/',
 	authLogoutPath='/',
