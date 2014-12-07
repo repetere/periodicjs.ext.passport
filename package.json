@@ -20,17 +20,20 @@
     "postuninstall": "node uninstall.js"
   },
   "dependencies": {
-    "fs-extra": "0.12.0",
     "ejs": "1.0.0",
+    "fs-extra": "0.12.0",
+    "install": "^0.1.8",
+    "npm": "^2.1.11",
     "passport": "0.2.1",
-    "passport-local": "1.0.0",
     "passport-facebook": "1.0.3",
-    "passport-twitter": "1.0.2",
     "passport-google": "0.3.0",
+    "passport-instagram": "^0.1.2",
+    "passport-local": "1.0.0",
+    "passport-twitter": "^1.0.2",
     "periodicjs.core.controller": "~3.1.1",
     "periodicjs.core.extensions": "~3.1.1",
-    "periodicjs.core.utilities": "~3.1.1",
-    "periodicjs.core.mailer": "~3.1.1"
+    "periodicjs.core.mailer": "~3.1.1",
+    "periodicjs.core.utilities": "~3.1.1"
   },
   "devDependencies": {
     "browserify": "~6.3.2",
@@ -54,7 +57,13 @@
     "uglifyify": "^2.5.0"
   },
   "keywords": [
-    "periodicjs","passport","authentication","express","cms","wordpress","drupal"
+    "periodicjs",
+    "passport",
+    "authentication",
+    "express",
+    "cms",
+    "wordpress",
+    "drupal"
   ],
   "bugs": {
     "url": "https://github.com/typesettin/periodicjs.ext.login/issues"

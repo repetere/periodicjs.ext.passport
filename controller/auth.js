@@ -3,7 +3,8 @@
 var passport = require('passport'),
 	path = require('path'),
 	LocalStrategy = require('passport-local').Strategy,
-	FacebookStrategy = require('passport-facebook').Strategy,
+	FacebookStrategy = require('passport-facebook').Strategy, 
+	InstagramStrategy = require('passport-instagram').Strategy,
 	fs = require('fs-extra'),
 	Utilities = require('periodicjs.core.utilities'),
 	ControllerHelper = require('periodicjs.core.controller'),
@@ -128,6 +129,38 @@ var facebookcallback = function (req, res, next) {
 		failureFlash: 'Invalid facebook authentication credentials username or password.'
 	})(req, res, next);
 };
+/**
+ * logs user in via instagram oauth2 
+ * @param  {object} req 
+ * @param  {object} res 
+ * @return {Function} next() callback
+ */
+var instagram = function (req, res, next) {
+	if(configError){
+		next(configError);
+	}
+	else{
+		passport.authenticate('instagram', {
+			scope: loginExtSettings.passport.oauth.instagram.scope
+		})(req, res, next);	
+	}
+};
+
+/**
+ * instagram oauth callback
+ * @param  {object} req 
+ * @param  {object} res 
+ * @return {Function} next() callback
+ */
+var instagramcallback = function (req, res, next) {
+	var loginUrl = (req.session.return_url) ? req.session.return_url : authLoggedInHomepage;
+	var loginFailureUrl = (req.session.return_url) ? req.session.return_url : authLoginPath+'?return_url=' + req.session.return_url;
+	passport.authenticate('instagram', {
+		successRedirect: loginUrl,
+		failureRedirect: loginFailureUrl,
+		failureFlash: 'Invalid instagram authentication credentials username or password.'
+	})(req, res, next);
+};
 
 /**
  * make sure a user is authenticated, if not logged in, send them to login page and return them to original resource after login
@@ -238,10 +271,12 @@ var usePassport = function () {
 			// var newUser = new User;
 			var facebookdata = profile._json;
 			User.findOne({
-				facebookid: facebookdata.id,
 				email: facebookdata.email,
-				facebookaccesstoken: accessToken
+				'attributes.facebookid':facebookdata.id,
+				'attributes.facebookaccesstoken':accessToken.toString()
 			}, function (err, user) {
+
+				console.log('user from passport',user);
 				if (err) {
 					return done(err, null);
 				}
@@ -250,7 +285,8 @@ var usePassport = function () {
 				}
 				else {
 					User.findOne({
-							email: facebookdata.email
+							email: facebookdata.email,
+							'attributes.facebookid':facebookdata.id,
 						},
 						function (err, existingUser) {
 							if (err) {
@@ -258,23 +294,92 @@ var usePassport = function () {
 							}
 							else if (existingUser) {
 								logger.info('model - user.js - already has an account, trying to connect account');
-								existingUser.facebookid = facebookdata.id;
-								existingUser.facebookaccesstoken = accessToken;
-								existingUser.facebookusername = facebookdata.username;
-
+								existingUser.attributes = {
+									facebookid : facebookdata.id,
+									facebookaccesstoken : accessToken,
+									facebookusername : facebookdata.username,
+									facebookaccesstokenupdated: new Date()
+								}
 								existingUser.save(done);
 							}
 							else {
 								logger.info('model - user.js - creating new facebook user');
 								User.create({
 									email: facebookdata.email,
-									facebookid: facebookdata.id,
-									facebookaccesstoken: accessToken,
-									facebookusername: facebookdata.username,
+									attributes:{
+										facebookid: facebookdata.id,
+										facebookaccesstoken: accessToken,
+										// facebookusername: facebookdata.username,
+									},
 									activated: true,
 									accounttype: 'regular',
 									firstname: facebookdata.first_name,
 									lastname: facebookdata.last_name
+								}, done);
+							}
+						});
+				}
+			});
+		}));
+	}
+
+	if(loginExtSettings && loginExtSettings.passport && loginExtSettings.passport.oauth.instagram.clientid){
+		passport.use(new InstagramStrategy({
+			clientID: loginExtSettings.passport.oauth.instagram.clientid,
+			clientSecret: loginExtSettings.passport.oauth.instagram.clientsecret,
+			callbackURL: loginExtSettings.passport.oauth.instagram.callbackurl
+		},
+		function (accessToken, refreshToken, profile, done) {
+			console.log('accessToken:' +accessToken);
+			console.log('refreshToken:' +refreshToken);
+			console.log('profile:',profile);
+			// var newUser = new User;
+			var instagramdata = profile;
+			User.findOne({
+				// email: instagramdata.email,
+				'attributes.instagramid':instagramdata.id,
+				'attributes.instagramaccesstoken':accessToken.toString()
+			}, function (err, user) {
+
+				console.log('user from passport',user);
+				if (err) {
+					return done(err, null);
+				}
+				else if (user) {
+					return done(null, user);
+				}
+				else {
+					User.findOne({
+							// email: instagramdata.email,
+							'attributes.instagramid':instagramdata.id,
+						},
+						function (err, existingUser) {
+							if (err) {
+								return done(err);
+							}
+							else if (existingUser) {
+								logger.info('model - user.js - already has an account, trying to connect account');
+								existingUser.attributes = {
+									instagramid : instagramdata.id,
+									instagramaccesstoken : accessToken,
+									instagramusername : instagramdata.username,
+									instagramaccesstokenupdated: new Date()
+								}
+								existingUser.save(done);
+							}
+							else {
+								logger.info('model - user.js - creating new instagram user');
+								User.create({
+									email: instagramdata.email,
+									attributes:{
+										instagramid: instagramdata.id,
+										instagramaccesstoken: accessToken,
+										// instagramusername: instagramdata.username,
+									},
+									activated: true,
+									accounttype: 'regular',
+									firstname: instagramdata.first_name,
+									lastname: instagramdata.last_name
 								}, done);
 							}
 						});
@@ -359,6 +464,8 @@ var controller = function (resources) {
 		logout: logout,
 		facebook: facebook,
 		facebookcallback: facebookcallback,
+		instagram: instagram,
+		instagramcallback: instagramcallback,
 		ensureAuthenticated: ensureAuthenticated
 	};
 };

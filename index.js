@@ -29,6 +29,8 @@ module.exports = function (periodic) {
 	authRouter.get('/logout', authController.logout);
 	authRouter.get('/facebook', authController.facebook);
 	authRouter.get('/facebook/callback', authController.facebookcallback);
+	authRouter.get('/instagram', authController.instagram);
+	authRouter.get('/instagram/callback', authController.instagramcallback);
 
 	userRouter.get('/new|/register', userController.newuser);
 	userRouter.get('/finishregistration', userController.finishregistration);
