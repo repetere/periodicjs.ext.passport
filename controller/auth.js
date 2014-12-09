@@ -208,6 +208,28 @@ var ensureAuthenticated = function (req, res, next) {
 	}
 };
 
+var authenticateUser = function(options) {
+	var username = options.username,
+		donecallback = options.done,
+		nonusercallback = options.nonusercallback,
+		existinusercallback = options.existinusercallback,
+		exitinguserquery = options.exitinguserquery;
+	User.findOne(exitinguserquery,function(err,user){
+		if(err){
+			logger.silly('login error');
+			donecallback(err);
+		}
+		else if(!user){
+			logger.silly('login no user');
+			nonusercallback();
+		}
+		else{
+			logger.silly('login found exiting user');
+			existinusercallback(user);
+		}
+	});
+};
+
 /**
  * uses passport to log users in, calls done(err,user) when complete, can define what credentials to check here
  * @param  {object} req 
@@ -216,45 +238,47 @@ var ensureAuthenticated = function (req, res, next) {
  */
 var usePassport = function () {
 	passport.use(new LocalStrategy(function (username, password, done) {
-		User.findOne({
-			$or: [{
-				username: {
-					$regex: new RegExp(username, 'i')
-				}
-			}, {
-				email: {
-					$regex: new RegExp(username, 'i')
-				}
-			}]
-		}, function (err, user) {
-			if (err) {
-				return done(err);
-			}
-			if (!user) {
-				return done(null, false, {
+		authenticateUser({
+			exitinguserquery: {
+				$or: [{
+					username: {
+						$regex: new RegExp(username, 'i')
+					}
+				}, {
+					email: {
+						$regex: new RegExp(username, 'i')
+					}
+				}]
+			},
+			nonusercallback: function(){
+				done(null, false, {
 					message: 'Unknown user ' + username
 				});
-			}
-			if(loginExtSettings && loginExtSettings.settings.usepassword===false){
-				return done(null, user);
-			}
-			else{
-				user.comparePassword(password, function (err, isMatch) {
-					if (err) {
-						return done(err);
-					}
+			},
+			existinusercallback: function(user){
+				if(loginExtSettings && loginExtSettings.settings.usepassword===false){
+					logger.verbose(' skip password usage ');
+					done(null, user);
+				}
+				else{
+					user.comparePassword(password, function (err, isMatch) {
+						if (err) {
+							return done(err);
+						}
 
-					if (isMatch) {
-						return done(null, user);
-					}
-					else {
-						logger.verbose(' in passport callback when no password');
-						return done(null, false, {
-							message: 'Invalid password'
-						});
-					}
-				});
-			}
+						if (isMatch) {
+							return done(null, user);
+						}
+						else {
+							logger.verbose(' in passport callback when no password');
+							return done(null, false, {
+								message: 'Invalid password'
+							});
+						}
+					});
+				}
+			},
+			donecallback: done
 		});
 	}));
 
@@ -264,62 +288,60 @@ var usePassport = function () {
 			clientSecret: loginExtSettings.passport.oauth.facebook.appsecret,
 			callbackURL: loginExtSettings.passport.oauth.facebook.callbackurl
 		},
-		function (accessToken, refreshToken, profile, done) {
-			// console.log('accessToken:' +accessToken);
-			// console.log('refreshToken:' +refreshToken);
-			// console.log('profile:',profile);
-			// var newUser = new User;
+		function (accessToken, refreshToken, profile, done) {		
 			var facebookdata = profile._json;
-			User.findOne({
-				email: facebookdata.email,
-				'attributes.facebookid':facebookdata.id,
-				'attributes.facebookaccesstoken':accessToken.toString()
-			}, function (err, user) {
 
-				console.log('user from passport',user);
-				if (err) {
-					return done(err, null);
-				}
-				else if (user) {
-					return done(null, user);
-				}
-				else {
-					User.findOne({
-							email: facebookdata.email,
-							'attributes.facebookid':facebookdata.id,
-						},
-						function (err, existingUser) {
-							if (err) {
-								return done(err);
-							}
-							else if (existingUser) {
-								logger.info('model - user.js - already has an account, trying to connect account');
-								existingUser.attributes = {
-									facebookid : facebookdata.id,
-									facebookaccesstoken : accessToken,
-									facebookusername : facebookdata.username,
-									facebookaccesstokenupdated: new Date()
+			authenticateUser({
+					exitinguserquery: {
+						email: facebookdata.email,
+						'attributes.facebookid':facebookdata.id,
+						'attributes.facebookaccesstoken':accessToken.toString()
+					},
+					existinusercallback: function(user){
+						return done(null, user);
+					},
+					nonusercallback: function(){
+						User.findOne({
+								$or: [{
+									email: facebookdata.email
+								}, {
+									'attributes.facebookid':facebookdata.id
+								}]
+							},
+							function (err, existingUser) {
+								if (err) {
+									return done(err);
 								}
-								existingUser.save(done);
-							}
-							else {
-								logger.info('model - user.js - creating new facebook user');
-								User.create({
-									email: facebookdata.email,
-									attributes:{
-										facebookid: facebookdata.id,
-										facebookaccesstoken: accessToken,
-										// facebookusername: facebookdata.username,
-									},
-									activated: true,
-									accounttype: 'regular',
-									firstname: facebookdata.first_name,
-									lastname: facebookdata.last_name
-								}, done);
-							}
-						});
+								else if (existingUser) {
+									logger.info('model - user.js - already has an account, trying to connect account');
+									existingUser.attributes = {
+										facebookid : facebookdata.id,
+										facebookaccesstoken : accessToken,
+										facebookusername : facebookdata.username,
+										facebookaccesstokenupdated: new Date()
+									}
+									existingUser.save(done);
+								}
+								else {
+									logger.info('model - user.js - creating new facebook user');
+									User.create({
+										email: facebookdata.email,
+										attributes:{
+											facebookid: facebookdata.id,
+											facebookaccesstoken: accessToken,
+											// facebookusername: facebookdata.username,
+										},
+										activated: true,
+										accounttype: 'regular',
+										firstname: facebookdata.first_name,
+										lastname: facebookdata.last_name
+									}, done);
+								}
+							});
+					},
+					donecallback: done
 				}
-			});
+			);
 		}));
 	}
 
