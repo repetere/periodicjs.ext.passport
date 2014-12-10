@@ -16,8 +16,8 @@ var path = require('path'),
 
 /**
  * user login page
- * @param  {object} req 
- * @param  {object} res 
+ * @param  {object} req
+ * @param  {object} res
  * @return {object} reponds with an error page or requested view
  */
 var login = function (req, res) {
@@ -44,8 +44,8 @@ var login = function (req, res) {
 
 /**
  * user registration form
- * @param  {object} req 
- * @param  {object} res 
+ * @param  {object} req
+ * @param  {object} res
  * @return {object} reponds with an error page or requested view
  */
 var newuser = function (req, res) {
@@ -72,8 +72,8 @@ var newuser = function (req, res) {
 
 /**
  * create a new user account
- * @param  {object} req 
- * @param  {object} res 
+ * @param  {object} req
+ * @param  {object} res
  * @return {object} reponds with an error page or requested view
  */
 var create = function (req, res) {
@@ -89,8 +89,8 @@ var create = function (req, res) {
 
 /**
  * complete registration form view
- * @param  {object} req 
- * @param  {object} res 
+ * @param  {object} req
+ * @param  {object} res
  * @return {object} reponds with an error page or requested view
  */
 var finishregistration = function (req, res) {
@@ -117,8 +117,8 @@ var finishregistration = function (req, res) {
 
 /**
  * if username required, updates user username after account is created
- * @param  {object} req 
- * @param  {object} res 
+ * @param  {object} req
+ * @param  {object} res
  * @return {object} reponds with an error page or requested view
  */
 var updateuserregistration = function (req, res) {

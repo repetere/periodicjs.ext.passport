@@ -13,6 +13,10 @@
 * [rememberme(req, res)](#rememberme)
 * [facebook(req, res)](#facebook)
 * [facebookcallback(req, res)](#facebookcallback)
+* [instagram(req, res)](#instagram)
+* [instagramcallback(req, res)](#instagramcallback)
+* [twitter(req, res)](#twitter)
+* [twittercallback(req, res)](#twittercallback)
 * [ensureAuthenticated(req, res)](#ensureAuthenticated)
 * [usePassport(req, res)](#usePassport)
 * [login(req, res)](#login)
@@ -99,6 +103,46 @@ logs user in via facebook oauth2
 <a name="facebookcallback"></a>
 #facebookcallback(req, res)
 facebook oauth callback
+
+**Params**
+
+- req `object`  
+- res `object`  
+
+**Returns**: `function` - next() callback  
+<a name="instagram"></a>
+#instagram(req, res)
+logs user in via instagram oauth2
+
+**Params**
+
+- req `object`  
+- res `object`  
+
+**Returns**: `function` - next() callback  
+<a name="instagramcallback"></a>
+#instagramcallback(req, res)
+instagram oauth callback
+
+**Params**
+
+- req `object`  
+- res `object`  
+
+**Returns**: `function` - next() callback  
+<a name="twitter"></a>
+#twitter(req, res)
+logs user in via twitter oauth2
+
+**Params**
+
+- req `object`  
+- res `object`  
+
+**Returns**: `function` - next() callback  
+<a name="twittercallback"></a>
+#twittercallback(req, res)
+twitter oauth callback
 
 **Params**
 

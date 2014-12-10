@@ -31,6 +31,8 @@ module.exports = function (periodic) {
 	authRouter.get('/facebook/callback', authController.facebookcallback);
 	authRouter.get('/instagram', authController.instagram);
 	authRouter.get('/instagram/callback', authController.instagramcallback);
+	authRouter.get('/twitter', authController.twitter);
+	authRouter.get('/twitter/callback', authController.twittercallback);
 
 	userRouter.get('/new|/register', userController.newuser);
 	userRouter.get('/finishregistration', userController.finishregistration);
