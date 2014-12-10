@@ -42,5 +42,5 @@ module.exports = function (periodic) {
 	periodic.app.use(passport.initialize());
 	periodic.app.use(passport.session());
 	periodic.app.use('/auth', authRouter);
-	periodic.app.use('/user', userRouter);
+	periodic.app.use('/auth/user', userRouter);
 };

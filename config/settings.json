@@ -5,7 +5,9 @@
 			"authLogoutPath":"/",
 			"authLoggedInHomepage":"/p-admin",
 			"usepassword":true,
-			"requireusername":true
+			"requireusername":true,
+			"requireemail":true,
+			"disablesocialsignin":true
 		},
 		"passport":{
 			"oauth":{

@@ -15,6 +15,7 @@ var passport = require('passport'),
 	authLoginPath='/auth/login/',
 	authLogoutPath='/',
 	authLoggedInHomepage='/p-admin',
+	merge = require('utils-merge'),
 	CoreUtilities,
 	CoreController,
 	appSettings,
@@ -174,12 +175,45 @@ var ensureAuthenticated = function (req, res, next) {
 	}
 	else{
 		if (req.isAuthenticated()) {
+			if(req.session.linkaccount ===true){
+				var updateuser = {};
+				updateuser.attributes = merge(req.user.attributes,req.session.linkaccountdata);
+				CoreController.updateModel({
+					cached: req.headers.periodicCache !== 'no-periodic-cache',
+					model: User,
+					id: req.user._id,
+					updatedoc: updateuser,
+					// saverevision: true,
+					// population: 'contenttypes',
+					res: res,
+					req: req,
+					callback:function(err,updateduser){
+						if(err){
+							next(err);
+						}
+						else{
+							logger.verbose('linked ',req.session.linkaccountservice,' instagram account for ',req.user.id,req.user.email,req.user.username);
+							req.session.linkaccount = false;
+							delete req.session.linkaccount;
+							delete req.session.linkaccountdata;
+							delete req.session.linkaccountservice;
+							next();
+						}
+					}
+				});
 
-			if(loginExtSettings && loginExtSettings.settings.requireusername===false){
-				return next();
+				// next(new Error('cannot link '+req.session.linkaccountservice+' account'));
+				// res.redirect('/user/linkaccount?service='+req.session.linkaccountservice);
 			}
-			else if (!req.user.username) {
-				res.redirect('/user/finishregistration');
+			else if(loginExtSettings && loginExtSettings.settings.disablesocialsignin===true && req.user.accounttype==='social-sign-in'){
+				res.redirect('/auth/user/finishregistration?reason=social-sign-in-pending');
+			}
+			else if(loginExtSettings && loginExtSettings.settings.requireusername!==false && !req.user.username){
+				res.redirect('/auth/user/finishregistration?required=username');
+				// return next();
+			}
+			else if(loginExtSettings && loginExtSettings.settings.requireemail!==false && !req.user.email){
+				res.redirect('/auth/user/finishregistration?required=email');
 			}
 			else {
 				return next();
@@ -349,29 +383,28 @@ var usePassport = function () {
 		passport.use(new InstagramStrategy({
 			clientID: loginExtSettings.passport.oauth.instagram.clientid,
 			clientSecret: loginExtSettings.passport.oauth.instagram.clientsecret,
-			callbackURL: loginExtSettings.passport.oauth.instagram.callbackurl
+			callbackURL: loginExtSettings.passport.oauth.instagram.callbackurl,
+			passReqToCallback: true,
 		},
-		function (accessToken, refreshToken, profile, done) {
-			console.log('accessToken:' +accessToken);
-			console.log('refreshToken:' +refreshToken);
-			console.log('profile:',profile);
-			// var newUser = new User;
-			var instagramdata = profile;
-			User.findOne({
-				// email: instagramdata.email,
-				'attributes.instagramid':instagramdata.id,
-				'attributes.instagramaccesstoken':accessToken.toString()
-			}, function (err, user) {
+		function (req, accessToken, refreshToken, profile, done) {
+			// console.log('instagram req:',req);
+			// console.log('instagram accessToken:',accessToken);
+			// console.log('instagram refreshToken:',refreshToken);
+			// console.log('instagram profile:',profile);
 
-				console.log('user from passport',user);
-				if (err) {
-					return done(err, null);
-				}
-				else if (user) {
-					return done(null, user);
-				}
-				else {
-					User.findOne({
+			var instagramdata = profile;
+			authenticateUser({
+					exitinguserquery: {
+						// email: instagramdata.email,
+						'attributes.instagramid':instagramdata.id,
+						'attributes.instagramaccesstoken':accessToken.toString()
+					},
+					existinusercallback: function(user){
+						console.log('user from instagram passport',user);
+						return done(null, user);
+					},
+					nonusercallback: function(){
+						User.findOne({
 							// email: instagramdata.email,
 							'attributes.instagramid':instagramdata.id,
 						},
@@ -389,25 +422,38 @@ var usePassport = function () {
 								}
 								existingUser.save(done);
 							}
+							else if(req.user){
+								req.session.linkaccount=true;
+								req.session.linkaccountservice='instagram';
+								req.session.linkaccountdata = {
+									instagramusername : instagramdata.username,
+									instagramid: instagramdata.id,
+									instagramaccesstoken: accessToken,
+								};
+								done(null,req.user)
+							}
 							else {
 								logger.info('model - user.js - creating new instagram user');
-								User.create({
-									email: instagramdata.email,
-									attributes:{
-										instagramid: instagramdata.id,
-										instagramaccesstoken: accessToken,
-										// instagramusername: instagramdata.username,
-									},
-									activated: true,
-									accounttype: 'regular',
-									firstname: instagramdata.first_name,
-									lastname: instagramdata.last_name
-								}, done);
+									User.create({
+										email: instagramdata.username+'@instagram.account.com',
+										attributes:{
+											instagramid: instagramdata.id,
+											instagramaccesstoken: accessToken,
+											instagramusername: instagramdata.username,
+										},
+										activated: true,
+										accounttype: 'social-sign-in',
+										firstname: instagramdata.first_name,
+										lastname: instagramdata.last_name
+									}, done);
 							}
 						});
+					},
+					donecallback: done
 				}
-			});
+			);
 		}));
+
 	}
 };
 
@@ -517,7 +563,6 @@ passport.deserializeUser(function (token, done) {
 	})
 	.populate('userroles primaryasset')
 	.exec(function (err, user) {
-		// console.log(user)
 		done(err, user);
 	});
 });
