@@ -380,7 +380,7 @@ var usePassport = function () {
 		});
 	}));
 
-	if (loginExtSettings && loginExtSettings.passport && loginExtSettings.passport.oauth.facebook.appid) {
+	if (loginExtSettings && loginExtSettings.passport && loginExtSettings.passport.oauth.facebook && loginExtSettings.passport.oauth.facebook.appid) {
 		passport.use(new FacebookStrategy({
 				clientID: loginExtSettings.passport.oauth.facebook.appid,
 				clientSecret: loginExtSettings.passport.oauth.facebook.appsecret,
@@ -428,7 +428,7 @@ var usePassport = function () {
 			}));
 	}
 
-	if (loginExtSettings && loginExtSettings.passport && loginExtSettings.passport.oauth.instagram.clientid) {
+	if (loginExtSettings && loginExtSettings.passport && loginExtSettings.passport.oauth.instagram && loginExtSettings.passport.oauth.instagram.clientid) {
 		passport.use(new InstagramStrategy({
 				clientID: loginExtSettings.passport.oauth.instagram.clientid,
 				clientSecret: loginExtSettings.passport.oauth.instagram.clientsecret,
@@ -479,7 +479,7 @@ var usePassport = function () {
 
 	}
 
-	if (loginExtSettings && loginExtSettings.passport && loginExtSettings.passport.oauth.twitter.consumerKey) {
+	if (loginExtSettings && loginExtSettings.passport && loginExtSettings.passport.oauth.twitter && loginExtSettings.passport.oauth.twitter.consumerKey) {
 		passport.use(new TwitterStrategy({
 				consumerKey: loginExtSettings.passport.oauth.twitter.consumerKey,
 				consumerSecret: loginExtSettings.passport.oauth.twitter.consumerSecret,
@@ -572,8 +572,6 @@ var controller = function (resources) {
 		usePassport();
 	}
 	else {
-
-
 		fs.readJson(loginExtSettingsFile, function (err, settingJSON) {
 			if (err) {
 				usePassport();
@@ -595,8 +593,6 @@ var controller = function (resources) {
 					throw configError;
 				}
 			}
-
-
 		});
 	}
 
