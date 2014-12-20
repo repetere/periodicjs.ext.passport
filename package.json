@@ -1,7 +1,7 @@
 {
   "name": "periodicjs.ext.login",
   "description": "An authentication extension for periodicjs that uses passport to authenticate user sessions.",
-  "version": "3.2.1",
+  "version": "4.0.0",
   "main": "index.js",
   "engines": {
     "node": ">=0.10.x"
@@ -31,7 +31,7 @@
     "passport-local": "1.0.0",
     "passport-twitter": "^1.0.2",
     "periodicjs.core.controller": "~3.1.1",
-    "periodicjs.core.extensions": "~3.1.1",
+    "periodicjs.core.extensions": "~4.0.0",
     "periodicjs.core.mailer": "~3.1.1",
     "periodicjs.core.utilities": "~3.1.1"
   },

@@ -14,10 +14,15 @@ var passport = require('passport');
  */
 module.exports = function (periodic) {
 	// express,app,logger,config,db,mongoose
+	periodic.app.controller.extension.login = {
+		auth: require('./controller/auth')(periodic),
+		user: require('./controller/user')(periodic)
+	};
+
 	var authRouter = periodic.express.Router(),
-		authController = require('./controller/auth')(periodic),
+		authController = periodic.app.controller.extension.login.auth,
 		userRouter = periodic.express.Router(),
-		userController = require('./controller/user')(periodic);
+		userController = periodic.app.controller.extension.login.user;
 
 	authRouter.get('*', global.CoreCache.disableCache);
 	authRouter.post('*', global.CoreCache.disableCache);
@@ -45,4 +50,5 @@ module.exports = function (periodic) {
 	periodic.app.use(passport.session());
 	periodic.app.use('/auth', authRouter);
 	periodic.app.use('/auth/user', userRouter);
+	return	periodic;
 };
