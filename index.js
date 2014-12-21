@@ -29,15 +29,20 @@ module.exports = function (periodic) {
 	userRouter.get('*', global.CoreCache.disableCache);
 	userRouter.post('*', global.CoreCache.disableCache);
 
-	authRouter.get('/login', userController.login);
-	authRouter.post('/login', authController.login);
-	authRouter.get('/logout', authController.logout);
-	authRouter.get('/facebook', authController.facebook);
-	authRouter.get('/facebook/callback', authController.facebookcallback);
-	authRouter.get('/instagram', authController.instagram);
-	authRouter.get('/instagram/callback', authController.instagramcallback);
-	authRouter.get('/twitter', authController.twitter);
-	authRouter.get('/twitter/callback', authController.twittercallback);
+	authRouter.get('/login'              , userController.login);
+	authRouter.post('/login'             , authController.login);
+  authRouter.get('/logout'             , authController.logout);
+  authRouter.get('/forgot'             , userController.forgot)
+  authRouter.post('/forgot'            , authController.forgot);
+  authRouter.get('/reset'              , authController.reset);
+	authRouter.get('/reset/:token'       , authController.token);
+  authRouter.post('/reset/:token'      , authController.change);
+	authRouter.get('/facebook'           , authController.facebook);
+	authRouter.get('/facebook/callback'  , authController.facebookcallback);
+	authRouter.get('/instagram'          , authController.instagram);
+	authRouter.get('/instagram/callback' , authController.instagramcallback);
+	authRouter.get('/twitter'            , authController.twitter);
+	authRouter.get('/twitter/callback'   , authController.twittercallback);
 
 	userRouter.get('/new|/register', userController.newuser);
 	userRouter.get('/finishregistration', userController.finishregistration);
