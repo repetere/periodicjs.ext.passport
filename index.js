@@ -32,7 +32,7 @@ module.exports = function (periodic) {
 	authRouter.get('/login'              , userController.login);
 	authRouter.post('/login'             , authController.login);
   authRouter.get('/logout'             , authController.logout);
-  authRouter.get('/forgot'             , userController.forgot)
+  authRouter.get('/forgot'             , userController.forgot);
   authRouter.post('/forgot'            , authController.forgot);
   authRouter.get('/reset'              , authController.reset);
 	authRouter.get('/reset/:token'       , authController.token);

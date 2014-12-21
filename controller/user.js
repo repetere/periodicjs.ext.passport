@@ -218,7 +218,7 @@ CoreController.getPluginViewDefaultTemplate({
   }
 );
 
-}
+};
 
 /**
  * login controller
