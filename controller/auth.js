@@ -99,6 +99,22 @@ var rememberme = function (req, res, next) {
 	next();
 };
 
+
+var forgot = function(req,res,next) {
+  
+}
+
+var reset = function(req,res,next) {
+  
+}
+
+var token = function(req,res,next) {
+  
+}
+
+var change = function(req,res,next) {
+  
+}
 /**
  * logs user in via facebook oauth2
  * @param  {object} req
