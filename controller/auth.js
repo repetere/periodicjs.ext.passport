@@ -3,6 +3,7 @@
 var passport        = require('passport'),
 	path              = require('path'),
   jwt               = require('jsonwebtoken'),
+  async             = require('async'),
 	LocalStrategy     = require('passport-local').Strategy,
 	FacebookStrategy  = require('passport-facebook').Strategy,
 	InstagramStrategy = require('passport-instagram').Strategy,
@@ -11,7 +12,7 @@ var passport        = require('passport'),
 	Utilities         = require('periodicjs.core.utilities'),
 	ControllerHelper  = require('periodicjs.core.controller'),
 	Extensions        = require('periodicjs.core.extensions'),
-  tokenConfig       = require(path.resolve(process.cwd(),'config/token'))
+  tokenConfig       = require(path.resolve(process.cwd(),'config/token')),
 	CoreExtension     = new Extensions({
 		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
 	}),
@@ -102,13 +103,13 @@ var rememberme = function (req, res, next) {
 };
 
 var waterfall = function(array,cb) {
-  async.waterfall(array,cb)
-}
+  async.waterfall(array,cb);
+};
 var invalidateUserToken = function(user, cb) {
     User.findOne({email: user.email}, function(err, usr) {
         if(err || !usr) {
             console.log('error finding the user for invalidate token fn');
-            cb(err,null)
+            cb(err,null);
         }
         usr.token = null;
         usr.save(function(err, usr) {
@@ -123,11 +124,11 @@ var invalidateUserToken = function(user, cb) {
 
 var encode = function(data) {
   return jwt.sign(data, tokenConfig.secret,{ algorithm: 'HS256'});
-}
+};
 
 var decode = function(data) {
-  return jwt.verify(data, tokenConfig.secret)
-}
+  return jwt.verify(data, tokenConfig.secret);
+};
 
 var hasExpired = function(created) {
   var now = new Date();
@@ -137,13 +138,13 @@ var hasExpired = function(created) {
 
 var generateToken = function(user,cb) {
   //Generate reset token and URL link; also, create expiry for reset token
-  user.reset_token = encode(user)
+  user.reset_token = encode(user);
   var now = new Date();
-  var expires = new Date(now.getTime() + (config.resetTokenExpiresMinutes * 60 * 1000)).getTime();
+  var expires = new Date(now.getTime() + (tokenConfig.resetTokenExpiresMinutes * 60 * 1000)).getTime();
   user.reset_token_expires_millis = expires;
   user.save();
-  cb(null,user)
-}
+  cb(null,user);
+};
 
 var getUser = function(cb) {
     User.findOne(req.body.email, function(err, user) {
@@ -152,24 +153,29 @@ var getUser = function(cb) {
         } else if (user) {
             cb(false, user);
         } else {
-            //TODO: This is not really robust and we should probably return an error code or something here
+            //TODO: This is not really robust and we 
+            //should probably return an error code or something here
             cb(new Error('No user with that email found.'), null);
         }
     });
-}
+};
+
+var sendEmail = function(user,cb) {
+  
+};
 
 
 //Post to auth/forgot with the users email
 var forgot = function(req,res,next) {
- var arr = [ getUser,generateToken,sendEmail ]
+ var arr = [ getUser,generateToken,sendEmail ];
  waterfall(arr, function(err,results) {
    if (err){ 
      return next(err);
      res.redirect('/forgot');
    }
    res.send(results);
-   next()
- }) 
+   next();
+ }); 
 };
 
 //GET if the user token is vaild show the change password page

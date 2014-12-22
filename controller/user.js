@@ -276,6 +276,7 @@ var controller = function (resources) {
 	return {
 		login: login,
 		newuser: newuser,
+    forgot: forgot,
 		create: create,
 		finishregistration: finishregistration,
 		updateuserregistration: updateuserregistration
