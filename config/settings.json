@@ -19,5 +19,10 @@
 				}
 			}
 		}
-	}
+	},
+  "token":{
+    "ttl":"3600000",
+    "resetTokenExpiresMinutes": "60",
+    "secret": "periodicjs"
+  }
 }

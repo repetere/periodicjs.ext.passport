@@ -12,7 +12,8 @@ var passport        = require('passport'),
 	Utilities         = require('periodicjs.core.utilities'),
 	ControllerHelper  = require('periodicjs.core.controller'),
 	Extensions        = require('periodicjs.core.extensions'),
-  tokenConfig       = require(path.resolve(process.cwd(),'config/token')),
+  CoreMailer = require('periodicjs.core.mailer'),
+  tokenConfig       = require('../config/token'),
 	CoreExtension     = new Extensions({
 		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
 	}),
@@ -22,12 +23,14 @@ var passport        = require('passport'),
 	merge                = require('utils-merge'),
 	CoreUtilities,
 	CoreController,
+  emailtransport,
 	appSettings,
 	mongoose,
 	User,
 	logger,
 	configError,
 	loginExtSettingsFile,
+  changedemailtemplate,
 	loginExtSettings;
 
 /**
@@ -105,6 +108,7 @@ var rememberme = function (req, res, next) {
 var waterfall = function(array,cb) {
   async.waterfall(array,cb);
 };
+
 var invalidateUserToken = function(user, cb) {
     User.findOne({email: user.email}, function(err, usr) {
         if(err || !usr) {
@@ -136,17 +140,7 @@ var hasExpired = function(created) {
   return diff > tokenConfig.ttl;
 };
 
-var generateToken = function(user,cb) {
-  //Generate reset token and URL link; also, create expiry for reset token
-  user.reset_token = encode(user);
-  var now = new Date();
-  var expires = new Date(now.getTime() + (tokenConfig.resetTokenExpiresMinutes * 60 * 1000)).getTime();
-  user.reset_token_expires_millis = expires;
-  user.save();
-  cb(null,user);
-};
-
-var getUser = function(cb) {
+var getUser = function(req,res,next,cb) {
     User.findOne(req.body.email, function(err, user) {
         if (err) {
             cb(err, null);
@@ -160,15 +154,44 @@ var getUser = function(cb) {
     });
 };
 
-var sendEmail = function(user,cb) {
-  
+var generateToken = function(user,cb) {
+  console.log(user);
+  //Generate reset token and URL link; also, create expiry for reset token
+  user.attributes.reset_token = encode(user);
+  var now = new Date();
+  var expires = new Date(now.getTime() + (tokenConfig.resetTokenExpiresMinutes * 60 * 1000)).getTime();
+  user.attributes.reset_token_expires_millis = expires;
+  user.save();
+  cb(null,user);
+};
+
+
+var sendEmail = function(options,cb) {
+ //require mailer 
+ var mailtransport = options.mailtransport,
+ user = options.user,
+        mailoptions = {};
+
+        mailoptions.to = (options.to) ? options.to : 'ecasilla@icloud.com'
+        mailoptions.cc = options.cc; //options.ccc;
+        mailoptions.bcc = options.bcc;
+        mailoptions.replyTo = options.replyTo;
+        mailoptions.subject = options.subject;
+        if (options.generatetextemail) {
+        mailoptions.generateTextFromHTML = true;
+        }
+        mailoptions.html        = options.html;
+        mailoptions.text = options.text;
+        mailtransport.sendMail(mailoptions, cb);
 };
 
 
 //Post to auth/forgot with the users email
 var forgot = function(req,res,next) {
- var arr = [ getUser,generateToken,sendEmail ];
- waterfall(arr, function(err,results) {
+ var arr = [ function(cb){cb(null,req,res,next)},getUser,generateToken];
+ waterfall(arr, 
+ 
+ function(err,results) {
    if (err){ 
      return next(err);
      res.redirect('/forgot');
@@ -180,17 +203,25 @@ var forgot = function(req,res,next) {
 
 //GET if the user token is vaild show the change password page
 var reset = function(req,res,next) {
-  
+  //user.attributes
+  User.findOne({reset_token: req.params.token},function(err,user) {
+   if (err || !user) {
+    req.flash('error', 'Password reset token is invalid or has expired.');
+    return res.redirect('/forgot');
+   }
+   res.render('reset', {
+     user: req.user
+   });
+  });
 };
 //POST change the users old password to the new password in the form
 var token = function(req,res,next) {
-  
+  //set the token to invaild 
+  //change the users password to whats the params.body
+  //send a email saything there password has been changed
+  //here go back /login
 };
 
-//once the reset has completed this the route action
-var change = function(req,res,next) {
-  
-};
 
 /**
  * logs user in via facebook oauth2
@@ -688,6 +719,28 @@ var controller = function (resources) {
 			}
 		});
 	}
+  
+  CoreController.getPluginViewDefaultTemplate({
+        viewname: 'views/user/email/forgot',
+        themefileext: appSettings.templatefileextension
+      },
+      function (err, templatepath) {
+        if (templatepath === 'views/user/email/forgot') {
+          templatepath = path.resolve(process.cwd(), 'node_modules/periodicjs.ext.login/views', templatepath + '.' + appSettings.templatefileextension);
+        }
+        changedemailtemplate = templatepath;
+      }
+    );
+    CoreMailer.getTransport({
+      appenvironment: appSettings.application.environment
+    }, function (err, transport) {
+      if (err) {
+        console.error(err);
+      }
+      else {
+        emailtransport = transport;
+      }
+    });
 
 
 	return {
@@ -697,7 +750,6 @@ var controller = function (resources) {
     forgot              : forgot,
     reset               : reset,
     token               : token,
-    change              : change,
 		facebook            : facebook,
 		facebookcallback    : facebookcallback,
 		instagram           : instagram,

@@ -36,7 +36,6 @@ module.exports = function (periodic) {
   authRouter.post('/forgot'            , authController.forgot);
   authRouter.get('/reset'              , authController.reset);
 	authRouter.get('/reset/:token'       , authController.token);
-  authRouter.post('/reset/:token'      , authController.change);
 	authRouter.get('/facebook'           , authController.facebook);
 	authRouter.get('/facebook/callback'  , authController.facebookcallback);
 	authRouter.get('/instagram'          , authController.instagram);

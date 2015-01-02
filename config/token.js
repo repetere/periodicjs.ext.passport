@@ -1,4 +1,4 @@
-or finding the user for invalidate token fn
+//move to setting.json instead
 module.exports = {
   /**
   ** Millis conversions cheat sheet:
