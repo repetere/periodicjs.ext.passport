@@ -109,18 +109,19 @@ var waterfall = function(array,cb) {
   async.waterfall(array,cb);
 };
 
-var invalidateUserToken = function(user, cb) {
-    User.findOne({email: user.email}, function(err, usr) {
+var invalidateUserToken = function(req,res,next,user, cb) {
+    User.findOne({email: req.params.token}, function(err, usr) {
         if(err || !usr) {
             console.log('error finding the user for invalidate token fn');
             cb(err,null);
         }
-        usr.token = null;
+        usr.attributes.reset_token = null;
+        usr.attributes.reset_token_expires_millis = 0;
         usr.save(function(err, usr) {
             if (err) {
                 cb(err, null);
             } else {
-                cb(false, 'removed');
+                cb(false, usr);
             }
         });
     });
@@ -155,55 +156,77 @@ var getUser = function(req,res,next,cb) {
 };
 
 var generateToken = function(user,cb) {
-  console.log(user);
   //Generate reset token and URL link; also, create expiry for reset token
-  user.attributes.reset_token = encode(user);
+  //make sure attributes exists || create it via merge
   var now = new Date();
   var expires = new Date(now.getTime() + (tokenConfig.resetTokenExpiresMinutes * 60 * 1000)).getTime();
+  if (!user.attributes) {
+    user.attributes = {};
+    user.attributes.reset_token = encode(user.email);
+    user.attributes.reset_token_expires_millis = expires;
+  }
+  user.attributes.reset_token = encode(user.email);
   user.attributes.reset_token_expires_millis = expires;
   user.save();
   cb(null,user);
+//cb(null,{user:user, mailtransport:emailtransport});
 };
 
+// create a func for the mail options
+
+var emailConfig = function(user,cb) {
+  var options = {};
+  options.mailtransport = emailtransport;
+  options.subject = "You forgot your password";
+  options.user = user;
+  options.replyTo = 'ecasilla@icloud.com';
+  cb(null,options);
+
+}
 
 var sendEmail = function(options,cb) {
  //require mailer 
  var mailtransport = options.mailtransport,
- user = options.user,
-        mailoptions = {};
+     user          = options.user,
+     mailoptions   = {};
 
-        mailoptions.to = (options.to) ? options.to : 'ecasilla@icloud.com'
-        mailoptions.cc = options.cc; //options.ccc;
-        mailoptions.bcc = options.bcc;
-        mailoptions.replyTo = options.replyTo;
-        mailoptions.subject = options.subject;
-        if (options.generatetextemail) {
-        mailoptions.generateTextFromHTML = true;
-        }
-        mailoptions.html        = options.html;
-        mailoptions.text = options.text;
-        mailtransport.sendMail(mailoptions, cb);
+     mailoptions.to = (options.to) ? options.to : 'ecasilla@icloud.com'
+     mailoptions.cc = options.cc; //options.ccc;
+     mailoptions.bcc = options.bcc;
+     mailoptions.replyTo = options.replyTo;
+     mailoptions.subject = options.subject;
+     if (options.generatetextemail) {
+       mailoptions.generateTextFromHTML = true;
+     }
+     mailoptions.html        = options.html;
+     mailoptions.text = options.text;
+     mailtransport.sendMail(mailoptions, cb);
 };
 
 
 //Post to auth/forgot with the users email
 var forgot = function(req,res,next) {
- var arr = [ function(cb){cb(null,req,res,next)},getUser,generateToken];
+ var arr = [ 
+   function(cb){cb(null,req,res,next)},
+   getUser,
+   generateToken,
+   emailConfig,
+   sendEmail
+ ];
+
  waterfall(arr, 
- 
- function(err,results) {
-   if (err){ 
-     return next(err);
-     res.redirect('/forgot');
-   }
-   res.send(results);
-   next();
- }); 
+   function(err,results) {
+     if (err){ 
+       return next(err);
+       res.redirect('/forgot');
+     }
+     res.send(results);
+     next();
+   }); 
 };
 
 //GET if the user token is vaild show the change password page
 var reset = function(req,res,next) {
-  //user.attributes
   User.findOne({reset_token: req.params.token},function(err,user) {
    if (err || !user) {
     req.flash('error', 'Password reset token is invalid or has expired.');
@@ -216,10 +239,21 @@ var reset = function(req,res,next) {
 };
 //POST change the users old password to the new password in the form
 var token = function(req,res,next) {
-  //set the token to invaild 
-  //change the users password to whats the params.body
-  //send a email saything there password has been changed
-  //here go back /login
+ waterfall([
+   function(cb){cb(null,req,res,next)},
+     invalidateUserToken,
+     resetPassword,
+     emailConfig,
+     sendEmail,
+ ],
+ function(err,results) {
+   if (err) {
+    req.flash("Opps Something went wrong Please Try Again!");
+    res.redirect("/reset");
+   }
+  res.flash("Password Sucessfully Changed!");
+  res.redirect("/login");
+ }); 
 };
 
 
