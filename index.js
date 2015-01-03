@@ -34,8 +34,8 @@ module.exports = function (periodic) {
   authRouter.get('/logout'             , authController.logout);
   authRouter.get('/forgot'             , userController.forgot);
   authRouter.post('/forgot'            , authController.forgot);
-  authRouter.get('/reset'              , authController.reset);
-	authRouter.get('/reset/:token'       , authController.token);
+  authRouter.get('/reset/:token'       , authController.reset);
+	authRouter.post('/reset/:token'      , authController.token);
 	authRouter.get('/facebook'           , authController.facebook);
 	authRouter.get('/facebook/callback'  , authController.facebookcallback);
 	authRouter.get('/instagram'          , authController.instagram);

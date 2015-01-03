@@ -215,9 +215,7 @@ CoreController.getPluginViewDefaultTemplate({
         user: req.user
       }
     });
-  }
-);
-
+  });
 };
 
 /**

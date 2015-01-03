@@ -109,9 +109,12 @@ var waterfall = function(array,cb) {
   async.waterfall(array,cb);
 };
 
-var invalidateUserToken = function(req,res,next,user, cb) {
-    User.findOne({email: req.params.token}, function(err, usr) {
-        if(err || !usr) {
+var invalidateUserToken = function(req,res,next,cb) {
+    console.log(req.params.id);
+    console.log(req.params);
+    var token = req.param('id');
+    User.findOne({"attributes.reset_token": token}, function(err, usr) {
+        if(err) {
             console.log('error finding the user for invalidate token fn');
             cb(err,null);
         }
@@ -128,11 +131,16 @@ var invalidateUserToken = function(req,res,next,user, cb) {
 };
 
 var encode = function(data) {
-  return jwt.sign(data, tokenConfig.secret,{ algorithm: 'HS256'});
+  return jwt.sign(data,tokenConfig.secret);
 };
 
-var decode = function(data) {
-  return jwt.verify(data, tokenConfig.secret);
+var decode = function(data,cb) {
+  jwt.verify(data, tokenConfig.secret, function(err,decoded_token) {
+    if (err) {
+     console.log("Error from JWT.verify", err.stack);
+    }
+    cb(decoded_token);
+  });
 };
 
 var hasExpired = function(created) {
@@ -167,9 +175,9 @@ var generateToken = function(user,cb) {
   }
   user.attributes.reset_token = encode(user.email);
   user.attributes.reset_token_expires_millis = expires;
+  console.log(user);
   user.save();
   cb(null,user);
-//cb(null,{user:user, mailtransport:emailtransport});
 };
 
 // create a func for the mail options
@@ -182,6 +190,25 @@ var emailConfig = function(user,cb) {
   options.replyTo = 'ecasilla@icloud.com';
   cb(null,options);
 
+}
+
+var resetPassword = function(user,cb) {
+  if (user.password) {
+    if (user.password !== user.passwordconfirm) {
+      err = new Error('Passwords do not match');
+      cb(err);
+    }
+    else if (user.password === undefined || user.password.length < 8) {
+      err = new Error('Password is too short');
+      cb(err);
+    }
+    else {
+      var salt = bcrypt.genSaltSync(10),
+        hash = bcrypt.hashSync(user.password, salt);
+        user.password = hash;
+        cb(null,user);
+    }
+  }
 }
 
 var sendEmail = function(options,cb) {
@@ -227,18 +254,46 @@ var forgot = function(req,res,next) {
 
 //GET if the user token is vaild show the change password page
 var reset = function(req,res,next) {
-  User.findOne({reset_token: req.params.token},function(err,user) {
+  var token = req.params.token;
+  User.findOne({"attributes.reset_token": token},function(err,user) {
    if (err || !user) {
-    req.flash('error', 'Password reset token is invalid or has expired.');
-    return res.redirect('/forgot');
+    req.flash('error', 'Password reset token is invalid.');
+    return res.redirect('/auth/forgot');
    }
-   res.render('reset', {
-     user: req.user
-   });
+   //if (hasExpired(user.attributes.reset_token_expires_millis)) {
+     //req.flash('error', 'Password reset token is has expired.');
+     //return res.redirect('/auth/forgot');
+   //}
+   CoreController.getPluginViewDefaultTemplate({
+       viewname: 'user/reset',
+       themefileext: appSettings.templatefileextension,
+       extname: 'periodicjs.ext.login'
+     },
+     function (err, templatepath) {
+       CoreController.handleDocumentQueryRender({
+         res: res,
+         req: req,
+         renderView: templatepath,
+         responseData: {
+           pagedata: {
+             title: 'Reset Password'
+           },
+           user: req.user
+         }
+       });
+     });
+
   });
 };
+
+
 //POST change the users old password to the new password in the form
 var token = function(req,res,next) {
+console.log(req.params);
+var decoded = decode(req.params.token,function(decoded_token) {
+ var t = decoded_token; 
+console.log(t);
+});
  waterfall([
    function(cb){cb(null,req,res,next)},
      invalidateUserToken,

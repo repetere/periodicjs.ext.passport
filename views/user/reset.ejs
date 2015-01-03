@@ -7,6 +7,7 @@
 
       <form action="/auth/reset/:token" method="post" autocomplete="on" id="reset_form" 
         name="reset_form" class="_pea-form">
+        <input type="hidden" name="_csrf" value=<%= locals.token %> >
         <div class="_pea-row _pea-container-forminput">
           <small>Password</small>
           <input type="password" name="password" placeholder="password"  class="_pea-col-span12"/>
@@ -19,7 +20,6 @@
         <div class="_pea-text-center">
           <button type="submit" name="submit" class="_pea-button _pea-color-success">
             <i class="icon-ok icon-white"></i> Reset</button>
-          <input type="hidden" name="_csrf" value=<%= locals.token %> >
         </form>
       </div>
     </div>
