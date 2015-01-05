@@ -110,9 +110,9 @@ var waterfall = function(array,cb) {
 };
 
 var invalidateUserToken = function(req,res,next,cb) {
-    console.log(req.params.id);
+    console.log(req.params.token);
     console.log(req.params);
-    var token = req.param('id');
+    var token = req.param.token;
     User.findOne({"attributes.reset_token": token}, function(err, usr) {
         if(err) {
             console.log('error finding the user for invalidate token fn');
@@ -258,11 +258,6 @@ var forgot = function(req,res,next) {
 //GET if the user token is vaild show the change password page
 var reset = function(req,res,next) {
   var token = req.params.token;
-  console.log(req.params);
-  var decoded = decode(token, function(decoded_token) {
-   var t = decoded_token; 
-  console.log(t);
-  });
   User.findOne({"attributes.reset_token": token},function(err,user) {
    if (err || !user) {
     req.flash('error', 'Password reset token is invalid.');
