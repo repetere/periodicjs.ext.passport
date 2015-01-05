@@ -135,9 +135,12 @@ var encode = function(data) {
 };
 
 var decode = function(data,cb) {
-  jwt.verify(data, tokenConfig.secret, function(err,decoded_token) {
+  console.log(data,"DATA from decode");
+  console.log(tokenConfig);
+  jwt.verify(data,tokenConfig.secret,function(err, decoded_token) {
     if (err) {
-     console.log("Error from JWT.verify", err.stack);
+     console.log("Error from JWT.verify", err.name);
+     console.log("Error from JWT.verify", err.message);
     }
     cb(decoded_token);
   });
@@ -255,6 +258,11 @@ var forgot = function(req,res,next) {
 //GET if the user token is vaild show the change password page
 var reset = function(req,res,next) {
   var token = req.params.token;
+  console.log(req.params);
+  var decoded = decode(token, function(decoded_token) {
+   var t = decoded_token; 
+  console.log(t);
+  });
   User.findOne({"attributes.reset_token": token},function(err,user) {
    if (err || !user) {
     req.flash('error', 'Password reset token is invalid.');
@@ -289,11 +297,6 @@ var reset = function(req,res,next) {
 
 //POST change the users old password to the new password in the form
 var token = function(req,res,next) {
-console.log(req.params);
-var decoded = decode(req.params.token,function(decoded_token) {
- var t = decoded_token; 
-console.log(t);
-});
  waterfall([
    function(cb){cb(null,req,res,next)},
      invalidateUserToken,
