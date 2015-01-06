@@ -112,7 +112,7 @@ var waterfall = function(array,cb) {
 var invalidateUserToken = function(req,res,next,cb) {
     console.log(req.params.token);
     console.log(req.params);
-    var token = req.param.token;
+    var token = req.params.token;
     User.findOne({"attributes.reset_token": token}, function(err, usr) {
         if(err) {
             console.log('error finding the user for invalidate token fn');
@@ -196,9 +196,10 @@ var emailConfig = function(user,cb) {
 }
 
 var resetPassword = function(user,cb) {
+  var err;
   if (user.password) {
     if (user.password !== user.passwordconfirm) {
-      err = new Error('Passwords do not match');
+       err = new Error('Passwords do not match');
       cb(err);
     }
     else if (user.password === undefined || user.password.length < 8) {
@@ -258,11 +259,13 @@ var forgot = function(req,res,next) {
 //GET if the user token is vaild show the change password page
 var reset = function(req,res,next) {
   var token = req.params.token;
+  var current_user;
   User.findOne({"attributes.reset_token": token},function(err,user) {
    if (err || !user) {
     req.flash('error', 'Password reset token is invalid.');
     return res.redirect('/auth/forgot');
    }
+   current_user = user;
    //if (hasExpired(user.attributes.reset_token_expires_millis)) {
      //req.flash('error', 'Password reset token is has expired.');
      //return res.redirect('/auth/forgot');
@@ -279,7 +282,8 @@ var reset = function(req,res,next) {
          renderView: templatepath,
          responseData: {
            pagedata: {
-             title: 'Reset Password'
+             title: 'Reset Password',
+             current_user: current_user
            },
            user: req.user
          }
@@ -302,10 +306,10 @@ var token = function(req,res,next) {
  function(err,results) {
    if (err) {
     req.flash("Opps Something went wrong Please Try Again!");
-    res.redirect("/reset");
+    res.redirect("auth/reset");
    }
-  res.flash("Password Sucessfully Changed!");
-  res.redirect("/login");
+  req.flash("Password Sucessfully Changed!");
+  res.redirect("/auth/login");
  }); 
 };
 

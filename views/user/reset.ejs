@@ -3,9 +3,10 @@
 <div class="_pea-container">
   <div class="_pea-row">
     <div class="_pea-col-span6 _pea-col-nofloat">
-      <h2 class="text-left"><%= pagedata.title %></h2>
+      <h2 class="text-left"><%= pagedata.title %> <%=pagedata.current_user.email %></h2>
 
-      <form action="/auth/reset/:token" method="post" autocomplete="on" id="reset_form" 
+      <form action="/auth/reset/<%- request.params.token %>" 
+      method="post" autocomplete="on" id="reset_form" 
         name="reset_form" class="_pea-form">
         <input type="hidden" name="_csrf" value=<%= locals.token %> >
         <div class="_pea-row _pea-container-forminput">
