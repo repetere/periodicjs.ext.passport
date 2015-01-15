@@ -111,7 +111,6 @@ var waterfall = function(array,cb) {
 
 var invalidateUserToken = function(req,res,next,cb) {
     console.log(req.params.token);
-    console.log(req.params);
     var token = req.params.token;
     User.findOne({"attributes.reset_token": token}, function(err, usr) {
         if(err) {
@@ -122,9 +121,10 @@ var invalidateUserToken = function(req,res,next,cb) {
         usr.attributes.reset_token_expires_millis = 0;
         usr.save(function(err, usr) {
             if (err) {
-                cb(err, null);
+              cb(err, null);
             } else {
-                cb(false, usr);
+              console.log(usr,"\nFrom invalidate");
+              cb(false, req,res,next,usr);
             }
         });
     });
@@ -136,7 +136,6 @@ var encode = function(data) {
 
 var decode = function(data,cb) {
   console.log(data,"DATA from decode");
-  console.log(tokenConfig);
   jwt.verify(data,tokenConfig.secret,function(err, decoded_token) {
     if (err) {
      console.log("Error from JWT.verify", err.name);
@@ -195,16 +194,17 @@ var emailConfig = function(user,cb) {
 
 }
 
-var resetPassword = function(user,cb) {
+
+var resetPassword = function(req,res,next,user,cb) {
   var err;
-  if (user.password) {
+  if (req.body.password) {
     if (user.password !== user.passwordconfirm) {
        err = new Error('Passwords do not match');
-      cb(err);
+       cb(err,null);
     }
     else if (user.password === undefined || user.password.length < 8) {
       err = new Error('Password is too short');
-      cb(err);
+      cb(err,null);
     }
     else {
       var salt = bcrypt.genSaltSync(10),
@@ -296,17 +296,19 @@ var reset = function(req,res,next) {
 
 //POST change the users old password to the new password in the form
 var token = function(req,res,next) {
+var user_token = req.params.token;
  waterfall([
    function(cb){cb(null,req,res,next)},
-     invalidateUserToken,
-     resetPassword,
-     emailConfig,
-     sendEmail,
+   invalidateUserToken,
+   resetPassword,
+   emailConfig,
+   sendEmail,
  ],
  function(err,results) {
    if (err) {
     req.flash("Opps Something went wrong Please Try Again!");
-    res.redirect("auth/reset");
+    console.log(err);
+    res.redirect("/auth/reset/" + user_token);
    }
   req.flash("Password Sucessfully Changed!");
   res.redirect("/auth/login");
