@@ -16,19 +16,17 @@ module.exports = function (periodic) {
 	// express,app,logger,config,db,mongoose
 	periodic.app.controller.extension.login = {
 		auth   : require('./controller/auth')(periodic),
-		user   : require('./controller/user')(periodic),
-    token  : require('./controller/token')(periodic),
-    social : require('./controller/social')(periodic),
+		user   : require('./controller/user')(periodic)
 	};
 
 	var authRouter     = periodic.express.Router(),
 		authController   = periodic.app.controller.extension.login.auth,
 		userRouter       = periodic.express.Router(),
-		userController   = periodic.app.controller.extension.login.user,
-    tokenRouter      = periodic.express.Router(),
-    tokenController  = periodic.app.controller.extension.login.token
-    socialRouter     = periodic.express.Router(),
-    socialController = periodic.app.controller.extension.login.social,
+		userController   = periodic.app.controller.extension.login.user
+    //tokenRouter      = periodic.express.Router(),
+    //tokenController  = periodic.app.controller.extension.login.token
+    //socialRouter     = periodic.express.Router(),
+    //socialController = periodic.app.controller.extension.login.social,
 
 	authRouter.get('*', global.CoreCache.disableCache);
 	authRouter.post('*', global.CoreCache.disableCache);
