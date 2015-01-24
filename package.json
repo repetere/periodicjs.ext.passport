@@ -17,7 +17,8 @@
   },
   "scripts": {
     "postinstall": "node install.js",
-    "postuninstall": "node uninstall.js"
+    "postuninstall": "node uninstall.js",
+    "test":"mocha"
   },
   "dependencies": {
     "ejs": "1.0.0",
@@ -54,6 +55,7 @@
     "grunt-simple-mocha": ">=0.4.0",
     "jsdoc": "3.3.0-alpha10",
     "mocha": "2.0.1",
+    "supertest": "^0.15.0",
     "uglify-js": "^2.4.15",
     "uglifyify": "^2.5.0"
   },
