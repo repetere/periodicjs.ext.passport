@@ -106,23 +106,10 @@ var rememberme = function (req, res, next) {
   next();
 };
 
+// Utility Functions
 var waterfall = function(array,cb) {
   async.waterfall(array,cb);
 };
-
-var invalidateUserToken = function(req,res,next,cb) {
-  var token = req.params.token;
-  User.findOne({"attributes.reset_token": token}, function(err, usr) {
-    if(err) {
-      console.log('error finding the user for invalidate token fn');
-      cb(err,null);
-    }
-    usr.attributes = {};
-    console.log(usr,"\nFrom invalidate");
-    cb(false, req,res,next,usr);
-  });
-};
-
 var encode = function(data) {
   return jwt.sign(data,tokenConfig.secret);
 };
@@ -143,6 +130,55 @@ var hasExpired = function(created) {
   return diff > tokenConfig.ttl;
 };
 
+
+var invalidateUserToken = function(req,res,next,cb) {
+  var token = req.params.token;
+  User.findOne({"attributes.reset_token": token}, function(err, usr) {
+    if(err) {
+      console.log('error finding the user for invalidate token fn');
+      cb(err,null);
+    }
+    usr.attributes.reset_token = "";
+    usr.attributes.reset_token_expires_millis = 0;
+    console.log(usr,"\nFrom invalidate");
+    cb(false, req,res,next,usr);
+  });
+};
+
+var resetPassword = function(req,res,next,user,cb) {
+  var err;
+  if (req.body.password) {
+    if (req.body.password !== req.body.passwordconfirm) {
+      err = new Error('Passwords do not match');
+      req.flash('error',err);
+      cb(err,null);
+    }
+    else if (req.body.password === undefined || req.body.password.length < 8) {
+      err = new Error('Password is too short');
+      req.flash('error',err);
+      cb(err,null);
+    }
+    else {
+      var salt = bcrypt.genSaltSync(10),
+      hash = bcrypt.hashSync(req.body.password, salt);
+      user.password = hash;
+      cb(null,user);
+    }
+  }
+}
+
+function saveUser(user,cb) {
+  user.markModified('attributes');
+  user.markModified('password');
+  user.save(function(err,usr) {
+    if (err) {
+      cb(err,null) 
+    }
+    cb(null,usr);
+  }) 
+}
+
+
 var getUser = function(req,res,next,cb) {
   User.findOne(req.body.email, function(err, user) {
     if (err) {
@@ -150,6 +186,7 @@ var getUser = function(req,res,next,cb) {
     } else if (user) {
       cb(false, user);
     } else {
+      req.flash('error','No user with that email found!')
       cb(new Error('No user with that email found.'), null);
     }
   });
@@ -163,11 +200,12 @@ var generateToken = function(user,cb) {
   user.attributes = {};
   user.attributes.reset_token = encode(user.email);
   user.attributes.reset_token_expires_millis = expires;
+  user.markModified('attributes');
   user.save(function(err){
     if (err) {
       cb(err,null);
     }
-    console.log(user);
+    console.log(user,"\n after save");
     cb(null,user);
   });
 };
@@ -185,36 +223,6 @@ var emailConfig = function(user,cb) {
 }
 
 
-var resetPassword = function(req,res,next,user,cb) {
-  var err;
-  if (req.body.password) {
-    if (req.body.password !== req.body.passwordconfirm) {
-      err = new Error('Passwords do not match');
-      req.flash(err);
-      cb(err,null);
-    }
-    else if (req.body.password === undefined || req.body.password.length < 8) {
-      err = new Error('Password is too short');
-      req.flash(err);
-      cb(err,null);
-    }
-    else {
-      var salt = bcrypt.genSaltSync(10),
-      hash = bcrypt.hashSync(req.body.password, salt);
-      user.password = hash;
-      cb(null,user);
-    }
-  }
-}
-
-function saveUser(user,cb) {
-  user.save(function(err,usr) {
-    if (err) {
-      cb(err,null) 
-    }
-    cb(null,usr);
-  }) 
-}
 
 var sendEmail = function(options,cb) {
   //require mailer 
@@ -250,7 +258,7 @@ var forgot = function(req,res,next) {
     function(err,results) {
       if (err){ 
         return next(err);
-        res.redirect('/forgot');
+        res.redirect('/auth/forgot');
       }
       res.send(results);
       next();
@@ -281,7 +289,7 @@ var reset = function(req,res,next) {
     }
     //Check to make sure token is valid and sign by us
     if (current_user.email !== decode_token) {
-      req.flash("This token is not valid please try again")
+      req.flash('error', "This token is not valid please try again")
       res.redirect('/auth/forgot');
     }
     CoreController.getPluginViewDefaultTemplate({
@@ -321,11 +329,11 @@ var token = function(req,res,next) {
   ],
   function(err,results) {
     if (err) {
-      req.flash("Opps Something went wrong Please Try Again!");
+      req.flash('error',"Opps Something went wrong Please Try Again!");
       console.log(err);
       res.redirect("/auth/reset/" + user_token);
     }
-    req.flash("Password Sucessfully Changed!");
+    req.flash('success',"Password Sucessfully Changed!");
     res.redirect("/auth/login");
   }); 
 };
