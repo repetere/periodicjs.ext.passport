@@ -7,20 +7,20 @@ var mocha = require('mocha');
   
 describe('The Login Flow', function(){
   context('Auth: ',function() {
-    it('it can register a user', registerUser());    
-    it('it allows a current user to login', loginUser());
-    it('uri that requires user to be logged in',loggedIn());
+    it('will register a user', registerUser());    
+    it('will allow a user to login', loginUser());
+    it('will authorize a user on a uri that requires user to be logged in',loggedIn());
   })
   context('Forgot: ',function() {
-    xit('will show the forgot password view on request',getForgotPassword());
+    it('will show the forgot password view on request',getForgotPassword());
     xit('will allow a user to give an email to change password',postForgotPassword());
-    xit('will show the reset form if the user has a valid token',getReset());
-    xit('will show the login form once a user changes the password',postReset());
+    xit('will show the reset form if the user has a valid token',getResetToken());
+    xit('will show the login form once a user changes the password',postResetToken());
   });
   context("Social Auth: ",function() {
-   xit('will allow users to authenticate with facebook',facebookAuth) 
-   xit('will allow users to authenticate with instagram',instagramAuth) 
-   xit('will allow users to authenticate with twitter',twitterAuth) 
+   xit('will allow users to authenticate with facebook',facebookAuth());
+   xit('will allow users to authenticate with instagram',instagramAuth());
+   xit('will allow users to authenticate with twitter',twitterAuth());
   })
 });
 
@@ -76,7 +76,7 @@ describe('The Login Flow', function(){
       .expect(200)
       .end(function(err, res){
         if (err) return done(err);
-        getCsrf(function(token){
+        getCsrfLogin(function(token){
         expect(token).to.be.ok
         done()
         });
@@ -98,7 +98,7 @@ function getCsrfReg(cb) {
     })
   })
 }
-  function getCsrf(cb) {
+  function getCsrfLogin(cb) {
     server
     .get('/auth/login')
     .end(function(err,res) {
@@ -110,4 +110,47 @@ function getCsrfReg(cb) {
         cb(csrf);
       })
     })
+  }
+
+  function getForgotPassword() {
+   return function(done){
+   server
+   .get('/auth/forgot')
+   .expect(200)
+   .end(function(err,res) {
+     if (err) throw err;
+     var html = res.text
+     env(html,function(errors,window) {
+       var $ = require('jquery')(window) 
+       expect($('.text-left').text()).to.be.eql('Forgot Password')
+       return done();
+     });
+   });
+  }
+  }
+
+  function postForgotPassword() {
+   return function(done){
+   }
+  }
+  function getResetToken() {
+   return function(done){
+   }
+  }
+  function postResetToken() {
+   return function(done){
+   }
+  }
+  function facebookAuth() {
+   return function(done){
+   }
+  }
+  
+  function instagramAuth() {
+   return function(done){
+   }
+  }
+  function twitterAuth() {
+   return function(done){
+   }
   }
