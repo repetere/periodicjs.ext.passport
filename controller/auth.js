@@ -140,7 +140,6 @@ var invalidateUserToken = function(req,res,next,cb) {
     }
     usr.attributes.reset_token = "";
     usr.attributes.reset_token_expires_millis = 0;
-    console.log(usr,"\nFrom invalidate");
     cb(false, req,res,next,usr);
   });
 };
@@ -205,7 +204,6 @@ var generateToken = function(user,cb) {
     if (err) {
       cb(err,null);
     }
-    console.log(user,"\n after save");
     cb(null,user);
   });
 };
@@ -272,7 +270,6 @@ var reset = function(req,res,next) {
   decode_token;
   var d_token = decode(token,function(decode) {
     decode_token = decode;
-    console.log(decode_token,"inside");
   });
 
   //Find the User by their token
@@ -330,7 +327,6 @@ var token = function(req,res,next) {
   function(err,results) {
     if (err) {
       req.flash('error',"Opps Something went wrong Please Try Again!");
-      console.log(err);
       res.redirect("/auth/reset/" + user_token);
     }
     req.flash('success',"Password Sucessfully Changed!");

@@ -11,6 +11,17 @@ describe('The Login Flow', function(){
     it('it allows a current user to login', loginUser());
     it('uri that requires user to be logged in',loggedIn());
   })
+  context('Forgot: ',function() {
+    xit('will show the forgot password view on request',getForgotPassword());
+    xit('will allow a user to give an email to change password',postForgotPassword());
+    xit('will show the reset form if the user has a valid token',getReset());
+    xit('will show the login form once a user changes the password',postReset());
+  });
+  context("Social Auth: ",function() {
+   xit('will allow users to authenticate with facebook',facebookAuth) 
+   xit('will allow users to authenticate with instagram',instagramAuth) 
+   xit('will allow users to authenticate with twitter',twitterAuth) 
+  })
 });
 
 
@@ -76,7 +87,7 @@ describe('The Login Flow', function(){
 
 function getCsrfReg(cb) {
   server
-  .get('/auth/users/register')
+  .get('/auth/user/register')
   .end(function(err,res) {
     if (err) throw err;
     var html = res.text
