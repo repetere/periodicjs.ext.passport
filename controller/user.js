@@ -191,6 +191,34 @@ var updateuserregistration = function (req, res) {
 };
 
 /**
+ * @description Shows the forgot password view
+ * @param  {object} req
+ * @param  {object} res
+ * @return {object} reponds with an error page or requested view
+ */
+
+var forgot = function(req, res){
+CoreController.getPluginViewDefaultTemplate({
+    viewname: 'user/forgot',
+    themefileext: appSettings.templatefileextension,
+    extname: 'periodicjs.ext.login'
+  },
+  function (err, templatepath) {
+    CoreController.handleDocumentQueryRender({
+      res: res,
+      req: req,
+      renderView: templatepath,
+      responseData: {
+        pagedata: {
+          title: 'Forgot Password'
+        },
+        user: req.user
+      }
+    });
+  });
+};
+
+/**
  * login controller
  * @module userloginController
  * @{@link https://github.com/typesettin/periodicjs.ext.login}
@@ -246,6 +274,7 @@ var controller = function (resources) {
 	return {
 		login: login,
 		newuser: newuser,
+    forgot: forgot,
 		create: create,
 		finishregistration: finishregistration,
 		updateuserregistration: updateuserregistration
