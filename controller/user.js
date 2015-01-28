@@ -197,25 +197,25 @@ var updateuserregistration = function (req, res) {
  * @return {object} reponds with an error page or requested view
  */
 
-var forgot = function(req, res){
-CoreController.getPluginViewDefaultTemplate({
-    viewname: 'user/forgot',
-    themefileext: appSettings.templatefileextension,
-    extname: 'periodicjs.ext.login'
-  },
-  function (err, templatepath) {
-    CoreController.handleDocumentQueryRender({
-      res: res,
-      req: req,
-      renderView: templatepath,
-      responseData: {
-        pagedata: {
-          title: 'Forgot Password'
-        },
-        user: req.user
-      }
-    });
-  });
+var forgot = function (req, res) {
+	CoreController.getPluginViewDefaultTemplate({
+			viewname: 'user/forgot',
+			themefileext: appSettings.templatefileextension,
+			extname: 'periodicjs.ext.login'
+		},
+		function (err, templatepath) {
+			CoreController.handleDocumentQueryRender({
+				res: res,
+				req: req,
+				renderView: templatepath,
+				responseData: {
+					pagedata: {
+						title: 'Forgot Password'
+					},
+					user: req.user
+				}
+			});
+		});
 };
 
 /**
@@ -274,7 +274,7 @@ var controller = function (resources) {
 	return {
 		login: login,
 		newuser: newuser,
-    forgot: forgot,
+		forgot: forgot,
 		create: create,
 		finishregistration: finishregistration,
 		updateuserregistration: updateuserregistration

@@ -15,39 +15,39 @@ var passport = require('passport');
 module.exports = function (periodic) {
 	// express,app,logger,config,db,mongoose
 	periodic.app.controller.extension.login = {
-		auth   : require('./controller/auth')(periodic),
-		user   : require('./controller/user')(periodic)
+		auth: require('./controller/auth')(periodic),
+		user: require('./controller/user')(periodic)
 	};
 
-	var authRouter     = periodic.express.Router(),
-		authController   = periodic.app.controller.extension.login.auth,
-		userRouter       = periodic.express.Router(),
-		userController   = periodic.app.controller.extension.login.user
-    //tokenRouter      = periodic.express.Router(),
-    //tokenController  = periodic.app.controller.extension.login.token
-    //socialRouter     = periodic.express.Router(),
-    //socialController = periodic.app.controller.extension.login.social,
+	var authRouter = periodic.express.Router(),
+		authController = periodic.app.controller.extension.login.auth,
+		userRouter = periodic.express.Router(),
+		userController = periodic.app.controller.extension.login.user
+		//tokenRouter      = periodic.express.Router(),
+		//tokenController  = periodic.app.controller.extension.login.token
+		//socialRouter     = periodic.express.Router(),
+		//socialController = periodic.app.controller.extension.login.social,
 
 	authRouter.get('*', global.CoreCache.disableCache);
 	authRouter.post('*', global.CoreCache.disableCache);
 	userRouter.get('*', global.CoreCache.disableCache);
 	userRouter.post('*', global.CoreCache.disableCache);
 
-	authRouter.get('/login'              , userController.login);
-	authRouter.post('/login'             , authController.login);
-  authRouter.get('/logout'             , authController.logout);
-  //token controller & router
-  authRouter.get('/forgot'             , userController.forgot);
-  authRouter.post('/forgot'            , authController.forgot);
-  authRouter.get('/reset/:token'       , authController.reset);
-	authRouter.post('/reset/:token'      , authController.token);
-//social controller & router
-	authRouter.get('/facebook'           , authController.facebook);
-	authRouter.get('/facebook/callback'  , authController.facebookcallback);
-	authRouter.get('/instagram'          , authController.instagram);
-	authRouter.get('/instagram/callback' , authController.instagramcallback);
-	authRouter.get('/twitter'            , authController.twitter);
-	authRouter.get('/twitter/callback'   , authController.twittercallback);
+	authRouter.get('/login', userController.login);
+	authRouter.post('/login', authController.login);
+	authRouter.get('/logout', authController.logout);
+	//token controller & router
+	authRouter.get('/forgot', userController.forgot);
+	authRouter.post('/forgot', authController.forgot);
+	authRouter.get('/reset/:token', authController.reset);
+	authRouter.post('/reset/:token', authController.token);
+	//social controller & router
+	authRouter.get('/facebook', authController.facebook);
+	authRouter.get('/facebook/callback', authController.facebookcallback);
+	authRouter.get('/instagram', authController.instagram);
+	authRouter.get('/instagram/callback', authController.instagramcallback);
+	authRouter.get('/twitter', authController.twitter);
+	authRouter.get('/twitter/callback', authController.twittercallback);
 
 	userRouter.get('/new|/register', userController.newuser);
 	userRouter.get('/finishregistration', userController.finishregistration);
@@ -60,5 +60,5 @@ module.exports = function (periodic) {
 	periodic.app.use(passport.session());
 	periodic.app.use('/auth', authRouter);
 	periodic.app.use('/auth/user', userRouter);
-	return	periodic;
+	return periodic;
 };
