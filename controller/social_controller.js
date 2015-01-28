@@ -1,34 +1,122 @@
 'use strict';
 
-// var passport = require('passport'),
-// 	path = require('path'),
-// 	jwt = require('jsonwebtoken'),
-// 	async = require('async'),
-// 	LocalStrategy = require('passport-local').Strategy,
-// 	FacebookStrategy = require('passport-facebook').Strategy,
-// 	InstagramStrategy = require('passport-instagram').Strategy,
-// 	TwitterStrategy = require('passport-twitter').Strategy,
-// 	fs = require('fs-extra'),
-// 	Utilities = require('periodicjs.core.utilities'),
-// 	ControllerHelper = require('periodicjs.core.controller'),
-// 	Extensions = require('periodicjs.core.extensions'),
-// 	CoreMailer = require('periodicjs.core.mailer'),
-// 	tokenConfig = require('../config/token'),
-// 	CoreExtension = new Extensions({
-// 		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
-// 	}),
-// 	authLoginPath = '/auth/login/',
-// 	authLogoutPath = '/',
-// 	authLoggedInHomepage = '/p-admin',
-// 	merge = require('utils-merge'),
-// 	CoreUtilities,
-// 	CoreController,
-// 	emailtransport,
-// 	appSettings,
-// 	mongoose,
-// 	User,
-// 	logger,
-// 	configError,
-// 	loginExtSettingsFile,
-// 	changedemailtemplate,
-// 	loginExtSettings;
+var logger,
+	User,
+	passport,
+	loginExtSettings,
+	configError;
+
+
+/**
+ * logs user in via facebook oauth2
+ * @param  {object} req
+ * @param  {object} res
+ * @return {Function} next() callback
+ */
+var facebook = function (req, res, next) {
+	if (configError) {
+		next(configError);
+	}
+	else {
+		passport.authenticate('facebook', {
+			scope: loginExtSettings.passport.oauth.facebook.scope
+		})(req, res, next);
+	}
+};
+
+/**
+ * facebook oauth callback
+ * @param  {object} req
+ * @param  {object} res
+ * @return {Function} next() callback
+ */
+var facebookcallback = function (req, res, next) {
+	var loginUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoggedInHomepage;
+	var loginFailureUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoginPath + '?return_url=' + req.session.return_url;
+	passport.authenticate('facebook', {
+		successRedirect: loginUrl,
+		failureRedirect: loginFailureUrl,
+		failureFlash: 'Invalid facebook authentication credentials username or password.'
+	})(req, res, next);
+};
+/**
+ * logs user in via instagram oauth2
+ * @param  {object} req
+ * @param  {object} res
+ * @return {Function} next() callback
+ */
+var instagram = function (req, res, next) {
+	if (configError) {
+		next(configError);
+	}
+	else {
+		passport.authenticate('instagram', {
+			scope: loginExtSettings.passport.oauth.instagram.scope
+		})(req, res, next);
+	}
+};
+
+/**
+ * instagram oauth callback
+ * @param  {object} req
+ * @param  {object} res
+ * @return {Function} next() callback
+ */
+var instagramcallback = function (req, res, next) {
+	var loginUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoggedInHomepage;
+	var loginFailureUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoginPath + '?return_url=' + req.session.return_url;
+	passport.authenticate('instagram', {
+		successRedirect: loginUrl,
+		failureRedirect: loginFailureUrl,
+		failureFlash: 'Invalid instagram authentication credentials username or password.'
+	})(req, res, next);
+};
+/**
+ * logs user in via twitter oauth2
+ * @param  {object} req
+ * @param  {object} res
+ * @return {Function} next() callback
+ */
+var twitter = function (req, res, next) {
+	if (configError) {
+		next(configError);
+	}
+	else {
+		passport.authenticate('twitter', {
+			scope: loginExtSettings.passport.oauth.twitter.scope
+		})(req, res, next);
+	}
+};
+
+/**
+ * twitter oauth callback
+ * @param  {object} req
+ * @param  {object} res
+ * @return {Function} next() callback
+ */
+var twittercallback = function (req, res, next) {
+	var loginUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoggedInHomepage;
+	var loginFailureUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoginPath + '?return_url=' + req.session.return_url;
+	passport.authenticate('twitter', {
+		successRedirect: loginUrl,
+		failureRedirect: loginFailureUrl,
+		failureFlash: 'Invalid twitter authentication credentials username or password.'
+	})(req, res, next);
+};
+
+var passportSocialController = function (resources, passportResources) {
+	logger = resources.logger;
+	User = passportResources.User;
+	passport = passportResources.passport;
+	loginExtSettings = passportResources.loginExtSettings;
+	return {
+		facebook: facebook,
+		facebookcallback: facebookcallback,
+		instagram: instagram,
+		instagramcallback: instagramcallback,
+		twitter: twitter,
+		twittercallback: twittercallback,
+	};
+};
+
+module.exports = passportSocialController;

@@ -19,14 +19,18 @@ module.exports = function (periodic) {
 		user: require('./controller/user')(periodic)
 	};
 
-	var authRouter = periodic.express.Router(),
+	var passport = periodic.app.controller.extension.login.auth.passport,
+		authRouter = periodic.express.Router(),
 		authController = periodic.app.controller.extension.login.auth,
 		userRouter = periodic.express.Router(),
-		userController = periodic.app.controller.extension.login.user
-		//tokenRouter      = periodic.express.Router(),
-		//tokenController  = periodic.app.controller.extension.login.token
-		//socialRouter     = periodic.express.Router(),
-		//socialController = periodic.app.controller.extension.login.social,
+		userController = periodic.app.controller.extension.login.user,
+		socialPassportController = require('./controller/auth')(periodic, {
+			passport: passport
+		});
+	//tokenRouter      = periodic.express.Router(),
+	//tokenController  = periodic.app.controller.extension.login.token
+	//socialRouter     = periodic.express.Router(),
+	//socialController = periodic.app.controller.extension.login.social,
 
 	authRouter.get('*', global.CoreCache.disableCache);
 	authRouter.post('*', global.CoreCache.disableCache);
@@ -42,12 +46,12 @@ module.exports = function (periodic) {
 	authRouter.get('/reset/:token', authController.reset);
 	authRouter.post('/reset/:token', authController.token);
 	//social controller & router
-	authRouter.get('/facebook', authController.facebook);
-	authRouter.get('/facebook/callback', authController.facebookcallback);
-	authRouter.get('/instagram', authController.instagram);
-	authRouter.get('/instagram/callback', authController.instagramcallback);
-	authRouter.get('/twitter', authController.twitter);
-	authRouter.get('/twitter/callback', authController.twittercallback);
+	authRouter.get('/facebook', socialPassportController.facebook);
+	authRouter.get('/facebook/callback', socialPassportController.facebookcallback);
+	authRouter.get('/instagram', socialPassportController.instagram);
+	authRouter.get('/instagram/callback', socialPassportController.instagramcallback);
+	authRouter.get('/twitter', socialPassportController.twitter);
+	authRouter.get('/twitter/callback', socialPassportController.twittercallback);
 
 	userRouter.get('/new|/register', userController.newuser);
 	userRouter.get('/finishregistration', userController.finishregistration);

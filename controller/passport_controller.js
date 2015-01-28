@@ -1,33 +1,5 @@
 'use strict';
 
-// var passport = require('passport'),
-// 	path = require('path'),
-// 	jwt = require('jsonwebtoken'),
-// 	async = require('async'),
-// 	fs = require('fs-extra'),
-// 	Utilities = require('periodicjs.core.utilities'),
-// 	ControllerHelper = require('periodicjs.core.controller'),
-// 	Extensions = require('periodicjs.core.extensions'),
-// 	CoreMailer = require('periodicjs.core.mailer'),
-// 	tokenConfig = require('../config/token'),
-// 	CoreExtension = new Extensions({
-// 		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
-// 	}),
-// 	authLoginPath = '/auth/login/',
-// 	authLogoutPath = '/',
-// 	authLoggedInHomepage = '/p-admin',
-// 	CoreUtilities,
-// 	CoreController,
-// 	emailtransport,
-// 	appSettings,
-// 	mongoose,
-// 	User,
-// 	logger,
-// 	configError,
-// 	loginExtSettingsFile,
-// 	changedemailtemplate,
-// 	loginExtSettings;
-// 	
 var logger,
 	User,
 	passport,

@@ -5,6 +5,7 @@ var passport = require('passport'),
 	jwt = require('jsonwebtoken'),
 	async = require('async'),
 	fs = require('fs-extra'),
+	merge = require('utils-merge'),
 	Utilities = require('periodicjs.core.utilities'),
 	ControllerHelper = require('periodicjs.core.controller'),
 	Extensions = require('periodicjs.core.extensions'),
@@ -13,7 +14,6 @@ var passport = require('passport'),
 		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
 	}),
 	extend = require('util-extend'),
-	merge = require('utils-merge'),
 	CoreUtilities,
 	CoreController,
 	emailtransport,
@@ -285,7 +285,7 @@ var reset = function (req, res, next) {
 
 	//Find the User by their token
 	User.findOne({
-		"attributes.reset_token": token
+		'attributes.reset_token': token
 	}, function (err, user) {
 		if (err || !user) {
 			req.flash('error', 'Password reset token is invalid.');
@@ -299,7 +299,7 @@ var reset = function (req, res, next) {
 		}
 		//Check to make sure token is valid and sign by us
 		if (current_user.email !== decode_token.email && current_user.api_key !== decode_token.api_key) {
-			req.flash('error', "This token is not valid please try again")
+			req.flash('error', 'This token is not valid please try again');
 			res.redirect('/auth/forgot');
 		}
 		CoreController.getPluginViewDefaultTemplate({
@@ -331,7 +331,7 @@ var token = function (req, res, next) {
 	var user_token = req.params.token;
 	waterfall([
 			function (cb) {
-				cb(null, req, res, next)
+				cb(null, req, res, next);
 			},
 			invalidateUserToken,
 			resetPassword,
@@ -339,113 +339,17 @@ var token = function (req, res, next) {
 			emailConfig,
 			sendEmail,
 		],
-		function (err, results) {
+		function (err /*, results*/ ) {
 			if (err) {
-				req.flash('error', "Opps Something went wrong Please Try Again!");
-				res.redirect("/auth/reset/" + user_token);
+				req.flash('error', 'Opps Something went wrong Please Try Again!');
+				res.redirect('/auth/reset/' + user_token);
 			}
-			req.flash('success', "Password Sucessfully Changed!");
-			res.redirect("/auth/login");
+			req.flash('success', 'Password Sucessfully Changed!');
+			res.redirect('/auth/login');
 		});
 };
 
 
-/**
- * logs user in via facebook oauth2
- * @param  {object} req
- * @param  {object} res
- * @return {Function} next() callback
- */
-var facebook = function (req, res, next) {
-	if (configError) {
-		next(configError);
-	}
-	else {
-		passport.authenticate('facebook', {
-			scope: loginExtSettings.passport.oauth.facebook.scope
-		})(req, res, next);
-	}
-};
-
-/**
- * facebook oauth callback
- * @param  {object} req
- * @param  {object} res
- * @return {Function} next() callback
- */
-var facebookcallback = function (req, res, next) {
-	var loginUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoggedInHomepage;
-	var loginFailureUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoginPath + '?return_url=' + req.session.return_url;
-	passport.authenticate('facebook', {
-		successRedirect: loginUrl,
-		failureRedirect: loginFailureUrl,
-		failureFlash: 'Invalid facebook authentication credentials username or password.'
-	})(req, res, next);
-};
-/**
- * logs user in via instagram oauth2
- * @param  {object} req
- * @param  {object} res
- * @return {Function} next() callback
- */
-var instagram = function (req, res, next) {
-	if (configError) {
-		next(configError);
-	}
-	else {
-		passport.authenticate('instagram', {
-			scope: loginExtSettings.passport.oauth.instagram.scope
-		})(req, res, next);
-	}
-};
-
-/**
- * instagram oauth callback
- * @param  {object} req
- * @param  {object} res
- * @return {Function} next() callback
- */
-var instagramcallback = function (req, res, next) {
-	var loginUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoggedInHomepage;
-	var loginFailureUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoginPath + '?return_url=' + req.session.return_url;
-	passport.authenticate('instagram', {
-		successRedirect: loginUrl,
-		failureRedirect: loginFailureUrl,
-		failureFlash: 'Invalid instagram authentication credentials username or password.'
-	})(req, res, next);
-};
-/**
- * logs user in via twitter oauth2
- * @param  {object} req
- * @param  {object} res
- * @return {Function} next() callback
- */
-var twitter = function (req, res, next) {
-	if (configError) {
-		next(configError);
-	}
-	else {
-		passport.authenticate('twitter', {
-			scope: loginExtSettings.passport.oauth.twitter.scope
-		})(req, res, next);
-	}
-};
-
-/**
- * twitter oauth callback
- * @param  {object} req
- * @param  {object} res
- * @return {Function} next() callback
- */
-var twittercallback = function (req, res, next) {
-	var loginUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoggedInHomepage;
-	var loginFailureUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoginPath + '?return_url=' + req.session.return_url;
-	passport.authenticate('twitter', {
-		successRedirect: loginUrl,
-		failureRedirect: loginFailureUrl,
-		failureFlash: 'Invalid twitter authentication credentials username or password.'
-	})(req, res, next);
-};
 
 /**
  * make sure a user is authenticated, if not logged in, send them to login page and return them to original resource after login
@@ -458,6 +362,7 @@ var ensureAuthenticated = function (req, res, next) {
 		next(configError);
 	}
 	else {
+		/* if a user is logged in, and requires to link account, update the user document with social credentials and then pass to the next express middleware */
 		if (req.isAuthenticated()) {
 			if (req.session.linkaccount === true) {
 				var updateuser = {};
@@ -467,16 +372,14 @@ var ensureAuthenticated = function (req, res, next) {
 					model: User,
 					id: req.user._id,
 					updatedoc: updateuser,
-					// saverevision: true,
-					// population: 'contenttypes',
 					res: res,
 					req: req,
-					callback: function (err, updateduser) {
+					callback: function (err /* , updateduser */ ) {
 						if (err) {
 							next(err);
 						}
 						else {
-							logger.verbose('linked ', req.session.linkaccountservice, ' instagram account for ', req.user.id, req.user.email, req.user.username);
+							logger.verbose('linked ', req.session.linkaccountservice, ' account for ', req.user.id, req.user.email, req.user.username);
 							req.session.linkaccount = false;
 							delete req.session.linkaccount;
 							delete req.session.linkaccountdata;
@@ -525,11 +428,6 @@ var ensureAuthenticated = function (req, res, next) {
 		}
 	}
 };
-
-
-
-
-
 
 /**
  * login controller
@@ -583,13 +481,8 @@ var controller = function (resources) {
 		forgot: forgot,
 		reset: reset,
 		token: token,
-		facebook: facebook,
-		facebookcallback: facebookcallback,
-		instagram: instagram,
-		instagramcallback: instagramcallback,
-		twitter: twitter,
-		twittercallback: twittercallback,
-		ensureAuthenticated: ensureAuthenticated
+		ensureAuthenticated: ensureAuthenticated,
+		passport: passport
 	};
 };
 
