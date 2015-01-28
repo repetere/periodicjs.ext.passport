@@ -461,9 +461,9 @@ var controller = function (resources) {
 	var appenvironment = appSettings.application.environment;
 	var settingJSON = fs.readJsonSync(loginExtSettingsFile);
 	loginExtSettings = (settingJSON[appenvironment]) ? extend(defaultExtSettings, settingJSON[appenvironment]) : defaultExtSettings;
-
 	passportController = require('./passport_controller')(resources, {
 		User: User,
+		loginExtSettings: loginExtSettings,
 		passport: passport
 	});
 	passportController.serialize();
@@ -482,6 +482,7 @@ var controller = function (resources) {
 		reset: reset,
 		token: token,
 		ensureAuthenticated: ensureAuthenticated,
+		loginExtSettings: loginExtSettings,
 		passport: passport
 	};
 };

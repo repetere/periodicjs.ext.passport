@@ -24,8 +24,9 @@ module.exports = function (periodic) {
 		authController = periodic.app.controller.extension.login.auth,
 		userRouter = periodic.express.Router(),
 		userController = periodic.app.controller.extension.login.user,
-		socialPassportController = require('./controller/auth')(periodic, {
-			passport: passport
+		socialPassportController = require('./controller/social_controller')(periodic, {
+			passport: passport,
+			loginExtSettings: periodic.app.controller.extension.login.auth.loginExtSettings
 		});
 	//tokenRouter      = periodic.express.Router(),
 	//tokenController  = periodic.app.controller.extension.login.token
