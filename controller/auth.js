@@ -14,7 +14,6 @@ ControllerHelper  = require('periodicjs.core.controller'),
 Extensions        = require('periodicjs.core.extensions'),
 bcrypt            = require('bcrypt'),
 CoreMailer = require('periodicjs.core.mailer'),
-tokenConfig       = require('../config/token'),
 CoreExtension     = new Extensions({
   extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
 }),
@@ -22,6 +21,7 @@ authLoginPath        = '/auth/login/',
 authLogoutPath       = '/',
 authLoggedInHomepage = '/p-admin',
 merge                = require('utils-merge'),
+tokenConfig,
 CoreUtilities,
 CoreController,
 emailtransport,
@@ -166,6 +166,10 @@ var resetPassword = function(req,res,next,user,cb) {
   }
 }
 
+/**
+ * description The save user function has two special fn calls on the model to mark the properties on it as changed/modified this gets around some werid edge cases when its being updated in memory but not save in mongo
+ *
+ */
 function saveUser(user,cb) {
   user.markModified('attributes');
   user.markModified('password');
@@ -179,7 +183,7 @@ function saveUser(user,cb) {
 
 
 var getUser = function(req,res,next,cb) {
-  User.findOne(req.body.email, function(err, user) {
+  User.findOne({email:req.body.email}, function(err, user) {
     if (err) {
       cb(err, null);
     } else if (user) {
@@ -197,8 +201,10 @@ var generateToken = function(user,cb) {
   var now = new Date();
   var expires = new Date(now.getTime() + (tokenConfig.resetTokenExpiresMinutes * 60 * 1000)).getTime();
   user.attributes = {};
-  user.attributes.reset_token = encode(user.email);
+  user.attributes.reset_token = encode({email: user.email, apikey: user.apikey});
   user.attributes.reset_token_expires_millis = expires;
+  //TODO: Look into why mongoose properties 
+  //are not being saved during async fn calls
   user.markModified('attributes');
   user.save(function(err){
     if (err) {
@@ -215,7 +221,8 @@ var emailConfig = function(user,cb) {
   options.mailtransport = emailtransport;
   options.subject = "You forgot your password";
   options.user = user;
-  options.replyTo = 'ecasilla@icloud.com';
+  options.to = user.email;
+  options.replyTo = appSettings.adminnotificationemail;
   cb(null,options);
 
 }
@@ -228,7 +235,7 @@ var sendEmail = function(options,cb) {
   user          = options.user,
   mailoptions   = {};
 
-  mailoptions.to = (options.to) ? options.to : 'ecasilla@icloud.com'
+  mailoptions.to = (options.to) ? options.to : appSettings.adminnotificationemail
   mailoptions.cc = options.cc; //options.ccc;
   mailoptions.bcc = options.bcc;
   mailoptions.replyTo = options.replyTo;
@@ -255,11 +262,10 @@ var forgot = function(req,res,next) {
   waterfall(arr, 
     function(err,results) {
       if (err){ 
-        return next(err);
+        res.flash('error',err)
         res.redirect('/auth/forgot');
       }
       res.send(results);
-      next();
     }); 
 };
 
@@ -285,7 +291,7 @@ var reset = function(req,res,next) {
       return res.redirect('/auth/forgot');
     }
     //Check to make sure token is valid and sign by us
-    if (current_user.email !== decode_token) {
+    if (current_user.email !== decode_token.email && current_user.api_key !== decode_token.api_key) {
       req.flash('error', "This token is not valid please try again")
       res.redirect('/auth/forgot');
     }
@@ -814,10 +820,11 @@ var controller = function (resources) {
         throw new Error(err);
       }
       else {
-        // console.log('settingJSON', settingJSON);
+         console.log('settingJSON', settingJSON);
         if (settingJSON[appenvironment]) {
           loginExtSettings = settingJSON[appenvironment];
           authLoginPath = (loginExtSettings.settings.authLoginPath) ? loginExtSettings.settings.authLoginPath : authLoginPath;
+          tokenConfig = loginExtSettings.token;
           authLogoutPath = (loginExtSettings.settings.authLogoutPath) ? loginExtSettings.settings.authLogoutPath : authLogoutPath;
           authLoggedInHomepage = (loginExtSettings.settings.authLoggedInHomepage) ? loginExtSettings.settings.authLoggedInHomepage : authLoggedInHomepage;
 
