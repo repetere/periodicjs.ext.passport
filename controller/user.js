@@ -1,14 +1,14 @@
 'use strict';
 
-var path = require('path'),
-	Utilities = require('periodicjs.core.utilities'),
+var Utilities = require('periodicjs.core.utilities'),
 	ControllerHelper = require('periodicjs.core.controller'),
 	CoreMailer = require('periodicjs.core.mailer'),
-	userHelper,
 	appSettings,
 	mongoose,
 	User,
 	logger,
+	loginExtSettings,
+	appenvironment,
 	welcomeemailtemplate,
 	emailtransport,
 	CoreUtilities,
@@ -78,13 +78,41 @@ var newuser = function (req, res) {
  */
 var create = function (req, res) {
 	var userdata = CoreUtilities.removeEmptyObjectValues(req.body);
-	userHelper.createNewUser({
-		userdata: userdata,
-		User: User,
-		res: res,
-		req: req,
-		applicationController: CoreController
-	});
+	User.createNewUserAccount({
+			newuser: userdata,
+			lognewuserin: true,
+			req: req,
+			send_new_user_email: true,
+			welcomeemaildata: {
+				getEmailTemplateFunction: CoreController.getPluginViewDefaultTemplate,
+				emailviewname: 'email/user/welcome',
+				themefileext: appSettings.templatefileextension,
+				sendEmailFunction: CoreMailer.sendEmail,
+				subject: appSettings.name + ' New User Registration',
+				replyto: appSettings.adminnotificationemail,
+				hostname: req.headers.host,
+				appenvironment: appenvironment,
+				appname: appSettings.name,
+			}
+		},
+		function (newusererr /*, newuser*/ ) {
+			if (newusererr) {
+				CoreController.handleDocumentQueryErrorResponse({
+					err: newusererr,
+					res: res,
+					req: req
+				});
+			}
+			else {
+				logger.silly('controller - periodic.ext.login/user.js - ' + req.session.return_url);
+				if (req.session.return_url) {
+					return res.redirect(req.session.return_url);
+				}
+				else {
+					return res.redirect('/');
+				}
+			}
+		});
 };
 
 /**
@@ -236,40 +264,11 @@ var controller = function (resources) {
 	logger = resources.logger;
 	mongoose = resources.mongoose;
 	appSettings = resources.settings;
-	userHelper = require(path.join(process.cwd(), 'app/controller/helpers/user'))(resources);
 	User = mongoose.model('User');
 	CoreController = new ControllerHelper(resources);
 	CoreUtilities = new Utilities(resources);
-	CoreController.getPluginViewDefaultTemplate({
-			viewname: 'email/user/welcome',
-			themefileext: appSettings.templatefileextension
-		},
-		function (err, templatepath) {
-			if (templatepath === 'email/user/welcome') {
-				templatepath = path.resolve(process.cwd(), 'app/views', templatepath + '.' + appSettings.templatefileextension);
-			}
-			User.getWelcomeEmailTemplate({
-				templatefile: templatepath
-			}, function (err, emailtemplate) {
-				if (err) {
-					console.error(err);
-				}
-				else {
-					welcomeemailtemplate = emailtemplate;
-				}
-			});
-		}
-	);
-	CoreMailer.getTransport({
-		appenvironment: appSettings.application.environment
-	}, function (err, transport) {
-		if (err) {
-			console.error(err);
-		}
-		else {
-			emailtransport = transport;
-		}
-	});
+	loginExtSettings = resources.app.controller.extension.login.loginExtSettings;
+	appenvironment = appSettings.application.environment;
 
 	return {
 		login: login,

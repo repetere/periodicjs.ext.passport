@@ -1,6 +1,19 @@
 'use strict';
 
-// var passport = require('passport');
+var path = require('path'),
+	fs = require('fs-extra'),
+	extend = require('util-extend'),
+	loginExtSettings,
+	appenvironment,
+	settingJSON,
+	Extensions = require('periodicjs.core.extensions'),
+	CoreExtension = new Extensions({
+		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
+	}),
+	loginExtSettingsFile = path.resolve(CoreExtension.getconfigdir({
+		extname: 'periodicjs.ext.login'
+	}), './settings.json'),
+	defaultExtSettings = require('./controller/default_config');
 
 /**
  * An authentication extension that uses passport to authenticate user sessions.
@@ -13,11 +26,17 @@
  * @param  {object} periodic variable injection of resources from current periodic instance
  */
 module.exports = function (periodic) {
-	// express,app,logger,config,db,mongoose
+	// periodic = express,app,logger,config,db,mongoose
+
+	appenvironment = periodic.settings.application.environment;
+	settingJSON = fs.readJsonSync(loginExtSettingsFile);
+	loginExtSettings = (settingJSON[appenvironment]) ? extend(defaultExtSettings, settingJSON[appenvironment]) : defaultExtSettings;
+
 	periodic.app.controller.extension.login = {
-		auth: require('./controller/auth')(periodic),
-		user: require('./controller/user')(periodic)
+		loginExtSettings: loginExtSettings
 	};
+	periodic.app.controller.extension.login.auth = require('./controller/auth')(periodic);
+	periodic.app.controller.extension.login.user = require('./controller/user')(periodic);
 
 	var passport = periodic.app.controller.extension.login.auth.passport,
 		authRouter = periodic.express.Router(),

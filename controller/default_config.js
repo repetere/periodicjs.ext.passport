@@ -8,7 +8,14 @@ module.exports = {
 		usepassword: true,
 		requireusername: true,
 		requireemail: true,
-		disablesocialsignin: true
+		disablesocialsignin: true,
+		new_user_validation: {
+			checkusername: true,
+			checkpassword: true,
+			length_of_username: 4,
+			length_of_password: 8,
+			send_new_user_email: true
+		}
 	},
 	passport: {
 		oauth: {

@@ -1,16 +1,9 @@
 'use strict';
 
 var passport = require('passport'),
-	path = require('path'),
-	fs = require('fs-extra'),
 	merge = require('utils-merge'),
 	Utilities = require('periodicjs.core.utilities'),
 	ControllerHelper = require('periodicjs.core.controller'),
-	Extensions = require('periodicjs.core.extensions'),
-	CoreExtension = new Extensions({
-		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
-	}),
-	extend = require('util-extend'),
 	CoreUtilities,
 	CoreController,
 	appSettings,
@@ -18,11 +11,8 @@ var passport = require('passport'),
 	User,
 	logger,
 	configError,
-	loginExtSettingsFile,
-	emailController,
 	loginExtSettings,
-	passportController,
-	defaultExtSettings = require('./default_config');
+	passportController;
 
 /**
  * logins a user using passport's local strategy, if a user is passed to this function, then the user will be logged in and req.user will be populated
@@ -200,13 +190,9 @@ var controller = function (resources) {
 	User = mongoose.model('User');
 	CoreController = new ControllerHelper(resources);
 	CoreUtilities = new Utilities(resources);
-	loginExtSettingsFile = path.resolve(CoreExtension.getconfigdir({
-		extname: 'periodicjs.ext.login'
-	}), './settings.json');
 
-	var appenvironment = appSettings.application.environment;
-	var settingJSON = fs.readJsonSync(loginExtSettingsFile);
-	loginExtSettings = (settingJSON[appenvironment]) ? extend(defaultExtSettings, settingJSON[appenvironment]) : defaultExtSettings;
+	// var appenvironment = appSettings.application.environment;
+	loginExtSettings = resources.app.controller.extension.login.loginExtSettings;
 	passportController = require('./passport_controller')(resources, {
 		User: User,
 		loginExtSettings: loginExtSettings,
