@@ -1,6 +1,6 @@
 'use strict';
 
-var passport = require('passport');
+// var passport = require('passport');
 
 /**
  * An authentication extension that uses passport to authenticate user sessions.
@@ -27,7 +27,13 @@ module.exports = function (periodic) {
 		socialPassportController = require('./controller/social_controller')(periodic, {
 			passport: passport,
 			loginExtSettings: periodic.app.controller.extension.login.auth.loginExtSettings
+		}),
+		tokenController = require('./controller/token_controller')(periodic, {
+			passport: passport,
+			loginExtSettings: periodic.app.controller.extension.login.auth.loginExtSettings
 		});
+	periodic.app.controller.extension.login.token = tokenController;
+	periodic.app.controller.extension.login.social = socialPassportController;
 	//tokenRouter      = periodic.express.Router(),
 	//tokenController  = periodic.app.controller.extension.login.token
 	//socialRouter     = periodic.express.Router(),
@@ -43,9 +49,9 @@ module.exports = function (periodic) {
 	authRouter.get('/logout', authController.logout);
 	//token controller & router
 	authRouter.get('/forgot', userController.forgot);
-	authRouter.post('/forgot', authController.forgot);
-	authRouter.get('/reset/:token', authController.reset);
-	authRouter.post('/reset/:token', authController.token);
+	authRouter.post('/forgot', tokenController.forgot);
+	authRouter.get('/reset/:token', tokenController.reset);
+	authRouter.post('/reset/:token', tokenController.token);
 	//social controller & router
 	authRouter.get('/facebook', socialPassportController.facebook);
 	authRouter.get('/facebook/callback', socialPassportController.facebookcallback);
