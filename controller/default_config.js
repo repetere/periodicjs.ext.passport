@@ -30,7 +30,7 @@ module.exports = {
 	},
 	token: {
 		ttl: '3600000',
-		resetTokenExpiresMinutes: '5',
+		resetTokenExpiresMinutes: '60',
 		secret: 'periodicjs'
 	}
 };

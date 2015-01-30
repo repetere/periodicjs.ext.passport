@@ -99,7 +99,7 @@ var create = function (req, res) {
 		},
 		finalnewusersettings;
 	finalnewusersettings = extend(newuseroptions, loginExtSettings.new_user_validation);
-	console.log('finalnewusersettings',finalnewusersettings);
+	// console.log('finalnewusersettings',finalnewusersettings);
 	User.createNewUserAccount(
 		finalnewusersettings,
 		function (newusererr /*, newuser*/ ) {
