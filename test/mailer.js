@@ -8,24 +8,23 @@ var appSettings;
 
 
 //CoreController.getPluginViewDefaultTemplate({
-  //viewname: 'views/user/email/forgot',
-  //themefileext: appSettings.templatefileextension
+//viewname: 'views/user/email/forgot',
+//themefileext: appSettings.templatefileextension
 //},
 //function (err, templatepath) {
-  //if (templatepath === 'views/user/email/forgot') {
-    //templatepath = path.resolve(process.cwd(), 'node_modules/periodicjs.ext.login/views', templatepath + '.' + appSettings.templatefileextension);
-  //}
-  //changedemailtemplate = templatepath;
+//if (templatepath === 'views/user/email/forgot') {
+//templatepath = path.resolve(process.cwd(), 'node_modules/periodicjs.ext.login/views', templatepath + '.' + appSettings.templatefileextension);
+//}
+//changedemailtemplate = templatepath;
 //}
 //);
 //CoreMailer.getTransport({
-  //appenvironment: appSettings.application.environment
+//appenvironment: appSettings.application.environment
 //}, function (err, transport) {
-  //if (err) {
-    //console.error(err);
-  //}
-  //else {
-    //emailtransport = transport;
-  //}
+//if (err) {
+//console.error(err);
+//}
+//else {
+//emailtransport = transport;
+//}
 //});
-
