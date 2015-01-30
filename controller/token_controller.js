@@ -149,7 +149,7 @@ var generateToken = function (user, req, cb) {
 
 var emailForgotPasswordLink = function (user, req, cb) {
 	CoreController.getPluginViewDefaultTemplate({
-			viewname: 'email/user/forgot',
+			viewname: 'email/user/forgot_password_link',
 			themefileext: appSettings.templatefileextension
 		},
 		function (err, templatepath) {
@@ -158,7 +158,7 @@ var emailForgotPasswordLink = function (user, req, cb) {
 			}
 			else {
 				// console.log('user for forgot password', user);
-				if (templatepath === 'email/user/forgot') {
+				if (templatepath === 'email/user/forgot_password_link') {
 					templatepath = path.resolve(process.cwd(), 'node_modules/periodicjs.ext.login/views', templatepath + '.' + appSettings.templatefileextension);
 				}
 				CoreMailer.sendEmail({
@@ -179,9 +179,9 @@ var emailForgotPasswordLink = function (user, req, cb) {
 	// cb(null, options);
 };
 
-var emailResetPasswordLink = function (user, req, cb) {
+var emailResetPasswordNotification = function (user, req, cb) {
 	CoreController.getPluginViewDefaultTemplate({
-			viewname: 'email/user/forgot',
+			viewname: 'email/user/reset_password_notification',
 			themefileext: appSettings.templatefileextension
 		},
 		function (err, templatepath) {
@@ -190,14 +190,14 @@ var emailResetPasswordLink = function (user, req, cb) {
 			}
 			else {
 				// console.log('user for forgot password', user);
-				if (templatepath === 'email/user/forgot') {
+				if (templatepath === 'email/user/reset_password_notification') {
 					templatepath = path.resolve(process.cwd(), 'node_modules/periodicjs.ext.login/views', templatepath + '.' + appSettings.templatefileextension);
 				}
 				CoreMailer.sendEmail({
 					appenvironment: appenvironment,
 					to: user.email,
 					replyTo: appSettings.adminnotificationemail,
-					subject: appSettings.name + ' - Reset your password',
+					subject: appSettings.name + ' - Password reset notification',
 					emailtemplatefilepath: templatepath,
 					emailtemplatedata: {
 						user: user,
@@ -335,7 +335,7 @@ var token = function (req, res, next) {
 			invalidateUserToken,
 			resetPassword,
 			saveUser,
-			emailResetPasswordLink
+			emailResetPasswordNotification
 		],
 		function (err /*, results*/ ) {
 			if (err) {
