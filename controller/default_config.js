@@ -4,7 +4,6 @@ module.exports = {
 	settings: {
 		authLoginPath: '/auth/login',
 		authLogoutPath: '/',
-		authLogoutPath2: '/2',
 		authLoggedInHomepage: '/p-admin',
 		usepassword: true,
 		requireusername: true,
