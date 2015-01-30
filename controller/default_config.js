@@ -4,18 +4,19 @@ module.exports = {
 	settings: {
 		authLoginPath: '/auth/login',
 		authLogoutPath: '/',
+		authLogoutPath2: '/2',
 		authLoggedInHomepage: '/p-admin',
 		usepassword: true,
 		requireusername: true,
 		requireemail: true,
-		disablesocialsignin: true,
-		new_user_validation: {
-			checkusername: true,
-			checkpassword: true,
-			length_of_username: 4,
-			length_of_password: 8,
-			send_new_user_email: true
-		}
+		disablesocialsignin: true
+	},
+	new_user_validation: {
+		checkusername: true,
+		checkpassword: true,
+		length_of_username: 4,
+		length_of_password: 8,
+		send_new_user_email: true
 	},
 	passport: {
 		oauth: {
@@ -29,7 +30,7 @@ module.exports = {
 	},
 	token: {
 		ttl: '3600000',
-		resetTokenExpiresMinutes: '60',
+		resetTokenExpiresMinutes: '5',
 		secret: 'periodicjs'
 	}
 };

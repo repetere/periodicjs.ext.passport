@@ -2,15 +2,15 @@
 <body style="background:#ececec; margin:1em; padding:1em;">
 	<div style="margin:1em; background:#fff; padding:0.5em;">
 		<h2>Forgot Password Notification.</h2>
-		<p>You've chosen to reset your password, click here or copy this url (<%- user.attributes.reset_token %>) to reset your password</p>
+		<p>You've chosen to reset your password, <a href="http://<%= hostname %>/auth/reset/<%- user.attributes.reset_token_link %>">click here</a> or copy this url (http://<%= hostname %>/auth/reset/<%- user.attributes.reset_token_link %>) to reset your password</p>
 
 		<p> 
 			If you did not request your password to be reset please ignore this email and your password will stay as it is.
 		</p>
 		<p>
-			Login with your email or username (<a href='http://example.com/<%= user.username %>' target='_blank'><%= user.username %></a>) at 
-			<a href='http://example.com/' target='_blank'>
-			http://example.com/
+			Login to <%- appname %> at 
+			<a href='http://<%= hostname %>/' target='_blank'>
+			http://<%= hostname %>/
 			</a> 
 		</p>
 	</div>

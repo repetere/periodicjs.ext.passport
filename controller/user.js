@@ -3,6 +3,7 @@
 var Utilities = require('periodicjs.core.utilities'),
 	ControllerHelper = require('periodicjs.core.controller'),
 	CoreMailer = require('periodicjs.core.mailer'),
+	extend = require('utils-merge'),
 	appSettings,
 	mongoose,
 	User,
@@ -77,8 +78,8 @@ var newuser = function (req, res) {
  * @return {object} reponds with an error page or requested view
  */
 var create = function (req, res) {
-	var userdata = CoreUtilities.removeEmptyObjectValues(req.body);
-	User.createNewUserAccount({
+	var userdata = CoreUtilities.removeEmptyObjectValues(req.body),
+		newuseroptions = {
 			newuser: userdata,
 			lognewuserin: true,
 			req: req,
@@ -95,6 +96,10 @@ var create = function (req, res) {
 				appname: appSettings.name,
 			}
 		},
+		finalnewusersettings;
+	finalnewusersettings = extend(newuseroptions, loginExtSettings.new_user_validation);
+	User.createNewUserAccount(
+		finalnewusersettings,
 		function (newusererr /*, newuser*/ ) {
 			if (newusererr) {
 				CoreController.handleDocumentQueryErrorResponse({

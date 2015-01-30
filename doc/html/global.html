@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Module: userloginController</title>
+    <title>JSDoc: Global</title>
     
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Module: userloginController</h1>
+    <h1 class="page-title">Global</h1>
     
     
 
@@ -27,7 +27,7 @@
     
 <header>
     <h2>
-    userloginController
+    
     </h2>
     
 </header>  
@@ -37,8 +37,6 @@
     
     
     
-        
-            <div class="description"><p>login controller</p></div>
         
         
         
@@ -54,31 +52,13 @@
     
     
     
-    <dt class="tag-author">Author:</dt>
-    <dd class="tag-author">
-        <ul>
-            <li>Yaw Joseph Etse</li>
-        </ul>
-    </dd>
-    
-    
-    
-    <dt class="tag-copyright">Copyright:</dt>
-    <dd class="tag-copyright"><ul class="dummy"><li>Copyright (c) 2014 Typesettin. All rights reserved.</li></ul></dd>
-    
-    
-    
-    <dt class="tag-license">License:</dt>
-    <dd class="tag-license"><ul class="dummy"><li>MIT</li></ul></dd>
     
     
     
     
     
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="user.js.html">controller/user.js</a>, <a href="user.js.html#line254">line 254</a>
-    </li></ul></dd>
+    
+    
     
     
     
@@ -97,18 +77,6 @@
     
     
     
-    
-        <h3 class="subsection-title">Requires</h3>
-        
-        <ul>
-            <li>module:path</li>
-        
-            <li>module:periodicjs.core.utilities</li>
-        
-            <li>module:periodicjs.core.controller</li>
-        
-            <li>module:periodicjs.core.mailer</li>
-        </ul>
     
     
     
@@ -123,7 +91,7 @@
         <dl>
             
 <dt>
-    <h4 class="name" id="create"><span class="type-signature">&lt;inner> </span>create<span class="signature">(req, res)</span><span class="type-signature"> &rarr; {object}</span></h4>
+    <h4 class="name" id="facebook"><span class="type-signature"></span>facebook<span class="signature">(req, res)</span><span class="type-signature"> &rarr; {function}</span></h4>
     
     
 </dt>
@@ -131,7 +99,7 @@
     
     
     <div class="description">
-        <p>create a new user account</p>
+        <p>logs user in via facebook oauth2</p>
     </div>
     
 
@@ -235,7 +203,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="user.js.html">controller/user.js</a>, <a href="user.js.html#line80">line 80</a>
+        <a href="social_controller.js.html">controller/social_controller.js</a>, <a href="social_controller.js.html#line16">line 16</a>
     </li></ul></dd>
     
     
@@ -260,7 +228,7 @@
     
             
 <div class="param-desc">
-    <p>reponds with an error page or requested view</p>
+    <p>next() callback</p>
 </div>
 
 
@@ -271,7 +239,7 @@
 	</dt>
 	<dd>
 		
-<span class="param-type">object</span>
+<span class="param-type">function</span>
 
 
 	</dd>
@@ -285,7 +253,7 @@
         
             
 <dt>
-    <h4 class="name" id="finishregistration"><span class="type-signature">&lt;inner> </span>finishregistration<span class="signature">(req, res)</span><span class="type-signature"> &rarr; {object}</span></h4>
+    <h4 class="name" id="facebookcallback"><span class="type-signature"></span>facebookcallback<span class="signature">(req, res)</span><span class="type-signature"> &rarr; {function}</span></h4>
     
     
 </dt>
@@ -293,7 +261,7 @@
     
     
     <div class="description">
-        <p>complete registration form view</p>
+        <p>facebook oauth callback</p>
     </div>
     
 
@@ -397,7 +365,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="user.js.html">controller/user.js</a>, <a href="user.js.html#line129">line 129</a>
+        <a href="social_controller.js.html">controller/social_controller.js</a>, <a href="social_controller.js.html#line33">line 33</a>
     </li></ul></dd>
     
     
@@ -422,7 +390,7 @@
     
             
 <div class="param-desc">
-    <p>reponds with an error page or requested view</p>
+    <p>next() callback</p>
 </div>
 
 
@@ -433,7 +401,7 @@
 	</dt>
 	<dd>
 		
-<span class="param-type">object</span>
+<span class="param-type">function</span>
 
 
 	</dd>
@@ -447,7 +415,7 @@
         
             
 <dt>
-    <h4 class="name" id="forgot"><span class="type-signature">&lt;inner> </span>forgot<span class="signature">(req, res)</span><span class="type-signature"> &rarr; {object}</span></h4>
+    <h4 class="name" id="instagram"><span class="type-signature"></span>instagram<span class="signature">(req, res)</span><span class="type-signature"> &rarr; {function}</span></h4>
     
     
 </dt>
@@ -455,7 +423,7 @@
     
     
     <div class="description">
-        <p>Shows the forgot password view</p>
+        <p>logs user in via instagram oauth2</p>
     </div>
     
 
@@ -559,7 +527,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="user.js.html">controller/user.js</a>, <a href="user.js.html#line233">line 233</a>
+        <a href="social_controller.js.html">controller/social_controller.js</a>, <a href="social_controller.js.html#line48">line 48</a>
     </li></ul></dd>
     
     
@@ -584,7 +552,7 @@
     
             
 <div class="param-desc">
-    <p>reponds with an error page or requested view</p>
+    <p>next() callback</p>
 </div>
 
 
@@ -595,7 +563,7 @@
 	</dt>
 	<dd>
 		
-<span class="param-type">object</span>
+<span class="param-type">function</span>
 
 
 	</dd>
@@ -609,7 +577,7 @@
         
             
 <dt>
-    <h4 class="name" id="login"><span class="type-signature">&lt;inner> </span>login<span class="signature">(req, res)</span><span class="type-signature"> &rarr; {object}</span></h4>
+    <h4 class="name" id="instagramcallback"><span class="type-signature"></span>instagramcallback<span class="signature">(req, res)</span><span class="type-signature"> &rarr; {function}</span></h4>
     
     
 </dt>
@@ -617,7 +585,7 @@
     
     
     <div class="description">
-        <p>user login page</p>
+        <p>instagram oauth callback</p>
     </div>
     
 
@@ -721,7 +689,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="user.js.html">controller/user.js</a>, <a href="user.js.html#line24">line 24</a>
+        <a href="social_controller.js.html">controller/social_controller.js</a>, <a href="social_controller.js.html#line65">line 65</a>
     </li></ul></dd>
     
     
@@ -746,7 +714,7 @@
     
             
 <div class="param-desc">
-    <p>reponds with an error page or requested view</p>
+    <p>next() callback</p>
 </div>
 
 
@@ -757,7 +725,7 @@
 	</dt>
 	<dd>
 		
-<span class="param-type">object</span>
+<span class="param-type">function</span>
 
 
 	</dd>
@@ -771,7 +739,7 @@
         
             
 <dt>
-    <h4 class="name" id="newuser"><span class="type-signature">&lt;inner> </span>newuser<span class="signature">(req, res)</span><span class="type-signature"> &rarr; {object}</span></h4>
+    <h4 class="name" id="saveUser"><span class="type-signature"></span>saveUser<span class="signature">()</span><span class="type-signature"></span></h4>
     
     
 </dt>
@@ -779,7 +747,76 @@
     
     
     <div class="description">
-        <p>user registration form</p>
+        <p>description The save user function has two special fn calls on the model to mark the properties on it as changed/modified this gets around some werid edge cases when its being updated in memory but not save in mongo</p>
+    </div>
+    
+
+    
+    
+    
+    
+    
+    
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="token_controller.js.html">controller/token_controller.js</a>, <a href="token_controller.js.html#line94">line 94</a>
+    </li></ul></dd>
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="twitter"><span class="type-signature"></span>twitter<span class="signature">(req, res)</span><span class="type-signature"> &rarr; {function}</span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>logs user in via twitter oauth2</p>
     </div>
     
 
@@ -883,7 +920,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="user.js.html">controller/user.js</a>, <a href="user.js.html#line52">line 52</a>
+        <a href="social_controller.js.html">controller/social_controller.js</a>, <a href="social_controller.js.html#line80">line 80</a>
     </li></ul></dd>
     
     
@@ -908,7 +945,7 @@
     
             
 <div class="param-desc">
-    <p>reponds with an error page or requested view</p>
+    <p>next() callback</p>
 </div>
 
 
@@ -919,7 +956,7 @@
 	</dt>
 	<dd>
 		
-<span class="param-type">object</span>
+<span class="param-type">function</span>
 
 
 	</dd>
@@ -933,7 +970,7 @@
         
             
 <dt>
-    <h4 class="name" id="updateuserregistration"><span class="type-signature">&lt;inner> </span>updateuserregistration<span class="signature">(req, res)</span><span class="type-signature"> &rarr; {object}</span></h4>
+    <h4 class="name" id="twittercallback"><span class="type-signature"></span>twittercallback<span class="signature">(req, res)</span><span class="type-signature"> &rarr; {function}</span></h4>
     
     
 </dt>
@@ -941,7 +978,7 @@
     
     
     <div class="description">
-        <p>if username required, updates user username after account is created</p>
+        <p>twitter oauth callback</p>
     </div>
     
 
@@ -1045,7 +1082,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="user.js.html">controller/user.js</a>, <a href="user.js.html#line157">line 157</a>
+        <a href="social_controller.js.html">controller/social_controller.js</a>, <a href="social_controller.js.html#line97">line 97</a>
     </li></ul></dd>
     
     
@@ -1070,7 +1107,7 @@
     
             
 <div class="param-desc">
-    <p>reponds with an error page or requested view</p>
+    <p>next() callback</p>
 </div>
 
 
@@ -1081,7 +1118,169 @@
 	</dt>
 	<dd>
 		
+<span class="param-type">function</span>
+
+
+	</dd>
+</dl>
+
+        
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="usePassport"><span class="type-signature"></span>usePassport<span class="signature">(req, res)</span><span class="type-signature"> &rarr; {function}</span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>uses passport to log users in, calls done(err,user) when complete, can define what credentials to check here</p>
+    </div>
+    
+
+    
+    
+    
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+		
+		<th>Type</th>
+		
+		
+		
+		
+		
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+	
+	<tbody>
+	
+	
+        <tr>
+            
+                <td class="name"><code>req</code></td>
+            
+            
+            <td class="type">
+            
+                
 <span class="param-type">object</span>
+
+
+            
+            </td>
+            
+            
+            
+            
+            
+            <td class="description last"></td>
+        </tr>
+	
+	
+	
+        <tr>
+            
+                <td class="name"><code>res</code></td>
+            
+            
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+            
+            
+            
+            
+            
+            <td class="description last"></td>
+        </tr>
+	
+	
+	</tbody>
+</table>
+    
+    
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="passport_controller.js.html">controller/passport_controller.js</a>, <a href="passport_controller.js.html#line73">line 73</a>
+    </li></ul></dd>
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+
+    
+
+    
+    
+    
+    
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    <p>done(err,user) callback</p>
+</div>
+
+
+
+<dl>
+	<dt>
+		Type
+	</dt>
+	<dd>
+		
+<span class="param-type">function</span>
 
 
 	</dd>

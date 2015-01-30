@@ -2,7 +2,7 @@
 
 var path = require('path'),
 	fs = require('fs-extra'),
-	extend = require('util-extend'),
+	extend = require('utils-merge'),
 	loginExtSettings,
 	appenvironment,
 	settingJSON,
@@ -27,10 +27,14 @@ var path = require('path'),
  */
 module.exports = function (periodic) {
 	// periodic = express,app,logger,config,db,mongoose
+	//console.log('before defaultExtSettings', defaultExtSettings);
 
 	appenvironment = periodic.settings.application.environment;
 	settingJSON = fs.readJsonSync(loginExtSettingsFile);
+	//console.log('before settingJSON[appenvironment]', settingJSON[appenvironment]);
 	loginExtSettings = (settingJSON[appenvironment]) ? extend(defaultExtSettings, settingJSON[appenvironment]) : defaultExtSettings;
+	//console.log('after defaultExtSettings', defaultExtSettings);
+	//console.log('after settingJSON[appenvironment]', settingJSON[appenvironment]);
 
 	periodic.app.controller.extension.login = {
 		loginExtSettings: loginExtSettings
@@ -69,8 +73,8 @@ module.exports = function (periodic) {
 	//token controller & router
 	authRouter.get('/forgot', userController.forgot);
 	authRouter.post('/forgot', tokenController.forgot);
-	authRouter.get('/reset/:token', tokenController.reset);
-	authRouter.post('/reset/:token', tokenController.token);
+	authRouter.get('/reset/:token', tokenController.get_token, tokenController.reset);
+	authRouter.post('/reset/:token', tokenController.get_token, tokenController.token);
 	//social controller & router
 	authRouter.get('/facebook', socialPassportController.facebook);
 	authRouter.get('/facebook/callback', socialPassportController.facebookcallback);
