@@ -84,6 +84,7 @@ var create = function (req, res) {
 			lognewuserin: true,
 			req: req,
 			send_new_user_email: true,
+      requireuseractivation:loginExtSettings.settings.requireuseractivation,
 			welcomeemaildata: {
 				getEmailTemplateFunction: CoreController.getPluginViewDefaultTemplate,
 				emailviewname: 'email/user/welcome',
@@ -98,6 +99,7 @@ var create = function (req, res) {
 		},
 		finalnewusersettings;
 	finalnewusersettings = extend(newuseroptions, loginExtSettings.new_user_validation);
+	console.log('finalnewusersettings',finalnewusersettings);
 	User.createNewUserAccount(
 		finalnewusersettings,
 		function (newusererr /*, newuser*/ ) {

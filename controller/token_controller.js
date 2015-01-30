@@ -260,6 +260,13 @@ var get_token = function (req, res, next) {
 	});
 };
 
+/*
+var get_activation_token(req,res,next)
+set (look at line 257)
+				req.controllerData.activation_token = user_with_token.attributes.activation_token; (double check this)
+
+ */
+
 //GET if the user token is vaild show the change password page
 var reset = function (req, res) {
 	var token = req.controllerData.token,
@@ -350,6 +357,31 @@ var token = function (req, res, next) {
 		});
 };
 
+var getTokenExpiresTime = function(){
+	var now = new Date();
+	return new Date(now.getTime() + (loginExtSettings.token.resetTokenExpiresMinutes * 60 * 1000)).getTime();
+};
+
+var create_validation_token = function(req,res,next){
+	try{
+		var userdata = CoreUtilities.removeEmptyObjectValues(req.body),
+			salt = bcrypt.genSaltSync(10),
+			expires = getTokenExpiresTime(),
+			validation_token = encode({
+				email: userdata.email
+			});
+		userdata.attributes = {};
+		userdata.attributes.validation_token = validation_token;
+		userdata.attributes.validation_token_link = CoreUtilities.makeNiceName(bcrypt.hashSync(userdata.attributes.validation_token, salt));
+		userdata.attributes.reset_token_expires_millis = expires;
+
+		req.body = userdata;
+		next();
+	}
+	catch(e){
+		next(e);
+	}
+};
 
 var tokenController = function (resources, passportResources) {
 	appSettings = resources.settings;
@@ -365,6 +397,7 @@ var tokenController = function (resources, passportResources) {
 		forgot: forgot,
 		reset: reset,
 		get_token: get_token,
+		create_validation_token: create_validation_token,
 		token: token
 	};
 };

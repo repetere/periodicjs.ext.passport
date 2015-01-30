@@ -7,6 +7,7 @@
       "usepassword":true,
       "requireusername":true,
       "requireemail":true,
+      "requireuseractivation":true,
       "disablesocialsignin":true
     },
       "new_user_validation": {

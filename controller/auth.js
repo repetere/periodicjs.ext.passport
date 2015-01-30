@@ -138,6 +138,14 @@ var ensureAuthenticated = function (req, res, next) {
 			else if (loginExtSettings && loginExtSettings.settings.requireemail !== false && !req.user.email) {
 				res.redirect('/auth/user/finishregistration?required=email');
 			}
+			/*
+			if settings.requireactivation && user.activted ===false
+				if has an req.originalURL
+					store original url in req.session.returnurl
+					redirect to /auth/user/activation?return url (see below on around 167)
+				else
+					redirect to /auth/user/activation
+			 */
 			else {
 				return next();
 			}
@@ -164,6 +172,26 @@ var ensureAuthenticated = function (req, res, next) {
 		}
 	}
 };
+
+
+/*
+
+middleware to get activation link is in token controller, 
+req.controllerData.activation_token is set in that middleware function
+
+this page requires authetication
+get ->get_activation /auth/user/activation:activation_link function(req,res)
+	if(req.controllerData.activation_token)
+		-> update user status
+			if status updated
+				remove the req.session.return_url
+				req.flash success -> user validated
+				redirect to return_url
+	else
+		render page validation page
+			form input validation link or send a new validation email
+ */
+
 
 /**
  * login controller

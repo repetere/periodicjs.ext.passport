@@ -75,6 +75,13 @@ module.exports = function (periodic) {
 	authRouter.post('/forgot', tokenController.forgot);
 	authRouter.get('/reset/:token', tokenController.get_token, tokenController.reset);
 	authRouter.post('/reset/:token', tokenController.get_token, tokenController.token);
+
+/*
+these both require authentication, look at admin extension for ensureAUthenticated 
+get:userrouter-> activation (tokencontroller.get_activation_token, authcontoller.get_activation);
+post:userrouter-> activation (tokencontroller.get_activation_token,authcontroller.activate_user);
+ */
+
 	//social controller & router
 	authRouter.get('/facebook', socialPassportController.facebook);
 	authRouter.get('/facebook/callback', socialPassportController.facebookcallback);
@@ -86,7 +93,7 @@ module.exports = function (periodic) {
 	userRouter.get('/new|/register', userController.newuser);
 	userRouter.get('/finishregistration', userController.finishregistration);
 
-	userRouter.post('/new', userController.create);
+	userRouter.post('/new', tokenController.create_validation_token, userController.create);
 	userRouter.post('/finishregistration', userController.updateuserregistration);
 
 	periodic.app.use(authController.rememberme);
