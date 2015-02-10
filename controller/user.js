@@ -207,7 +207,7 @@ var updateuserregistration = function (req, res) {
 								logger.error(err);
 							}
 							else {
-								// console.log('user for forgot password', user);
+								// console.log('user update registration', userSaved);
 								if (templatepath === 'email/user/update_user_account') {
 									templatepath = path.resolve(process.cwd(), 'node_modules/periodicjs.ext.login/views', templatepath + '.' + appSettings.templatefileextension);
 								}
@@ -222,12 +222,15 @@ var updateuserregistration = function (req, res) {
 										user: userSaved,
 										appname: appSettings.name,
 										hostname: req.headers.host,
-										update_message: 'updated username'
+										update_message: 'Your user account username was updated'
 									}
 								}, 
 								function(err){
 									if(err){
 										logger.error(err);
+									}
+									else{
+										logger.silly('sent email');
 									}
 								});
 
