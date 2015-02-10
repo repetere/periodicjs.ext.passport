@@ -4,14 +4,13 @@ var Utilities = require('periodicjs.core.utilities'),
 	ControllerHelper = require('periodicjs.core.controller'),
 	CoreMailer = require('periodicjs.core.mailer'),
 	extend = require('utils-merge'),
+	path = require('path'),
 	appSettings,
 	mongoose,
 	User,
 	logger,
 	loginExtSettings,
 	appenvironment,
-	welcomeemailtemplate,
-	emailtransport,
 	CoreUtilities,
 	CoreController;
 
@@ -168,7 +167,7 @@ var updateuserregistration = function (req, res) {
 					res: res,
 					req: req,
 					errorflash: userError.message,
-					redirecturl: '/user/finishregistration'
+					redirecturl: '/auth/user/finishregistration'
 				});
 			}
 			else if (!userToUpdate) {
@@ -178,7 +177,7 @@ var updateuserregistration = function (req, res) {
 					res: res,
 					req: req,
 					errorflash: userError.message,
-					redirecturl: '/user/finishregistration'
+					redirecturl: '/auth/user/finishregistration'
 				});
 			}
 			else {
@@ -191,7 +190,7 @@ var updateuserregistration = function (req, res) {
 							res: res,
 							req: req,
 							errorflash: userError.message,
-							redirecturl: '/user/finishregistration'
+							redirecturl: '/auth/user/finishregistration'
 						});
 					}
 					else {
@@ -199,24 +198,43 @@ var updateuserregistration = function (req, res) {
 						req.flash('info', 'updated user account');
 						res.redirect(forwardUrl);
 
-						if (welcomeemailtemplate && emailtransport) {
-							User.sendWelcomeUserEmail({
-								subject: appSettings.name + ' New User Registration',
-								user: userSaved,
-								hostname: req.headers.host,
-								appname: appSettings.name,
-								emailtemplate: welcomeemailtemplate,
-								// bcc:'yje2@cornell.edu',
-								mailtransport: emailtransport
-							}, function (err, status) {
-								if (err) {
-									console.log(err);
+						CoreController.getPluginViewDefaultTemplate({
+							viewname: 'email/user/update_user_account',
+							themefileext: appSettings.templatefileextension
+						},
+						function (err, templatepath) {
+							if (err) {
+								logger.error(err);
+							}
+							else {
+								// console.log('user for forgot password', user);
+								if (templatepath === 'email/user/update_user_account') {
+									templatepath = path.resolve(process.cwd(), 'node_modules/periodicjs.ext.login/views', templatepath + '.' + appSettings.templatefileextension);
 								}
-								else {
-									console.info('email status', status);
+
+								CoreMailer.sendEmail({
+									appenvironment: appenvironment,
+									to: userSaved.email,
+									replyTo: appSettings.adminnotificationemail,
+									subject: appSettings.name + ' - User Account Updated',
+									emailtemplatefilepath: templatepath,
+									emailtemplatedata: {
+										user: userSaved,
+										appname: appSettings.name,
+										hostname: req.headers.host,
+										update_message: 'updated username'
+									}
+								}, 
+								function(err){
+									if(err){
+										logger.error(err);
+									}
+								});
+
 								}
-							});
-						}
+							}
+						);
+
 					}
 				});
 			}
