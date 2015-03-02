@@ -75,6 +75,7 @@ module.exports = function (periodic) {
 
   activate_middleware = [tokenController.get_activation_token,authController.ensureAuthenticated]
 
+  // if they have token then render page otherwise
   userRouter.get('/auth/user/activation/:token',activate_middleware,authController.get_activation);
   userRouter.post('/auth/user/activation',activate_middleware,authController.activate_user);
 

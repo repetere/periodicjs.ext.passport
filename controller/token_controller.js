@@ -367,6 +367,7 @@ var get_activation_token = function(req,res,next) {
  return next() 
 }
 
+// auth/user/new
 var create_validation_token = function(req,res,next){
 	try{
 		var userdata = CoreUtilities.removeEmptyObjectValues(req.body),
