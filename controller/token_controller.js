@@ -260,12 +260,6 @@ var get_token = function (req, res, next) {
 	});
 };
 
-/*
-var get_activation_token(req,res,next)
-set (look at line 257)
-				req.controllerData.activation_token = user_with_token.attributes.activation_token; (double check this)
-
- */
 
 //GET if the user token is vaild show the change password page
 var reset = function (req, res) {
@@ -362,6 +356,17 @@ var getTokenExpiresTime = function(){
 	return new Date(now.getTime() + (loginExtSettings.token.resetTokenExpiresMinutes * 60 * 1000)).getTime();
 };
 
+/*
+var get_activation_token(req,res,next)
+set (look at line 257)
+        req.controllerData.activation_token = user_with_token.attributes.activation_token; (double check this)
+
+ */
+
+var get_activation_token = function(req,res,next) {
+ return next() 
+}
+
 var create_validation_token = function(req,res,next){
 	try{
 		var userdata = CoreUtilities.removeEmptyObjectValues(req.body),
@@ -396,6 +401,7 @@ var tokenController = function (resources, passportResources) {
 	return {
 		forgot: forgot,
 		reset: reset,
+    get_activation_token:get_activation_token,
 		get_token: get_token,
 		create_validation_token: create_validation_token,
 		token: token

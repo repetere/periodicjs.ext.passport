@@ -6,6 +6,7 @@ var path = require('path'),
 	loginExtSettings,
 	appenvironment,
 	settingJSON,
+  activate_middleware,
 	Extensions = require('periodicjs.core.extensions'),
 	CoreExtension = new Extensions({
 		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
@@ -57,10 +58,6 @@ module.exports = function (periodic) {
 		});
 	periodic.app.controller.extension.login.token = tokenController;
 	periodic.app.controller.extension.login.social = socialPassportController;
-	//tokenRouter      = periodic.express.Router(),
-	//tokenController  = periodic.app.controller.extension.login.token
-	//socialRouter     = periodic.express.Router(),
-	//socialController = periodic.app.controller.extension.login.social,
 
 	authRouter.get('*', global.CoreCache.disableCache);
 	authRouter.post('*', global.CoreCache.disableCache);
@@ -76,11 +73,10 @@ module.exports = function (periodic) {
 	authRouter.get('/reset/:token', tokenController.get_token, tokenController.reset);
 	authRouter.post('/reset/:token', tokenController.get_token, tokenController.token);
 
-/*
-these both require authentication, look at admin extension for ensureAUthenticated 
-get:userrouter-> activation (tokencontroller.get_activation_token, authcontoller.get_activation);
-post:userrouter-> activation (tokencontroller.get_activation_token,authcontroller.activate_user);
- */
+  activate_middleware = [tokenController.get_activation_token,authController.ensureAuthenticated]
+
+  userRouter.get('/auth/user/activation/:token',activate_middleware,authController.get_activation);
+  userRouter.post('/auth/user/activation',activate_middleware,authController.activate_user);
 
 	//social controller & router
 	authRouter.get('/facebook', socialPassportController.facebook);
