@@ -4,11 +4,10 @@ var request = require('supertest');
 var server = request.agent('http://localhost:8786');
 var env = require('js-dom').env;
 var expect = require('chai').expect;
-// var mocha = require('mocha');
 var mongoose = require('mongoose');
 var context = describe;
 var User = mongoose.model('User', require('./user.schema'));
-// var utils = require('./utils');
+var utils = require('./utils');
 
 
 

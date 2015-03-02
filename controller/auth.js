@@ -138,6 +138,12 @@ var ensureAuthenticated = function (req, res, next) {
 			else if (loginExtSettings && loginExtSettings.settings.requireemail !== false && !req.user.email) {
 				res.redirect('/auth/user/finishregistration?required=email');
 			}
+			else if (loginExtSettings && loginExtSettings.settings.requireemail !== false && !req.user.email) {
+				res.redirect('/auth/user/finishregistration?required=email');
+			}
+      else if (loginExtSettings && loginExtSettings.settings.requireuseractivation) {
+        res.redirect('/auth/user/activation');
+      }
 			/*
 			if settings.requireactivation && user.activted ===false
 				if has an req.originalURL
@@ -173,6 +179,49 @@ var ensureAuthenticated = function (req, res, next) {
 	}
 };
 
+//GET auth/user/activate
+var get_activation = function(req,res) {
+  var activation_token = req.controllerData.activation_token;
+  if(activation_token){
+    console.log(activation_token);
+  }
+  if(!activation_token){
+    console.log("No activation token");
+    CoreController.getPluginViewDefaultTemplate({
+      viewname: 'user/activate',
+      themefileext: appSettings.templatefileextension,
+      extname: 'periodicjs.ext.login'
+    },
+    function (err, templatepath) {
+      CoreController.handleDocumentQueryRender({
+        res: res,
+        req: req,
+        renderView: templatepath,
+        responseData: {
+          pagedata: {
+            title: 'Activate Your Account',
+            current_user: found_user
+          },
+          user: req.user
+        }
+      });
+    });
+  }
+  //-> update user status
+  //if status updated
+  //remove the req.session.return_url
+  //req.flash success -> user validated
+  //redirect to return_url
+//else
+  //render page validation page
+  //form input validation link or send a new validation email
+
+}
+
+//POST to auth/user/activate 
+var activate_user = function(req,res,next) {
+  return next();
+}
 
 /*
 
@@ -234,6 +283,8 @@ var controller = function (resources) {
 		rememberme: rememberme,
 		login: login,
 		logout: logout,
+    activate_user:activate_user,
+    get_activation: get_activation,
 		ensureAuthenticated: ensureAuthenticated,
 		loginExtSettings: loginExtSettings,
 		passport: passport
