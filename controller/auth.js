@@ -249,7 +249,7 @@ var activate_user = function(req,res) {
 						else{
 							logger.silly('emailstatus',emailstatus);
 							req.flash('info','user activation token email sent to '+req.user.email);
-							res.redirect(loginExtSettings.settings.authLoginPath);
+							res.redirect(loginExtSettings.settings.authLoggedInHomepage);
 						}
 
 					});

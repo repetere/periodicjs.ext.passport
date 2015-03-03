@@ -407,10 +407,6 @@ var create_user_activation_token = function(req,res,next){
 	}
 };
 
-var decode_activation_token = function(req,res,next){
-
-};
-
 var tokenController = function (resources, passportResources) {
 	appSettings = resources.settings;
 	CoreController = new ControllerHelper(resources);
