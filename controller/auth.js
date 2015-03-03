@@ -4,6 +4,8 @@ var passport = require('passport'),
 	merge = require('utils-merge'),
 	Utilities = require('periodicjs.core.utilities'),
 	ControllerHelper = require('periodicjs.core.controller'),
+	CoreMailer = require('periodicjs.core.mailer'),
+	path = require('path'),
 	CoreUtilities,
 	CoreController,
 	appSettings,
@@ -86,6 +88,15 @@ var rememberme = function (req, res, next) {
 	next();
 };
 
+var forceAuthLogin = function(req,res){
+	if (req.originalUrl) {
+		req.session.return_url = req.originalUrl;
+		res.redirect(loginExtSettings.settings.authLoginPath + '?return_url=' + req.originalUrl);
+	}
+	else {
+		res.redirect(loginExtSettings.settings.authLoginPath);
+	}
+};
 
 /**
  * make sure a user is authenticated, if not logged in, send them to login page and return them to original resource after login
@@ -141,17 +152,9 @@ var ensureAuthenticated = function (req, res, next) {
 			else if (loginExtSettings && loginExtSettings.settings.requireemail !== false && !req.user.email) {
 				res.redirect('/auth/user/finishregistration?required=email');
 			}
-      else if (loginExtSettings && loginExtSettings.settings.requireuseractivation) {
-        res.redirect('/auth/user/activation');
+      else if(loginExtSettings && loginExtSettings.settings.requireuseractivation && req.user.activated ===false){
+        res.redirect('/auth/user/finishregistration?required=activation');
       }
-			/*
-			if settings.requireactivation && user.activted ===false
-				if has an req.originalURL
-					store original url in req.session.returnurl
-					redirect to /auth/user/activation?return url (see below on around 167)
-				else
-					redirect to /auth/user/activation
-			 */
 			else {
 				return next();
 			}
@@ -167,13 +170,7 @@ var ensureAuthenticated = function (req, res, next) {
 			}
 			else {
 				logger.verbose('controller - login/user.js - ' + req.originalUrl);
-				if (req.originalUrl) {
-					req.session.return_url = req.originalUrl;
-					res.redirect(loginExtSettings.settings.authLoginPath + '?return_url=' + req.originalUrl);
-				}
-				else {
-					res.redirect(loginExtSettings.settings.authLoginPath);
-				}
+				forceAuthLogin(req,res);
 			}
 		}
 	}
@@ -181,66 +178,89 @@ var ensureAuthenticated = function (req, res, next) {
 
 //GET auth/user/activate
 var get_activation = function(req,res) {
-  var user_activation_token = req.controllerData.user_activation_token;
-  if(user_activation_token){
-    console.log(user_activation_token);
-  }
-  if(!user_activation_token){
-    console.log('No activation token');
-    CoreController.getPluginViewDefaultTemplate({
-      viewname: 'user/activate',
-      themefileext: appSettings.templatefileextension,
-      extname: 'periodicjs.ext.login'
-    },
-    function (err, templatepath) {
-      CoreController.handleDocumentQueryRender({
-        res: res,
-        req: req,
-        renderView: templatepath,
-        responseData: {
-          pagedata: {
-            title: 'Activate Your Account',
-            current_user: found_user
-          },
-          user: req.user
-        }
-      });
-    });
-  }
-  //-> update user status
-  //if status updated
-  //remove the req.session.return_url
-  //req.flash success -> user validated
-  //redirect to return_url
-//else
-  //render page validation page
-  //form input validation link or send a new validation email
-
+	if (req.isAuthenticated()) {
+		CoreController.getPluginViewDefaultTemplate({
+				viewname: 'user/activate',
+				themefileext: appSettings.templatefileextension,
+				extname: 'periodicjs.ext.login'
+			},
+			function (err, templatepath) {
+				CoreController.handleDocumentQueryRender({
+					res: res,
+					req: req,
+					renderView: templatepath,
+					responseData: {
+						pagedata: {
+							title: 'Activation Email'
+						},
+						user: req.user
+					}
+				});
+			}
+		);
+	}
+	else{
+		forceAuthLogin(req,res);
+	}
 };
 
 //POST to auth/user/activate 
-var activate_user = function(req,res,next) {
-  return next();
+var activate_user = function(req,res) {
+	var emailviewname = 'email/user/welcome_with_validation';
+	if (req.isAuthenticated()) {
+		CoreController.getPluginViewDefaultTemplate({
+				viewname: emailviewname,
+				themefileext: appSettings.templatefileextension
+			},
+			function (err, templatepath) {
+				console.log('templatepath',templatepath);
+				if (templatepath === emailviewname) {
+					templatepath = path.resolve(process.cwd(), 'app/views', templatepath + '.' + appSettings.templatefileextension);
+				}
+				if (err) {
+					CoreController.handleDocumentQueryErrorResponse({
+						err: err,
+						res: res,
+						req: req
+					});
+				}
+				else {
+					CoreMailer.sendEmail({
+						appenvironment: appSettings.application.environment,
+						to: req.user.email,
+						cc: appSettings.adminnotificationemail,
+						replyTo: appSettings.adminnotificationemail,
+						from: appSettings.adminnotificationemail,
+						subject: appSettings.name + ' User Account Activation',
+						emailtemplatefilepath: templatepath,
+						emailtemplatedata: {
+							user: req.user,
+							hostname: req.headers.host,
+							appname: appSettings.name
+						}
+					}, function(sendemailerr,emailstatus){
+						if (sendemailerr) {
+							CoreController.handleDocumentQueryErrorResponse({
+								err: sendemailerr,
+								res: res,
+								req: req
+							});
+						}
+						else{
+							logger.silly('emailstatus',emailstatus);
+							req.flash('info','user activation token email sent to '+req.user.email);
+							res.redirect(loginExtSettings.settings.authLoginPath);
+						}
+
+					});
+				}
+			}
+		);
+	}
+	else{
+		forceAuthLogin(req,res);
+	}
 };
-
-/*
-
-middleware to get activation link is in token controller, 
-req.controllerData.user_activation_token is set in that middleware function
-
-this page requires authetication
-get ->get_activation /auth/user/activation:activation_link function(req,res)
-	if(req.controllerData.user_activation_token)
-		-> update user status
-			if status updated
-				remove the req.session.return_url
-				req.flash success -> user validated
-				redirect to return_url
-	else
-		render page validation page
-			form input validation link or send a new validation email
- */
-
 
 /**
  * login controller
@@ -290,8 +310,5 @@ var controller = function (resources) {
 		passport: passport
 	};
 };
-
-
-
 
 module.exports = controller;

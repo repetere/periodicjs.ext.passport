@@ -4,6 +4,7 @@ var Utilities = require('periodicjs.core.utilities'),
 	ControllerHelper = require('periodicjs.core.controller'),
 	CoreMailer = require('periodicjs.core.mailer'),
 	extend = require('utils-merge'),
+	jwt = require('jsonwebtoken'),
 	appSettings,
 	mongoose,
 	User,
@@ -157,7 +158,7 @@ var finishregistration = function (req, res) {
  * @return {object} reponds with an error page or requested view
  */
 var updateuserregistration = function (req, res) {
-	var userError;
+	var userError,additionalqueryparams;
 
 	User.findOne({
 			email: req.user.email
@@ -170,7 +171,7 @@ var updateuserregistration = function (req, res) {
 					res: res,
 					req: req,
 					errorflash: userError.message,
-					redirecturl: '/user/finishregistration'
+					redirecturl: '/auth/user/finishregistration'
 				});
 			}
 			else if (!userToUpdate) {
@@ -180,47 +181,80 @@ var updateuserregistration = function (req, res) {
 					res: res,
 					req: req,
 					errorflash: userError.message,
-					redirecturl: '/user/finishregistration'
+					redirecturl: '/auth/user/finishregistration'
 				});
 			}
 			else {
-				userToUpdate.username = req.body.username;
-				userToUpdate.save(function (err, userSaved) {
-					if (err) {
+				if(req.body.username){
+					userToUpdate.username = req.body.username;
+				}
+				if(userToUpdate.attributes.user_activation_token_link === req.body['activation-token']){
+					try {
+					  var decoded = jwt.verify(userToUpdate.attributes.user_activation_token, loginExtSettings.token.secret);
+					  if(decoded.email === req.user.email){
+							userToUpdate.activated=true;
+							console.log('update activation');
+					  }
+					  else{
+							userError = new Error('activation token is invalid');
+							additionalqueryparams = '?required=activation';
+					  }
+					} catch(err) {
 						userError = err;
-						CoreController.handleDocumentQueryErrorResponse({
-							err: userError,
-							res: res,
-							req: req,
-							errorflash: userError.message,
-							redirecturl: '/user/finishregistration'
-						});
 					}
-					else {
-						var forwardUrl = (req.session.return_url) ? req.session.return_url : '/';
-						req.flash('info', 'updated user account');
-						res.redirect(forwardUrl);
+				}
+				else{
+					userError = new Error('invalid activation token');
+					additionalqueryparams = '?required=activation';
+				}
 
-						if (welcomeemailtemplate && emailtransport) {
-							User.sendWelcomeUserEmail({
-								subject: appSettings.name + ' New User Registration',
-								user: userSaved,
-								hostname: req.headers.host,
-								appname: appSettings.name,
-								emailtemplate: welcomeemailtemplate,
-								// bcc:'yje2@cornell.edu',
-								mailtransport: emailtransport
-							}, function (err, status) {
-								if (err) {
-									console.log(err);
-								}
-								else {
-									console.info('email status', status);
-								}
+				if(userError){
+					CoreController.handleDocumentQueryErrorResponse({
+						err: userError,
+						res: res,
+						req: req,
+						errorflash: userError.message,
+						redirecturl: '/auth/user/finishregistration'+additionalqueryparams
+					});
+				}
+				else{
+					userToUpdate.save(function (err, userSaved) {
+						if (err) {
+							userError = err;
+							CoreController.handleDocumentQueryErrorResponse({
+								err: userError,
+								res: res,
+								req: req,
+								errorflash: userError.message,
+								redirecturl: '/auth/user/finishregistration'
 							});
 						}
-					}
-				});
+						else {
+							var forwardUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoginPath;
+							req.flash('info', 'updated user account');
+							res.redirect(forwardUrl);
+
+							if (welcomeemailtemplate && emailtransport) {
+								User.sendWelcomeUserEmail({
+									subject: appSettings.name + ' New User Registration',
+									user: userSaved,
+									hostname: req.headers.host,
+									appname: appSettings.name,
+									emailtemplate: welcomeemailtemplate,
+									// bcc:'yje2@cornell.edu',
+									mailtransport: emailtransport
+								}, function (err, status) {
+									if (err) {
+										console.log(err);
+									}
+									else {
+										console.info('email status', status);
+									}
+								});
+							}
+						}
+					});
+				}
 			}
 		});
 };

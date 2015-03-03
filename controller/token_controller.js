@@ -361,10 +361,11 @@ set (look at line 257)
 
 var get_user_activation_token = function(req,res,next) {
 	req.controllerData = (req.controllerData) ? req.controllerData : {};
-
+	console.log('req.params.token',req.params.token);
 	User.findOne({
-		'attributes.activation_token_link': req.params.token
+		'attributes.user_activation_token_link': req.params.token
 	}, function (err, user_with_activation_token) {
+		console.log('user_with_activation_token',user_with_activation_token);
 		if (err) {
 			req.flash('error', err.message);
 			res.redirect(loginExtSettings.settings.authLoginPath);
@@ -378,7 +379,7 @@ var get_user_activation_token = function(req,res,next) {
 			res.redirect(loginExtSettings.settings.authLoginPath);
 		}
 		else {
-			req.controllerData.token = user_with_activation_token.attributes.reset_token;
+			req.controllerData.user_activation_token = user_with_activation_token.attributes.user_activation_token;
 			next();
 		}
 	});
@@ -404,6 +405,10 @@ var create_user_activation_token = function(req,res,next){
 	catch(e){
 		next(e);
 	}
+};
+
+var decode_activation_token = function(req,res,next){
+
 };
 
 var tokenController = function (resources, passportResources) {

@@ -1,5 +1,4 @@
 'use strict';
-
 module.exports = {
 	settings: {
 		authLoginPath: '/auth/login',

@@ -6,7 +6,7 @@ var path = require('path'),
 	loginExtSettings,
 	appenvironment,
 	settingJSON,
-  activate_middleware,
+  // activate_middleware,
 	Extensions = require('periodicjs.core.extensions'),
 	CoreExtension = new Extensions({
 		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
@@ -73,11 +73,11 @@ module.exports = function (periodic) {
 	authRouter.get('/reset/:token', tokenController.get_token, tokenController.reset);
 	authRouter.post('/reset/:token', tokenController.get_token, tokenController.token);
 
-  activate_middleware = [tokenController.get_user_activation_token,authController.ensureAuthenticated];
+  // activate_middleware = [tokenController.get_user_activation_token,authController.ensureAuthenticated];
 
   // if they have token then render page otherwise
-  userRouter.get('/activation/:token',activate_middleware,authController.get_activation);
-  userRouter.post('/activation',activate_middleware,authController.activate_user);
+  userRouter.get('/activate/', tokenController.create_user_activation_token,authController.get_activation);
+  userRouter.post('/activate',authController.activate_user);
 
 	//social controller & router
 	authRouter.get('/facebook', socialPassportController.facebook);
