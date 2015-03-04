@@ -18,7 +18,11 @@
 								</ul>
 							</li>
 							<li>
-								<%= user.username %>
+								<% if(user.username){%>
+									<%- user.username %>
+								<%} else{%>
+									<%- user.email %>
+								<%}%>
 								<ul class="_pea_menu-items-subnav _pea-right">
 									<li><a href="/p-admin/user/<%= user.username %>/edit">Edit Profile</a></li>
 									<li><a href="/auth/logout">Logout</a></li>
