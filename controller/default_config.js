@@ -1,5 +1,4 @@
 'use strict';
-
 module.exports = {
 	settings: {
 		authLoginPath: '/auth/login',
@@ -7,6 +6,7 @@ module.exports = {
 		authLoggedInHomepage: '/p-admin',
 		usepassword: true,
 		requireusername: true,
+    requireuseractivation:true,
 		requireemail: true,
 		disablesocialsignin: true
 	},
@@ -29,7 +29,7 @@ module.exports = {
 	},
 	token: {
 		ttl: '3600000',
-		resetTokenExpiresMinutes: '5',
+		resetTokenExpiresMinutes: '60',
 		secret: 'periodicjs'
 	}
 };
