@@ -4,13 +4,15 @@ var Utilities = require('periodicjs.core.utilities'),
 	ControllerHelper = require('periodicjs.core.controller'),
 	CoreMailer = require('periodicjs.core.mailer'),
 	extend = require('utils-merge'),
-	path = require('path'),
+	jwt = require('jsonwebtoken'),
 	appSettings,
 	mongoose,
 	User,
 	logger,
 	loginExtSettings,
 	appenvironment,
+	welcomeemailtemplate,
+	emailtransport,
 	CoreUtilities,
 	CoreController;
 
@@ -83,6 +85,7 @@ var create = function (req, res) {
 			lognewuserin: true,
 			req: req,
 			send_new_user_email: true,
+      requireuseractivation:loginExtSettings.settings.requireuseractivation,
 			welcomeemaildata: {
 				getEmailTemplateFunction: CoreController.getPluginViewDefaultTemplate,
 				emailviewname: 'email/user/welcome',
@@ -97,6 +100,7 @@ var create = function (req, res) {
 		},
 		finalnewusersettings;
 	finalnewusersettings = extend(newuseroptions, loginExtSettings.new_user_validation);
+	// console.log('finalnewusersettings',finalnewusersettings);
 	User.createNewUserAccount(
 		finalnewusersettings,
 		function (newusererr /*, newuser*/ ) {
@@ -154,7 +158,7 @@ var finishregistration = function (req, res) {
  * @return {object} reponds with an error page or requested view
  */
 var updateuserregistration = function (req, res) {
-	var userError;
+	var userError,additionalqueryparams;
 
 	User.findOne({
 			email: req.user.email
@@ -181,65 +185,76 @@ var updateuserregistration = function (req, res) {
 				});
 			}
 			else {
-				userToUpdate.username = req.body.username;
-				userToUpdate.save(function (err, userSaved) {
-					if (err) {
+				if(req.body.username){
+					userToUpdate.username = req.body.username;
+				}
+				if(userToUpdate.attributes.user_activation_token_link === req.body['activation-token']){
+					try {
+					  var decoded = jwt.verify(userToUpdate.attributes.user_activation_token, loginExtSettings.token.secret);
+					  if(decoded.email === req.user.email){
+							userToUpdate.activated=true;
+							console.log('update activation');
+					  }
+					  else{
+							userError = new Error('activation token is invalid');
+							additionalqueryparams = '?required=activation';
+					  }
+					} catch(err) {
 						userError = err;
-						CoreController.handleDocumentQueryErrorResponse({
-							err: userError,
-							res: res,
-							req: req,
-							errorflash: userError.message,
-							redirecturl: '/auth/user/finishregistration'
-						});
 					}
-					else {
-						var forwardUrl = (req.session.return_url) ? req.session.return_url : '/';
-						req.flash('info', 'updated user account');
-						res.redirect(forwardUrl);
+				}
+				else{
+					userError = new Error('invalid activation token');
+					additionalqueryparams = '?required=activation';
+				}
 
-						CoreController.getPluginViewDefaultTemplate({
-							viewname: 'email/user/update_user_account',
-							themefileext: appSettings.templatefileextension
-						},
-						function (err, templatepath) {
-							if (err) {
-								logger.error(err);
-							}
-							else {
-								// console.log('user update registration', userSaved);
-								if (templatepath === 'email/user/update_user_account') {
-									templatepath = path.resolve(process.cwd(), 'node_modules/periodicjs.ext.login/views', templatepath + '.' + appSettings.templatefileextension);
-								}
+				if(userError){
+					CoreController.handleDocumentQueryErrorResponse({
+						err: userError,
+						res: res,
+						req: req,
+						errorflash: userError.message,
+						redirecturl: '/auth/user/finishregistration'+additionalqueryparams
+					});
+				}
+				else{
+					userToUpdate.save(function (err, userSaved) {
+						if (err) {
+							userError = err;
+							CoreController.handleDocumentQueryErrorResponse({
+								err: userError,
+								res: res,
+								req: req,
+								errorflash: userError.message,
+								redirecturl: '/auth/user/finishregistration'
+							});
+						}
+						else {
+							var forwardUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoginPath;
+							req.flash('info', 'updated user account');
+							res.redirect(forwardUrl);
 
-								CoreMailer.sendEmail({
-									appenvironment: appenvironment,
-									to: userSaved.email,
-									replyTo: appSettings.adminnotificationemail,
-									subject: appSettings.name + ' - User Account Updated',
-									emailtemplatefilepath: templatepath,
-									emailtemplatedata: {
-										user: userSaved,
-										appname: appSettings.name,
-										hostname: req.headers.host,
-										update_message: 'Your user account username was updated'
+							if (welcomeemailtemplate && emailtransport) {
+								User.sendWelcomeUserEmail({
+									subject: appSettings.name + ' New User Registration',
+									user: userSaved,
+									hostname: req.headers.host,
+									appname: appSettings.name,
+									emailtemplate: welcomeemailtemplate,
+									// bcc:'yje2@cornell.edu',
+									mailtransport: emailtransport
+								}, function (err, status) {
+									if (err) {
+										console.log(err);
 									}
-								}, 
-								function(err){
-									if(err){
-										logger.error(err);
-									}
-									else{
-										logger.silly('sent email');
+									else {
+										console.info('email status', status);
 									}
 								});
-
-								}
 							}
-						);
-
-					}
-				});
+						}
+					});
+				}
 			}
 		});
 };

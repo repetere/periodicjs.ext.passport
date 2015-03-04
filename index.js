@@ -6,6 +6,7 @@ var path = require('path'),
 	loginExtSettings,
 	appenvironment,
 	settingJSON,
+  // activate_middleware,
 	Extensions = require('periodicjs.core.extensions'),
 	CoreExtension = new Extensions({
 		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
@@ -57,10 +58,6 @@ module.exports = function (periodic) {
 		});
 	periodic.app.controller.extension.login.token = tokenController;
 	periodic.app.controller.extension.login.social = socialPassportController;
-	//tokenRouter      = periodic.express.Router(),
-	//tokenController  = periodic.app.controller.extension.login.token
-	//socialRouter     = periodic.express.Router(),
-	//socialController = periodic.app.controller.extension.login.social,
 
 	authRouter.get('*', global.CoreCache.disableCache);
 	authRouter.post('*', global.CoreCache.disableCache);
@@ -75,6 +72,13 @@ module.exports = function (periodic) {
 	authRouter.post('/forgot', tokenController.forgot);
 	authRouter.get('/reset/:token', tokenController.get_token, tokenController.reset);
 	authRouter.post('/reset/:token', tokenController.get_token, tokenController.token);
+
+  // activate_middleware = [tokenController.get_user_activation_token,authController.ensureAuthenticated];
+
+  // if they have token then render page otherwise
+  userRouter.get('/activate/', tokenController.create_user_activation_token,authController.get_activation);
+  userRouter.post('/activate',authController.activate_user);
+
 	//social controller & router
 	authRouter.get('/facebook', socialPassportController.facebook);
 	authRouter.get('/facebook/callback', socialPassportController.facebookcallback);
@@ -86,7 +90,7 @@ module.exports = function (periodic) {
 	userRouter.get('/new|/register', userController.newuser);
 	userRouter.get('/finishregistration', userController.finishregistration);
 
-	userRouter.post('/new', userController.create);
+	userRouter.post('/new', tokenController.create_user_activation_token, userController.create);
 	userRouter.post('/finishregistration', userController.updateuserregistration);
 
 	periodic.app.use(authController.rememberme);

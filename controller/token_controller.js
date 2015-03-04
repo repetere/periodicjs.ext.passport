@@ -254,11 +254,12 @@ var get_token = function (req, res, next) {
 			res.redirect(loginExtSettings.settings.authLoginPath);
 		}
 		else {
-			req.controllerData.token = user_with_token.attributes.reset_token;
+			req.controllerData.token = user_with_token.attributes.user_activation_token;
 			next();
 		}
 	});
 };
+
 
 //GET if the user token is vaild show the change password page
 var reset = function (req, res) {
@@ -315,13 +316,9 @@ var reset = function (req, res) {
 							});
 						});
 				}
-
 			});
-
 		}
 	});
-
-
 };
 
 
@@ -350,6 +347,65 @@ var token = function (req, res, next) {
 		});
 };
 
+var getTokenExpiresTime = function(){
+	var now = new Date();
+	return new Date(now.getTime() + (loginExtSettings.token.resetTokenExpiresMinutes * 60 * 1000)).getTime();
+};
+
+/*
+var get_user_activation_token(req,res,next)
+set (look at line 257)
+        req.controllerData.activation_token = user_with_token.attributes.activation_token; (double check this)
+
+ */
+
+var get_user_activation_token = function(req,res,next) {
+	req.controllerData = (req.controllerData) ? req.controllerData : {};
+	console.log('req.params.token',req.params.token);
+	User.findOne({
+		'attributes.user_activation_token_link': req.params.token
+	}, function (err, user_with_activation_token) {
+		console.log('user_with_activation_token',user_with_activation_token);
+		if (err) {
+			req.flash('error', err.message);
+			res.redirect(loginExtSettings.settings.authLoginPath);
+		}
+		else if (!user_with_activation_token || !user_with_activation_token.attributes.user_activation_token) {
+			req.flash('error', 'invalid validation token');
+			res.redirect(loginExtSettings.settings.authLoginPath);
+		}
+		else if (hasExpired(user_with_activation_token.attributes.reset_activation_expires_millis)) {
+			req.flash('error', 'Activation token has expired.');
+			res.redirect(loginExtSettings.settings.authLoginPath);
+		}
+		else {
+			req.controllerData.user_activation_token = user_with_activation_token.attributes.user_activation_token;
+			next();
+		}
+	});
+};
+
+// auth/user/new
+var create_user_activation_token = function(req,res,next){
+	try{
+		var userdata = CoreUtilities.removeEmptyObjectValues(req.body),
+			salt = bcrypt.genSaltSync(10),
+			expires = getTokenExpiresTime(),
+			user_activation_token = encode({
+				email: userdata.email
+			});
+		userdata.attributes = {};
+		userdata.attributes.user_activation_token = user_activation_token;
+		userdata.attributes.user_activation_token_link = CoreUtilities.makeNiceName(bcrypt.hashSync(userdata.attributes.user_activation_token, salt));
+		userdata.attributes.reset_activation_expires_millis = expires;
+
+		req.body = userdata;
+		next();
+	}
+	catch(e){
+		next(e);
+	}
+};
 
 var tokenController = function (resources, passportResources) {
 	appSettings = resources.settings;
@@ -364,7 +420,9 @@ var tokenController = function (resources, passportResources) {
 	return {
 		forgot: forgot,
 		reset: reset,
+    get_user_activation_token:get_user_activation_token,
 		get_token: get_token,
+		create_user_activation_token: create_user_activation_token,
 		token: token
 	};
 };
