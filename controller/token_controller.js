@@ -12,6 +12,7 @@ var async = require('async'),
 	jwt = require('jsonwebtoken'),
 	loginExtSettings,
 	logger,
+	merge = require('utils-merge'),
 	mongoose,
 	User,
 	path = require('path'),
@@ -352,16 +353,46 @@ var getTokenExpiresTime = function(){
 	return new Date(now.getTime() + (loginExtSettings.token.resetTokenExpiresMinutes * 60 * 1000)).getTime();
 };
 
-/*
-var get_user_activation_token(req,res,next)
-set (look at line 257)
-        req.controllerData.activation_token = user_with_token.attributes.activation_token; (double check this)
+var update_user_activation_token = function(req,res,next){
+	try{
+		if(!req.body.attributes.user_activation_token){
+			throw Error('invalid user activation');
+		}
+		else if(!req.isAuthenticated()) {
+			throw Error('must be logged in');
+		}
+		req.user.attributes = merge(req.user.attributes,req.body.attributes);
 
- */
+		User.findOne({
+			'_id': req.user._id
+		}, function (err, user_to_update) {
+			if (err) {
+				throw err;
+			}
+			else if (!user_to_update || !user_to_update) {
+				throw Error('invalid user activation token');
+			}
+			else {
+				user_to_update.attributes = req.user.attributes;	
+				user_to_update.markModified('attributes');
+				user_to_update.save(function (err /*, usr */) {
+					if (err) {
+						next(err);
+					}
+					else{
+						next();						
+					}
+				});
+			}
+		});
+	}
+	catch(e){
+		next(e);
+	}
+};
 
 var get_user_activation_token = function(req,res,next) {
 	req.controllerData = (req.controllerData) ? req.controllerData : {};
-	console.log('req.params.token',req.params.token);
 	User.findOne({
 		'attributes.user_activation_token_link': req.params.token
 	}, function (err, user_with_activation_token) {
@@ -388,11 +419,14 @@ var get_user_activation_token = function(req,res,next) {
 // auth/user/new
 var create_user_activation_token = function(req,res,next){
 	try{
+		if(!req.body.email && !req.isAuthenticated()){
+			throw new Error('you must be logged in, to activate your account');
+		}
 		var userdata = CoreUtilities.removeEmptyObjectValues(req.body),
 			salt = bcrypt.genSaltSync(10),
 			expires = getTokenExpiresTime(),
 			user_activation_token = encode({
-				email: userdata.email
+				email: userdata.email || req.user.email
 			});
 		userdata.attributes = {};
 		userdata.attributes.user_activation_token = user_activation_token;
@@ -423,6 +457,7 @@ var tokenController = function (resources, passportResources) {
     get_user_activation_token:get_user_activation_token,
 		get_token: get_token,
 		create_user_activation_token: create_user_activation_token,
+		update_user_activation_token: update_user_activation_token,
 		token: token
 	};
 };
