@@ -6,7 +6,7 @@ module.exports = {
 		authLoggedInHomepage: '/p-admin',
 		usepassword: true,
 		requireusername: true,
-    requireuseractivation:true,
+		requireuseractivation: true,
 		requireemail: true,
 		disablesocialsignin: true
 	},

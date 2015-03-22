@@ -88,7 +88,7 @@ var rememberme = function (req, res, next) {
 	next();
 };
 
-var forceAuthLogin = function(req,res){
+var forceAuthLogin = function (req, res) {
 	if (req.originalUrl) {
 		req.session.return_url = req.originalUrl;
 		res.redirect(loginExtSettings.settings.authLoginPath + '?return_url=' + req.originalUrl);
@@ -152,9 +152,9 @@ var ensureAuthenticated = function (req, res, next) {
 			else if (loginExtSettings && loginExtSettings.settings.requireemail !== false && !req.user.email) {
 				res.redirect('/auth/user/finishregistration?required=email');
 			}
-      else if(loginExtSettings && loginExtSettings.settings.requireuseractivation && req.user.activated ===false){
-        res.redirect('/auth/user/finishregistration?required=activation');
-      }
+			else if (loginExtSettings && loginExtSettings.settings.requireuseractivation && req.user.activated === false) {
+				res.redirect('/auth/user/finishregistration?required=activation');
+			}
 			else {
 				return next();
 			}
@@ -170,14 +170,14 @@ var ensureAuthenticated = function (req, res, next) {
 			}
 			else {
 				logger.verbose('controller - login/user.js - ' + req.originalUrl);
-				forceAuthLogin(req,res);
+				forceAuthLogin(req, res);
 			}
 		}
 	}
 };
 
 //GET auth/user/activate
-var get_activation = function(req,res) {
+var get_activation = function (req, res) {
 	if (req.isAuthenticated()) {
 		CoreController.getPluginViewDefaultTemplate({
 				viewname: 'user/activate',
@@ -199,13 +199,13 @@ var get_activation = function(req,res) {
 			}
 		);
 	}
-	else{
-		forceAuthLogin(req,res);
+	else {
+		forceAuthLogin(req, res);
 	}
 };
 
 //POST to auth/user/activate 
-var activate_user = function(req,res) {
+var activate_user = function (req, res) {
 	var emailviewname = 'email/user/welcome_with_validation';
 	if (req.isAuthenticated()) {
 		CoreController.getPluginViewDefaultTemplate({
@@ -213,7 +213,7 @@ var activate_user = function(req,res) {
 				themefileext: appSettings.templatefileextension
 			},
 			function (err, templatepath) {
-				console.log('templatepath',templatepath);
+				console.log('templatepath', templatepath);
 				if (templatepath === emailviewname) {
 					templatepath = path.resolve(process.cwd(), 'app/views', templatepath + '.' + appSettings.templatefileextension);
 				}
@@ -238,7 +238,7 @@ var activate_user = function(req,res) {
 							hostname: req.headers.host,
 							appname: appSettings.name
 						}
-					}, function(sendemailerr,emailstatus){
+					}, function (sendemailerr, emailstatus) {
 						if (sendemailerr) {
 							CoreController.handleDocumentQueryErrorResponse({
 								err: sendemailerr,
@@ -246,9 +246,9 @@ var activate_user = function(req,res) {
 								req: req
 							});
 						}
-						else{
-							logger.silly('emailstatus',emailstatus);
-							req.flash('info','user activation token email sent to '+req.user.email);
+						else {
+							logger.silly('emailstatus', emailstatus);
+							req.flash('info', 'user activation token email sent to ' + req.user.email);
 							res.redirect(loginExtSettings.settings.authLoggedInHomepage);
 						}
 
@@ -257,8 +257,8 @@ var activate_user = function(req,res) {
 			}
 		);
 	}
-	else{
-		forceAuthLogin(req,res);
+	else {
+		forceAuthLogin(req, res);
 	}
 };
 
@@ -303,8 +303,8 @@ var controller = function (resources) {
 		rememberme: rememberme,
 		login: login,
 		logout: logout,
-    activate_user:activate_user,
-    get_activation: get_activation,
+		activate_user: activate_user,
+		get_activation: get_activation,
 		ensureAuthenticated: ensureAuthenticated,
 		loginExtSettings: loginExtSettings,
 		passport: passport

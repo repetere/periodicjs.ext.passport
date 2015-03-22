@@ -1,14 +1,32 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" class="ts ts-height-100">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />	
-	<title>Periodic Admin</title>
+  <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width,  minimal-ui">
+	<title><%= pagedata.title %> - <%- periodic.name %></title>
 	<meta name="author" content="Yaw Joseph Etse" />
 	<meta name="description" content="fullPage full-screen backgrounds." />
 	<meta name="keywords"  content="fullpage,screen,fullscreen,backgrounds,full-screen" />
 	<meta name="Resource-type" content="Document" />
 	<link rel="stylesheet" type="text/css" href="/stylesheets/default/periodic.css" />
-	<script type="text/javascript" src="<%= locals.themehelper.extensionPublicResourcePath('periodicjs.ext.admin','js') %>main.min.js"></script>
+	<style>
+		.ts .ts-button{
+			margin-bottom:.25em;
+		}
+	</style>
+	<script type="text/javascript">
+		<%- locals.viewhelper.passObjToClient(flash_messages,"periodic_flash_messages") %>
+	</script>
+	<link rel="icon" type="image/png" href="/favicon.png">
+	<script type="text/javascript" src="<%= locals.themehelper.extensionPublicResourcePath('periodicjs.ext.login','js') %>login.min.js"></script>
 	<% var headertags = locals.viewhelper.includeJavaScripts(pagedata.headerjs); %><%- headertags %>
+	<%- locals.viewhelper.getHTML(locals.additionalHeadHTML) %>
 </head>
-<body>
+<body class="ts-pushmenu-container ts-height-100 ts-no-x-overflow">
+  <div id="ts-pushmenu-mp-pusher" class="ts-pushmenu-mp-pusher ts-height-100 ">
+    <main class="ts-pushmenu-scroller ts-height-100 ">
+      <div class="ts-pushmenu-scroller-inner ts-height-100 ">
+      <% include _menu %>
+      <div id="ts-preloading" class="ts-preloading hide hide-preloading"></div>
+      <div id="ts-asyncadmin-content-wrapper">
+        <div id="ts-asyncadmin-content-container">

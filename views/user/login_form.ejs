@@ -1,24 +1,24 @@
-<div class="_pea-row _pea-container-forminput">
-	<small>Username / Email </small>
-	<input type="text" name="username" class="_pea-col-span12" placeholder="username or email@domain.com" />
+<div class="ts-row ts-form-row">
+	<label class="ts-label">Username / Email </label>
+	<input type="text" name="username" class="ts-col-span12 ts-input" placeholder="username or email@domain.com" />
 </div>
-<div class="_pea-row _pea-container-forminput" style="margin-bottom:1.0em">
-	<small>Password</small>
-	<input type="password" name="password" placeholder="password" class="_pea-col-span12"  />
-	<div class="_pea-col-span3">
-		<small >Remember me</small>
+<div class="ts-row ts-form-row">
+	<label class="ts-label">Password</label>
+	<input type="password" name="password" placeholder="password" class="ts-col-span12  ts-input"  />
+	<div class="ts-col-span3">
+		<label class="ts-label">Remember me</label>
 		<input type="checkbox" name="rememberme" />	
 	</div>
-	<div class="_pea-col-span3">
-    <small><a href="/auth/forgot">Forgot Password</a></small>
+	<div class="ts-col-span3">
+    <label class="ts-label"><a href="/auth/forgot">Forgot Password</a></label>
 	</div>
 </div>
-<div class="_pea-text-center">
-	<button type="submit" name="submit" class="_pea-button _pea-color-success"><i class="icon-ok icon-white"></i> Login</button>
-	<a href="/auth/facebook" class="_pea-button">Facebook login</a>
-	<a href="/auth/twitter" class="_pea-button">twitter login</a>
-	<a href="/auth/instagram" class="_pea-button">instagram login</a>
+<div class="ts-row ts-form-row ts-text-sm ts-text-center">
+	<button type="submit" name="submit" class="ts-button ts-color-success"><i class="icon-ok icon-white"></i> Login</button>
+	<a href="/auth/facebook" class="ts-button">Facebook login</a>
+	<a href="/auth/twitter" class="ts-button">twitter login</a>
+	<a href="/auth/instagram" class="ts-button">instagram login</a>
 	<small>or</small>
-	<a href="/auth/user/register" class="_pea-button">Register</a>
+	<a href="/auth/user/register" class="ts-button">Register</a>
 </div>
 <input type="hidden" name="_csrf" value=<%= locals.token %> >

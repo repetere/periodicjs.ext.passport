@@ -348,20 +348,20 @@ var token = function (req, res, next) {
 		});
 };
 
-var getTokenExpiresTime = function(){
+var getTokenExpiresTime = function () {
 	var now = new Date();
 	return new Date(now.getTime() + (loginExtSettings.token.resetTokenExpiresMinutes * 60 * 1000)).getTime();
 };
 
-var update_user_activation_token = function(req,res,next){
-	try{
-		if(!req.body.attributes.user_activation_token){
+var update_user_activation_token = function (req, res, next) {
+	try {
+		if (!req.body.attributes.user_activation_token) {
 			throw Error('invalid user activation');
 		}
-		else if(!req.isAuthenticated()) {
+		else if (!req.isAuthenticated()) {
 			throw Error('must be logged in');
 		}
-		req.user.attributes = merge(req.user.attributes,req.body.attributes);
+		req.user.attributes = merge(req.user.attributes, req.body.attributes);
 
 		User.findOne({
 			'_id': req.user._id
@@ -373,30 +373,30 @@ var update_user_activation_token = function(req,res,next){
 				throw Error('invalid user activation token');
 			}
 			else {
-				user_to_update.attributes = req.user.attributes;	
+				user_to_update.attributes = req.user.attributes;
 				user_to_update.markModified('attributes');
-				user_to_update.save(function (err /*, usr */) {
+				user_to_update.save(function (err /*, usr */ ) {
 					if (err) {
 						next(err);
 					}
-					else{
-						next();						
+					else {
+						next();
 					}
 				});
 			}
 		});
 	}
-	catch(e){
+	catch (e) {
 		next(e);
 	}
 };
 
-var get_user_activation_token = function(req,res,next) {
+var get_user_activation_token = function (req, res, next) {
 	req.controllerData = (req.controllerData) ? req.controllerData : {};
 	User.findOne({
 		'attributes.user_activation_token_link': req.params.token
 	}, function (err, user_with_activation_token) {
-		console.log('user_with_activation_token',user_with_activation_token);
+		console.log('user_with_activation_token', user_with_activation_token);
 		if (err) {
 			req.flash('error', err.message);
 			res.redirect(loginExtSettings.settings.authLoginPath);
@@ -417,9 +417,9 @@ var get_user_activation_token = function(req,res,next) {
 };
 
 // auth/user/new
-var create_user_activation_token = function(req,res,next){
-	try{
-		if(!req.body.email && !req.isAuthenticated()){
+var create_user_activation_token = function (req, res, next) {
+	try {
+		if (!req.body.email && !req.isAuthenticated()) {
 			throw new Error('you must be logged in, to activate your account');
 		}
 		var userdata = CoreUtilities.removeEmptyObjectValues(req.body),
@@ -436,7 +436,7 @@ var create_user_activation_token = function(req,res,next){
 		req.body = userdata;
 		next();
 	}
-	catch(e){
+	catch (e) {
 		next(e);
 	}
 };
@@ -454,7 +454,7 @@ var tokenController = function (resources, passportResources) {
 	return {
 		forgot: forgot,
 		reset: reset,
-    get_user_activation_token:get_user_activation_token,
+		get_user_activation_token: get_user_activation_token,
 		get_token: get_token,
 		create_user_activation_token: create_user_activation_token,
 		update_user_activation_token: update_user_activation_token,

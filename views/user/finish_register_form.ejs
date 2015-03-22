@@ -1,12 +1,12 @@
-<div class="control-group">
+<div class="ts-row ts-form-row">
 	<input type="hidden" name="_csrf" value=<%= locals.token %> >
-	<label for="email" class="control-label">email</label>
+	<label for="email" class="ts-label">email</label>
 	<div class="controls">
 		<input type="email" name="email" value="<%= user.email %>" disabled="disabled"/>
 	</div>
 </div>
-<div class="control-group">
-	<label for="username" class="control-label">username</label>
+<div class="ts-row ts-form-row">
+	<label for="username" class="ts-label">username</label>
 	<div class="controls">
 		<input type="text" name="username" <% if(user.username){%>value="<%= user.username %>" disabled="disabled"<%}%> placeholder="username" />
 	</div>
@@ -15,8 +15,8 @@
 
 <% if(request.query.required){
 	if(request.query.required==='activation'){%>
-		<div class="_pea-row _pea-container-forminput">
-			<label for="activation-token" class="control-label">activation token 
+		<div class="ts-row ts-container-forminput">
+			<label for="activation-token" class="ts-label">activation token 
 			<a href="/auth/user/activate">resend activation email</a></label>
 			<div class="controls">
 					<input type="text" name="activation-token" id="activation-token" value="<%- request.query.activation_token %>" placeholder="activation token" />
@@ -26,6 +26,6 @@
 <%}%>
 
 
-<div class="_pea-text-center">
-	<button type="submit" name="submit" class="_pea-button _pea-color-success"><i class="icon-ok icon-white"></i> Register</button>
+<div class="ts-text-center">
+	<button type="submit" name="submit" class="ts-button ts-color-success"><i class="icon-ok icon-white"></i> Register</button>
 </div>

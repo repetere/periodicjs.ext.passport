@@ -85,7 +85,7 @@ var create = function (req, res) {
 			lognewuserin: true,
 			req: req,
 			send_new_user_email: true,
-      requireuseractivation:loginExtSettings.settings.requireuseractivation,
+			requireuseractivation: loginExtSettings.settings.requireuseractivation,
 			welcomeemaildata: {
 				getEmailTemplateFunction: CoreController.getPluginViewDefaultTemplate,
 				emailviewname: 'email/user/welcome',
@@ -158,7 +158,7 @@ var finishregistration = function (req, res) {
  * @return {object} reponds with an error page or requested view
  */
 var updateuserregistration = function (req, res) {
-	var userError,additionalqueryparams;
+	var userError, additionalqueryparams;
 
 	User.findOne({
 			email: req.user.email
@@ -185,39 +185,40 @@ var updateuserregistration = function (req, res) {
 				});
 			}
 			else {
-				if(req.body.username){
+				if (req.body.username) {
 					userToUpdate.username = req.body.username;
 				}
-				if(userToUpdate.attributes.user_activation_token_link === req.body['activation-token']){
+				if (userToUpdate.attributes.user_activation_token_link === req.body['activation-token']) {
 					try {
-					  var decoded = jwt.verify(userToUpdate.attributes.user_activation_token, loginExtSettings.token.secret);
-					  if(decoded.email === req.user.email){
-							userToUpdate.activated=true;
+						var decoded = jwt.verify(userToUpdate.attributes.user_activation_token, loginExtSettings.token.secret);
+						if (decoded.email === req.user.email) {
+							userToUpdate.activated = true;
 							console.log('update activation');
-					  }
-					  else{
+						}
+						else {
 							userError = new Error('activation token is invalid');
 							additionalqueryparams = '?required=activation';
-					  }
-					} catch(err) {
+						}
+					}
+					catch (err) {
 						userError = err;
 					}
 				}
-				else{
+				else {
 					userError = new Error('invalid activation token');
 					additionalqueryparams = '?required=activation';
 				}
 
-				if(userError){
+				if (userError) {
 					CoreController.handleDocumentQueryErrorResponse({
 						err: userError,
 						res: res,
 						req: req,
 						errorflash: userError.message,
-						redirecturl: '/auth/user/finishregistration'+additionalqueryparams
+						redirecturl: '/auth/user/finishregistration' + additionalqueryparams
 					});
 				}
-				else{
+				else {
 					userToUpdate.save(function (err, userSaved) {
 						if (err) {
 							userError = err;

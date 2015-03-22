@@ -1,20 +1,20 @@
 <% include ../shared/header %>
-<% include ../shared/nav %>
-	<div class="_pea-container">
-		<div class="_pea-row">
-			<div class="_pea-col-span6 _pea-col-nofloat">
-				<h2 class="text-left"><%= pagedata.title %></h2>
-				<div class="_pea-document">
+<div class="ts-container">
+	<section class="ts-text-container">
+		<div class="ts-row">
+			<div class="ts-col-span8 ts-col-nofloat">
+				<h2 class="text-left">Sign In</h2>
+				<div class="ts-padding-lg">
 					<% if(locals.isLoggedIn()){
 						%>
-							<div class="_pea-text-center">
+							<div class="ts-text-center">
 								Already Logged In, <a href="/auth/logout">Log Out</a>
 							</div>
 						<%
 					} 
 					else{
 						%>
-							<form action="/auth/login" method="post" autocomplete="on" id="login_form" name="login_form" class="_pea-form">
+							<form action="/auth/login" method="post" autocomplete="on" id="login_form" name="login_form" class="ts-form">
 								<% include login_form %>
 							</form>
 						<%
@@ -22,5 +22,6 @@
 				</div>
 			</div>
 		</div>
-	</div>
+	</section>
+</div>
 <% include ../shared/footer %>

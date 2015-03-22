@@ -1,28 +1,27 @@
-	<footer>
-		<div class="_pea-container">
-			<div class="_pea-row _pea-text-small">
-				<div class="_pea-col-span6">Thank you for curating with <a href="http://getperiodic.org" target="_blank">Periodic</a></div>
-				<div class="_pea-col-span6 _pea-text-right">
-					Version <%= periodic.version %>
-				</div>
+				</div> <!-- END OF <div id="ts-asyncadmin-content-container"> -->
 			</div>
+			<!-- END OF <div id="ts-asyncadmin-content-wrapper"> -->
+			<footer class="ts-position-fixed ts-position-bottom ts-width-100 ts-text-center ts-serif-clean ts-padding-md ts-bg-text-primary-color" style="border-top: 1px solid black;">
+				<section class="ts-text-container ">
+					<div class="ts-row ">
+					  <div class="ts-col-span6 ts-text-left ts-text-sm">
+					    <%- periodic.name %> &copy;
+					    <%var d=new Date();%>
+					      <%- d.getFullYear() %>
+					  </div>
+					  <div class="ts-col-span6 ts-pull-right ts-text-right ts-text-sm">
+					    Version <%= periodic.version %>
+								<input type="hidden" name="periodic-version" value="<%= periodic.version %>"/> 
+					  </div>
+					</div>
+				</section>
+				
+			</footer>
 		</div>
-	</footer>
-	<script type="text/javascript">
-	window.addEventListener("load",function(e){
-		<%
-			var delayMultiplier=0;
-			for(x in flash_messages){
-				if(delayMultiplier === 0){
-					%>
-					ribbonNotification.showRibbon( '<%=flash_messages[x].join(". ") %>',4000,'<%= x %>');
-						
-					<%
-				}
-				delayMultiplier++;
-			};
-		%>
-	},false);
-	</script>
+	</main>
+	<nav id="ts-pushmenu-mp-menu" class="ts-pushmenu-mp-menu ts-admin-menu">
+	  <% include _nav %>
+	</nav>
+	<%- locals.viewhelper.getHTML(locals.additionalFooterHTML) %>
 </body>
 </html>
