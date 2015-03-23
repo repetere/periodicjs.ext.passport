@@ -1,21 +1,19 @@
 <% include ../shared/header %>
-<% include ../shared/nav %>
-<div class="_pea-container">
-  <div class="_pea-row">
-    <div class="_pea-col-span6 _pea-col-nofloat">
+<div class="ts-container">
+  <div class="ts-row">
+    <div class="ts-col-span8 ts-col-nofloat">
       <h2 class="text-left"><%= pagedata.title %></h2>
 
-      <form action="/auth/forgot" method="post" autocomplete="on" id="forgot_form" name="forgot_form" class="_pea-form">
+      <form action="/auth/forgot" method="post" autocomplete="on" id="forgot_form" name="forgot_form" class="ts-form">
         <input type="hidden" name="_csrf" value=<%= locals.token %> >
-        <div class="_pea-row _pea-container-forminput">
-          <small> Email </small>
-          <input type="text" name="email" class="_pea-col-span12" placeholder="email@domain.com" />
+        <div class="ts-row ts-form-row">
+          <label class="ts-label"> Email </label>
+          <input type="text" name="email" class="ts-col-span12" placeholder="email@domain.com" />
         </div>
-<button type="submit" name="submit" class="_pea-button _pea-color-success">
+<button type="submit" name="submit" class="ts-button ts-color-success">
 <i class="icon-ok icon-white"></i> Submit</button>
       </form>
     </div>
   </div>
-</div>
 </div>
 <% include ../shared/footer %>

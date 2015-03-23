@@ -52,7 +52,7 @@ function getCsrfReg(cb) {
 				});
 			}
 		});
-};
+}
 
 function getCsrfLogin(cb) {
 	server
@@ -214,37 +214,37 @@ function postForgotPassword() {
 function getResetToken() {
 	return function (done) {
 		return done();
-	}
+	};
 }
 
 function resetTokenEmail() {
 	return function (done) {
 		return done();
-	}
+	};
 }
 
 function postResetToken() {
 	return function (done) {
 		return done();
-	}
+	};
 }
 
 function facebookAuth() {
 	return function (done) {
 		return done();
-	}
+	};
 }
 
 function instagramAuth() {
 	return function (done) {
 		return done();
-	}
+	};
 }
 
 function twitterAuth() {
 	return function (done) {
 		return done();
-	}
+	};
 }
 
 

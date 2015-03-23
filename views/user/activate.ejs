@@ -1,13 +1,12 @@
 <% include ../shared/header %>
-<% include ../shared/nav %>
-	<div class="_pea-container">
-		<div class="_pea-row">
-			<div class="_pea-col-span6 _pea-col-nofloat">
+	<div class="ts-container">
+		<div class="ts-row">
+			<div class="ts-col-span6 ts-col-nofloat">
 				<h2 class="text-left"><%= pagedata.title %></h2>
-				<div class="_pea-document">
-					<form action="/auth/user/activate" method="post" autocomplete="on" id="login_form" name="login_form" class="_pea-form">
+				<div class="ts-document">
+					<form action="/auth/user/activate" method="post" autocomplete="on" id="login_form" name="login_form" class="ts-form">
 						<input type="hidden" name="_csrf" value=<%= locals.token %> >
-						<div class="_pea-row _pea-container-forminput">
+						<div class="ts-row ts-form-row">
 							<label for="email" class="control-label">activation token 
 							<!-- <a href="/auth/user/activate">resend activation email</a> -->
 							</label>
@@ -15,8 +14,8 @@
 									<input type="text" name="email" id="email" value="<%- user.email %>" disabled="disabled" />
 							</div>
 						</div>
-						<div class="_pea-text-center">
-							<button type="submit" name="submit" class="_pea-button _pea-color-success"><i class="icon-ok icon-white"></i> resend activation email</button>
+						<div class="ts-text-center">
+							<button type="submit" name="submit" class="ts-button ts-color-success"><i class="icon-ok icon-white"></i> resend activation email</button>
 						</div>
 
 					</form>
