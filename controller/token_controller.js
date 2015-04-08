@@ -261,7 +261,6 @@ var get_token = function (req, res, next) {
 	});
 };
 
-
 //GET if the user token is vaild show the change password page
 var reset = function (req, res) {
 	var token = req.controllerData.token,
@@ -321,7 +320,6 @@ var reset = function (req, res) {
 		}
 	});
 };
-
 
 //POST change the users old password to the new password in the form
 var token = function (req, res, next) {
@@ -416,6 +414,62 @@ var get_user_activation_token = function (req, res, next) {
 	});
 };
 
+var generate_activation_attributes = function(options,callback){
+	var activationData = options.activationData;
+
+	try {
+		if (!activationData.email) {
+			throw new Error('you must provide an email address to activate an account');
+		}
+		var salt = bcrypt.genSaltSync(10),
+			expires = getTokenExpiresTime(),
+			user_activation_token = encode({
+				email: activationData.email 
+			});
+		activationData.attributes = {};
+		activationData.attributes.user_activation_token = user_activation_token;
+		activationData.attributes.user_activation_token_link = CoreUtilities.makeNiceName(bcrypt.hashSync(activationData.attributes.user_activation_token, salt));
+		activationData.attributes.reset_activation_expires_millis = expires;
+
+		callback(null,activationData);
+	}
+	catch (e) {
+		callback(e,null);
+	}
+};
+
+var update_activation_attributes = function(options,callback){
+	try {
+		var updatedActivationData = options.updatedActivationData;
+
+		User.findOne({
+			'_id': updatedActivationData._id
+		}, function (err, user_to_update) {
+			if (err) {
+				callback(err);
+			}
+			else if (!user_to_update || !user_to_update) {
+				callback( Error('invalid user activation token'));
+			}
+			else {
+				user_to_update.attributes = updatedActivationData.attributes;
+				user_to_update.markModified('attributes');
+				user_to_update.save(function (err /*, usr */ ) {
+					if (err) {
+						callback(err);
+					}
+					else {
+						callback(null,user_to_update);
+					}
+				});
+			}
+		});
+	}
+	catch (e) {
+		callback(e);
+	}
+};
+
 // auth/user/new
 var create_user_activation_token = function (req, res, next) {
 	try {
@@ -454,6 +508,8 @@ var tokenController = function (resources, passportResources) {
 	return {
 		forgot: forgot,
 		reset: reset,
+		generate_activation_attributes: generate_activation_attributes,
+		update_activation_attributes: update_activation_attributes,
 		get_user_activation_token: get_user_activation_token,
 		get_token: get_token,
 		create_user_activation_token: create_user_activation_token,

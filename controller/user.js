@@ -151,6 +151,38 @@ var finishregistration = function (req, res) {
 	);
 };
 
+var verify_user_activation = function(options,callback){
+	try {
+		var user = options.user;
+		User.findOne({
+			email: user.email
+		},
+		function (err, userToUpdate) {
+			if(err){
+				throw err;
+			}
+			var decoded = jwt.verify(userToUpdate.attributes.user_activation_token, loginExtSettings.token.secret);
+			if (decoded.email === userToUpdate.email) {
+				userToUpdate.activated = true;
+				userToUpdate.save(function (err, userSaved) {
+					if (err) {
+						throw err;
+					}
+					else {
+						callback(err,userSaved);
+					}
+				});
+			}
+			else {
+				throw new Error('activation token is invalid');
+			}
+		});
+	}
+	catch (err) {
+		callback(err);
+	}
+};
+
 /**
  * if username required, updates user username after account is created
  * @param  {object} req
@@ -317,6 +349,7 @@ var controller = function (resources) {
 		newuser: newuser,
 		forgot: forgot,
 		create: create,
+		verify_user_activation: verify_user_activation,
 		finishregistration: finishregistration,
 		updateuserregistration: updateuserregistration
 	};
