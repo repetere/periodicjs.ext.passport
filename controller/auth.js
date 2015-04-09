@@ -206,7 +206,7 @@ var get_activation = function (req, res) {
 
 //POST to auth/user/activate 
 var activate_user = function (req, res) {
-	var emailviewname = (req.controllerData && req.controllerData.activateEmailTemplate) ? req.controllerData.activateEmailTemplate : 'email/user/welcome_with_validation';
+	var emailviewname = loginExtSettings.settings.activateEmailTemplate || 'email/user/welcome_with_validation';
 	if (req.isAuthenticated()) {
 		CoreController.getPluginViewDefaultTemplate({
 				viewname: emailviewname,
