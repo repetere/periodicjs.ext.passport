@@ -206,7 +206,7 @@ var get_activation = function (req, res) {
 
 //POST to auth/user/activate 
 var activate_user = function (req, res) {
-	var emailviewname = 'email/user/welcome_with_validation';
+	var emailviewname = (req.controllerData && req.controllerData.activateEmailTemplate) ? req.controllerData.activateEmailTemplate : 'email/user/welcome_with_validation';
 	if (req.isAuthenticated()) {
 		CoreController.getPluginViewDefaultTemplate({
 				viewname: emailviewname,
@@ -228,10 +228,10 @@ var activate_user = function (req, res) {
 					CoreMailer.sendEmail({
 						appenvironment: appSettings.application.environment,
 						to: req.user.email,
-						cc: appSettings.adminnotificationemail,
-						replyTo: appSettings.adminnotificationemail,
-						from: appSettings.adminnotificationemail,
-						subject: appSettings.name + ' User Account Activation',
+						// cc: appSettings.adminnotificationemail,
+						replyTo: appSettings.fromemail || appSettings.adminnotificationemail,
+						from: appSettings.fromemail || appSettings.adminnotificationemail,
+						subject: loginExtSettings.settings.activationEmailSubject || appSettings.name + ' User Account Activation',
 						emailtemplatefilepath: templatepath,
 						emailtemplatedata: {
 							user: req.user,

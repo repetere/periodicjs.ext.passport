@@ -88,10 +88,10 @@ module.exports = function (periodic) {
 	authRouter.get('/twitter/callback', socialPassportController.twittercallback);
 
 	userRouter.get('/new|/register', userController.newuser);
-	userRouter.get('/finishregistration', userController.finishregistration);
+	userRouter.get('/finishregistration', authController.ensureAuthenticated, userController.finishregistration);
 
 	userRouter.post('/new', tokenController.create_user_activation_token, userController.create);
-	userRouter.post('/finishregistration', userController.updateuserregistration);
+	userRouter.post('/finishregistration', authController.ensureAuthenticated, userController.updateuserregistration);
 
 	periodic.app.use(authController.rememberme);
 	periodic.app.use(passport.initialize());
