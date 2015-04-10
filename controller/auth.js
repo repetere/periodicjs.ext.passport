@@ -214,7 +214,10 @@ var activate_user = function (req, res) {
 			},
 			function (err, templatepath) {
 				console.log('templatepath', templatepath);
-				if (templatepath === emailviewname) {
+				if(loginExtSettings.settings.activateEmailTemplate){
+					templatepath = path.resolve(process.cwd(), loginExtSettings.settings.activateEmailTemplate);
+				}
+				else if (templatepath === emailviewname) {
 					templatepath = path.resolve(process.cwd(), 'app/views', templatepath + '.' + appSettings.templatefileextension);
 				}
 				if (err) {

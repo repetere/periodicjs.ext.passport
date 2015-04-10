@@ -265,7 +265,12 @@ var updateuserregistration = function (req, res) {
 						else {
 							var forwardUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoginPath;
 							req.flash('info', 'updated user account');
-							res.redirect(forwardUrl);
+							if(loginExtSettings.settings.activationCompletePath){
+								res.redirect(loginExtSettings.settings.activationCompletePath);
+							}
+							else{
+								res.redirect(forwardUrl);
+							}
 
 							if (welcomeemailtemplate && emailtransport) {
 								User.sendWelcomeUserEmail({
