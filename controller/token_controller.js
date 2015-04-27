@@ -28,7 +28,7 @@ var encode = function (data) {
 };
 
 var decode = function (data, cb) {
-logger.info('jwt decode data',data);
+logger.debug('jwt decode data',data);
 	jwt.verify(data, loginExtSettings.token.secret, {}, function (err, decoded_token) {
 		if (err) {
 			logger.error('Error from JWT.verify', err);
@@ -167,7 +167,7 @@ var emailForgotPasswordLink = function (user, req, cb) {
 					to: user.email,
 					from: appSettings.fromemail || appSettings.adminnotificationemail,
 					replyTo: appSettings.fromemail || appSettings.adminnotificationemail,
-					subject: appSettings.forgotPasswordEmailSubject || appSettings.name + ' - Reset your password',
+					subject: loginExtSettings.settings.forgotPasswordEmailSubject || appSettings.name + ' - Reset your password',
 					emailtemplatefilepath: templatepath,
 					emailtemplatedata: {
 						user: user,
@@ -200,7 +200,7 @@ var emailResetPasswordNotification = function (user, req, cb) {
 					to: user.email,
 					from: appSettings.fromemail || appSettings.adminnotificationemail,
 					replyTo: appSettings.fromemail || appSettings.adminnotificationemail,
-					subject: appSettings.forgotPasswordEmailNotificationSubject || appSettings.name + ' - Password reset notification',
+					subject: loginExtSettings.settings.forgotPasswordEmailNotificationSubject || appSettings.name + ' - Password reset notification',
 					emailtemplatefilepath: templatepath,
 					emailtemplatedata: {
 						user: user,
