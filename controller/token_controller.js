@@ -28,10 +28,10 @@ var encode = function (data) {
 };
 
 var decode = function (data, cb) {
+logger.info('jwt decode data',data);
 	jwt.verify(data, loginExtSettings.token.secret, {}, function (err, decoded_token) {
 		if (err) {
-			console.log('Error from JWT.verify', err.name);
-			console.log('Error from JWT.verify', err.message);
+			logger.error('Error from JWT.verify', err);
 			cb(err);
 		}
 		else {
@@ -53,7 +53,7 @@ var invalidateUserToken = function (req, res, next, cb) {
 		'attributes.reset_token': token
 	}, function (err, usr) {
 		if (err) {
-			console.log('error finding the user for invalidate token fn');
+			logger.error('error finding the user for invalidate token fn');
 			cb(err, null);
 		}
 		else {
@@ -165,8 +165,9 @@ var emailForgotPasswordLink = function (user, req, cb) {
 				CoreMailer.sendEmail({
 					appenvironment: appenvironment,
 					to: user.email,
-					replyTo: appSettings.adminnotificationemail,
-					subject: appSettings.name + ' - Reset your password',
+					from: appSettings.fromemail || appSettings.adminnotificationemail,
+					replyTo: appSettings.fromemail || appSettings.adminnotificationemail,
+					subject: appSettings.forgotPasswordEmailSubject || appSettings.name + ' - Reset your password',
 					emailtemplatefilepath: templatepath,
 					emailtemplatedata: {
 						user: user,
@@ -197,8 +198,9 @@ var emailResetPasswordNotification = function (user, req, cb) {
 				CoreMailer.sendEmail({
 					appenvironment: appenvironment,
 					to: user.email,
-					replyTo: appSettings.adminnotificationemail,
-					subject: appSettings.name + ' - Password reset notification',
+					from: appSettings.fromemail || appSettings.adminnotificationemail,
+					replyTo: appSettings.fromemail || appSettings.adminnotificationemail,
+					subject: appSettings.forgotPasswordEmailNotificationSubject || appSettings.name + ' - Password reset notification',
 					emailtemplatefilepath: templatepath,
 					emailtemplatedata: {
 						user: user,
@@ -255,7 +257,7 @@ var get_token = function (req, res, next) {
 			res.redirect(loginExtSettings.settings.authLoginPath);
 		}
 		else {
-			req.controllerData.token = user_with_token.attributes.user_activation_token;
+			req.controllerData.token = user_with_token.attributes.reset_token;
 			next();
 		}
 	});

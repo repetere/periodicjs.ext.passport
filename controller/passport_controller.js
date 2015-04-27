@@ -172,7 +172,7 @@ var usePassport = function () {
 				passReqToCallback: true,
 			},
 			function (req, accessToken, refreshToken, profile, done) {
-				// console.log('instagram req:',req); 	// console.log('instagram accessToken:',accessToken); // console.log('instagram refreshToken:',refreshToken); // console.log('instagram profile:',profile);
+				// logger.silly('instagram req:',req); 	// logger.silly('instagram accessToken:',accessToken); // logger.silly('instagram refreshToken:',refreshToken); // logger.silly('instagram profile:',profile);
 
 				var instagramdata = profile;
 				authenticateUser({
@@ -182,7 +182,7 @@ var usePassport = function () {
 						'attributes.instagramaccesstoken': accessToken.toString()
 					},
 					existinusercallback: function (user) {
-						console.log('user from instagram passport', user);
+						logger.silly('user from instagram passport', user);
 						return done(null, user);
 					},
 					nonusercallback: function () {
@@ -223,8 +223,8 @@ var usePassport = function () {
 				passReqToCallback: true,
 			},
 			function (req, token, tokenSecret, profile, done) {
-				// console.log('twitter req:',req); 	// console.log('twitter accessToken:',accessToken); // console.log('twitter refreshToken:',refreshToken);
-				// console.log('twitter profile:', profile);
+				// logger.silly('twitter req:',req); 	// logger.silly('twitter accessToken:',accessToken); // logger.silly('twitter refreshToken:',refreshToken);
+				// logger.silly('twitter profile:', profile);
 
 				var twitterdata = profile;
 				authenticateUser({
@@ -235,7 +235,7 @@ var usePassport = function () {
 						'attributes.twitteraccesstokensecret': tokenSecret.toString()
 					},
 					existinusercallback: function (user) {
-						console.log('user from twitter passport', user);
+						logger.silly('user from twitter passport', user);
 						return done(null, user);
 					},
 					nonusercallback: function () {

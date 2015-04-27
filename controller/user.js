@@ -91,8 +91,9 @@ var create = function (req, res) {
 				emailviewname: 'email/user/welcome',
 				themefileext: appSettings.templatefileextension,
 				sendEmailFunction: CoreMailer.sendEmail,
-				subject: appSettings.name + ' New User Registration',
-				replyto: appSettings.adminnotificationemail,
+				subject: appSettings.newUserRegistrationSubject || appSettings.name + ' New User Registration',
+				from: appSettings.fromemail || appSettings.adminnotificationemail,
+				replyto: appSettings.fromemail || appSettings.adminnotificationemail,
 				hostname: req.headers.host,
 				appenvironment: appenvironment,
 				appname: appSettings.name,
@@ -225,7 +226,7 @@ var updateuserregistration = function (req, res) {
 						var decoded = jwt.verify(userToUpdate.attributes.user_activation_token, loginExtSettings.token.secret);
 						if (decoded.email === req.user.email) {
 							userToUpdate.activated = true;
-							console.log('update activation');
+							logger.info('update activation');
 						}
 						else {
 							userError = new Error('activation token is invalid');
@@ -274,7 +275,9 @@ var updateuserregistration = function (req, res) {
 
 							if (welcomeemailtemplate && emailtransport) {
 								User.sendWelcomeUserEmail({
-									subject: appSettings.name + ' New User Registration',
+									subject: appSettings.newUserRegistrationSubject || appSettings.name + ' New User Registration',
+									from: appSettings.fromemail || appSettings.adminnotificationemail,
+									replyTo: appSettings.fromemail || appSettings.adminnotificationemail,
 									user: userSaved,
 									hostname: req.headers.host,
 									appname: appSettings.name,
@@ -283,7 +286,7 @@ var updateuserregistration = function (req, res) {
 									mailtransport: emailtransport
 								}, function (err, status) {
 									if (err) {
-										console.log(err);
+										logger.error(err);
 									}
 									else {
 										console.info('email status', status);
