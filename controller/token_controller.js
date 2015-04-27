@@ -127,7 +127,7 @@ var generateToken = function (user, req, cb) {
 	var salt = bcrypt.genSaltSync(10);
 	var now = new Date();
 	var expires = new Date(now.getTime() + (loginExtSettings.token.resetTokenExpiresMinutes * 60 * 1000)).getTime();
-	user.attributes = {};
+	user.attributes = user.attributes || {};
 	user.attributes.reset_token = encode({
 		email: user.email,
 		apikey: user.apikey
@@ -454,7 +454,7 @@ var update_activation_attributes = function(options,callback){
 				callback( Error('invalid user activation token'));
 			}
 			else {
-				user_to_update.attributes = updatedActivationData.attributes;
+				user_to_update.attributes = merge(user_to_update.attributes,updatedActivationData.attributes);
 				user_to_update.markModified('attributes');
 				user_to_update.save(function (err /*, usr */ ) {
 					if (err) {
