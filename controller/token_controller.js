@@ -172,7 +172,8 @@ var emailForgotPasswordLink = function (user, req, cb) {
 					emailtemplatedata: {
 						user: user,
 						appname: appSettings.name,
-						hostname: req.headers.host
+						hostname: req.headers.host,
+						filename: templatepath
 					}
 				}, cb);
 			}
@@ -205,7 +206,8 @@ var emailResetPasswordNotification = function (user, req, cb) {
 					emailtemplatedata: {
 						user: user,
 						appname: appSettings.name,
-						hostname: req.headers.host
+						hostname: req.headers.host,
+						filename: templatepath
 					}
 				}, cb);
 			}
@@ -226,14 +228,20 @@ var forgot = function (req, res, next) {
 	];
 
 	waterfall(arr,
-		function (err /*, results*/ ) {
+		function (err , results ) {
 			if (err) {
 				req.flash('error', err.message);
 				res.redirect('/auth/forgot');
 			}
 			else {
 				req.flash('info', 'Password reset instructions were sent to your email address');
-				res.redirect(loginExtSettings.settings.authLoginPath);
+				if(req.controllerData && req.controllerData.sendemailstatus){
+			 		req.controllerData.password_reset_emailstatus = results;
+					next();
+				}
+				else{
+					res.redirect(loginExtSettings.settings.authLoginPath);
+				}
 			}
 		});
 };

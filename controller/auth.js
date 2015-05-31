@@ -205,7 +205,7 @@ var get_activation = function (req, res) {
 };
 
 //POST to auth/user/activate 
-var activate_user = function (req, res) {
+var activate_user = function (req, res,next) {
 	var emailviewname = loginExtSettings.settings.activateEmailTemplate || 'email/user/welcome_with_validation';
 	if (req.isAuthenticated()) {
 		CoreController.getPluginViewDefaultTemplate({
@@ -239,7 +239,8 @@ var activate_user = function (req, res) {
 						emailtemplatedata: {
 							user: req.user,
 							hostname: req.headers.host,
-							appname: appSettings.name
+							appname: appSettings.name,
+							filename: templatepath
 						}
 					}, function (sendemailerr, emailstatus) {
 						if (sendemailerr) {
@@ -252,7 +253,13 @@ var activate_user = function (req, res) {
 						else {
 							logger.silly('emailstatus', emailstatus);
 							req.flash('info', 'user activation token email sent to ' + req.user.email);
-							res.redirect(loginExtSettings.settings.authLoggedInHomepage);
+							if(req.controllerData && req.controllerData.sendemailstatus){
+								 req.controllerData.activate_user_emailstatus = emailstatus;
+								 next();
+							}
+							else{
+								res.redirect(loginExtSettings.settings.authLoggedInHomepage);
+							}
 						}
 
 					});
