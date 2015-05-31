@@ -308,7 +308,9 @@ var passportController = function (resources, passportResources) {
 		usePassport: usePassport,
 		deserialize: deserialize,
 		serialize: serialize,
-		passport: passport
+		passport: passport,
+		authenticateUser: authenticateUser,
+		linkSocialAccount: linkSocialAccount
 	};
 };
 

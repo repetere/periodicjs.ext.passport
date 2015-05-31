@@ -2,12 +2,10 @@
 
 var passport = require('passport'),
 	merge = require('utils-merge'),
-	Utilities = require('periodicjs.core.utilities'),
-	ControllerHelper = require('periodicjs.core.controller'),
-	CoreMailer = require('periodicjs.core.mailer'),
 	path = require('path'),
 	CoreUtilities,
 	CoreController,
+	CoreMailer,
 	appSettings,
 	mongoose,
 	User,
@@ -295,8 +293,9 @@ var controller = function (resources) {
 	mongoose = resources.mongoose;
 	appSettings = resources.settings;
 	User = mongoose.model('User');
-	CoreController = new ControllerHelper(resources);
-	CoreUtilities = new Utilities(resources);
+	CoreController = resources.core.controller;
+	CoreUtilities = resources.core.utilities;
+	CoreMailer = resources.core.extension.mailer;
 
 	// var appenvironment = appSettings.application.environment;
 	loginExtSettings = resources.app.controller.extension.login.loginExtSettings;
@@ -317,7 +316,8 @@ var controller = function (resources) {
 		get_activation: get_activation,
 		ensureAuthenticated: ensureAuthenticated,
 		loginExtSettings: loginExtSettings,
-		passport: passport
+		passport: passport,
+		passportController: passportController
 	};
 };
 
