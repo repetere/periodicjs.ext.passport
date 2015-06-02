@@ -25,8 +25,8 @@ var login = function (req, res, next) {
 		next(configError);
 	}
 	else {
-		passport.authenticate('local', function (err, user, info) {
-			logger.silly('info', info);
+		passport.authenticate('local', function (err, user /*, info*/) {
+	
 			if (err) {
 				logger.error(err);
 				return next(err);
@@ -44,7 +44,7 @@ var login = function (req, res, next) {
 					return res.redirect(req.session.return_url);
 				}
 				else {
-					return res.redirect('/');
+					res.redirect(loginExtSettings.settings.authLoggedInHomepage);
 				}
 			});
 		})(req, res, next);

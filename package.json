@@ -1,7 +1,7 @@
 {
   "name": "periodicjs.ext.login",
   "description": "An authentication extension for periodicjs that uses passport to authenticate user sessions.",
-  "version": "5.0.10",
+  "version": "5.0.11",
   "main": "index.js",
   "engines": {
     "node": ">=0.10.x"
@@ -68,12 +68,12 @@
     "url": "https://github.com/typesettin/periodicjs.ext.login/issues"
   },
   "homepage": "https://github.com/typesettin/periodicjs.ext.login",
-  "_id": "periodicjs.ext.login@1.5.4",
-  "_shasum": "c2c86b8a963aebf4846f09b894164fbc279ac507",
-  "_from": "periodicjs.ext.login@1.5.4",
-  "_resolved": "https://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-1.5.4.tgz",
+  "_id": "periodicjs.ext.login@5.0.10",
+  "_shasum": "db77473bc7ee582970239c60a5578b659e9eb057",
+  "_from": "periodicjs.ext.login@latest",
+  "_resolved": "https://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-5.0.10.tgz",
   "gitHead": "4664b50397714fe9aad5c9b1e77d1707525c107c",
-  "_npmVersion": "1.5.0-alpha-4",
+  "_npmVersion": "2.9.0",
   "_npmUser": {
     "name": "yawetse",
     "email": "yaw.etse@gmail.com"
@@ -85,8 +85,10 @@
     }
   ],
   "dist": {
-    "shasum": "c2c86b8a963aebf4846f09b894164fbc279ac507",
-    "tarball": "http://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-1.5.4.tgz"
+    "shasum": "db77473bc7ee582970239c60a5578b659e9eb057",
+    "tarball": "http://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-5.0.10.tgz"
   },
-  "directories": {}
+  "directories": {},
+  "_nodeVersion": "0.10.33",
+  "readme": "ERROR: No README data found!"
 }

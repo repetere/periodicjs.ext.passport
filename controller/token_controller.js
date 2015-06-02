@@ -6,9 +6,7 @@ var async = require('async'),
 	bcrypt = require('bcrypt'),
 	CoreController,
 	CoreUtilities,
-	ControllerHelper = require('periodicjs.core.controller'),
-	CoreMailer = require('periodicjs.core.mailer'),
-	Utilities = require('periodicjs.core.utilities'),
+	CoreMailer,
 	jwt = require('jsonwebtoken'),
 	loginExtSettings,
 	logger,
@@ -229,20 +227,31 @@ var forgot = function (req, res, next) {
 
 	waterfall(arr,
 		function (err , results ) {
-			if (err) {
-				req.flash('error', err.message);
-				res.redirect('/auth/forgot');
-			}
-			else {
-				req.flash('info', 'Password reset instructions were sent to your email address');
-				if(req.controllerData && req.controllerData.sendemailstatus){
-			 		req.controllerData.password_reset_emailstatus = results;
-					next();
+			CoreController.respondInKind({
+				req : req,
+				res : res,
+				err : err,
+				responseData : results,
+				callback:function(req,res/*,responseData*/){
+					if (err) {
+						req.flash('error', err.message);
+						res.redirect('/auth/forgot');
+					}
+					else {
+						req.flash('info', 'Password reset instructions were sent to your email address');
+						if(req.controllerData && req.controllerData.sendemailstatus){
+					 		req.controllerData.password_reset_emailstatus = results;
+							next();
+						}
+						else{
+							res.redirect(loginExtSettings.settings.authLoginPath);
+						}
+					}
 				}
-				else{
-					res.redirect(loginExtSettings.settings.authLoginPath);
-				}
-			}
+			});
+
+
+			
 		});
 };
 
@@ -343,16 +352,23 @@ var token = function (req, res, next) {
 			saveUser,
 			emailResetPasswordNotification
 		],
-		function (err /*, results*/ ) {
-			if (err) {
-				req.flash('error', err.message);
-				res.redirect('/auth/reset/' + user_token);
-			}
-			else {
-				req.flash('success', 'Password Sucessfully Changed!');
-				res.redirect(loginExtSettings.settings.authLoginPath);
-			}
-
+		function (err , results ) {
+			CoreController.respondInKind({
+				req : req,
+				res : res,
+				err : err,
+				responseData : results,
+				callback:function(req,res/*,responseData*/){
+						if (err) {
+							req.flash('error', err.message);
+							res.redirect('/auth/reset/' + user_token);
+						}
+						else {
+							req.flash('success', 'Password Sucessfully Changed!');
+							res.redirect(loginExtSettings.settings.authLoginPath);
+						}
+				}
+			});
 		});
 };
 
@@ -507,8 +523,9 @@ var create_user_activation_token = function (req, res, next) {
 
 var tokenController = function (resources, passportResources) {
 	appSettings = resources.settings;
-	CoreController = new ControllerHelper(resources);
-	CoreUtilities = new Utilities(resources);
+	CoreController = resources.core.controller;
+	CoreUtilities = resources.core.utilities;
+	CoreMailer = resources.core.mailer;
 	loginExtSettings = passportResources.loginExtSettings;
 	logger = resources.logger;
 	mongoose = resources.mongoose;
