@@ -23,8 +23,9 @@ var linkSocialAccount = function (options) {
 				return done(err);
 			}
 			else if (existingUser) {
-				logger.info('ext - controller/auth.js - already has an account, trying to connect account');
+				logger.debug('ext - controller/auth.js - already has an account, trying to connect account');
 				existingUser.attributes = merge(existingUser.attributes, socialaccountattributes);
+				existingUser.markModified('attributes');
 				existingUser.save(done);
 			}
 			else if (requestobj.user) {
@@ -34,7 +35,7 @@ var linkSocialAccount = function (options) {
 				done(null, requestobj.user);
 			}
 			else {
-				logger.info('ext - controller/auth.js - creating new ' + linkaccountservice + ' user');
+				logger.debug('ext - controller/auth.js - creating new ' + linkaccountservice + ' user');
 				newaccountdata.attributes = socialaccountattributes;
 				User.create(newaccountdata, done);
 			}

@@ -1,7 +1,7 @@
 'use strict';
 
-var Utilities = require('periodicjs.core.utilities'),
-	ControllerHelper = require('periodicjs.core.controller'),
+var CoreUtilities,
+	CoreController,
 	CoreMailer = require('periodicjs.core.mailer'),
 	extend = require('utils-merge'),
 	jwt = require('jsonwebtoken'),
@@ -12,9 +12,7 @@ var Utilities = require('periodicjs.core.utilities'),
 	loginExtSettings,
 	appenvironment,
 	welcomeemailtemplate,
-	emailtransport,
-	CoreUtilities,
-	CoreController;
+	emailtransport;
 
 /**
  * user login page
@@ -347,8 +345,8 @@ var controller = function (resources) {
 	mongoose = resources.mongoose;
 	appSettings = resources.settings;
 	User = mongoose.model('User');
-	CoreController = new ControllerHelper(resources);
-	CoreUtilities = new Utilities(resources);
+	CoreController = resources.core.controller;
+	CoreUtilities = resources.core.utilities;
 	loginExtSettings = resources.app.controller.extension.login.loginExtSettings;
 	appenvironment = appSettings.application.environment;
 
