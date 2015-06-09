@@ -452,7 +452,7 @@ var generate_activation_attributes = function(options,callback){
 			user_activation_token = encode({
 				email: activationData.email 
 			});
-		activationData.attributes = {};
+		activationData.attributes = activationData.attributes || {};
 		activationData.attributes.user_activation_token = user_activation_token;
 		activationData.attributes.user_activation_token_link = CoreUtilities.makeNiceName(bcrypt.hashSync(activationData.attributes.user_activation_token, salt));
 		activationData.attributes.reset_activation_expires_millis = expires;
