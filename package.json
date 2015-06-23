@@ -1,7 +1,7 @@
 {
   "name": "periodicjs.ext.login",
   "description": "An authentication extension for periodicjs that uses passport to authenticate user sessions.",
-  "version": "5.0.12",
+  "version": "5.1.0",
   "main": "index.js",
   "engines": {
     "node": ">=0.10.x"
@@ -21,9 +21,9 @@
     "test": "mocha"
   },
   "dependencies": {
-    "jsonwebtoken": "^3.2.0",
-    "passport": "0.2.1",
-    "passport-facebook": "1.0.3",
+    "jsonwebtoken": "^5.0.2",
+    "passport": "^0.2.2",
+    "passport-facebook": "^2.0.0",
     "passport-google": "0.3.0",
     "passport-instagram": "^0.1.2",
     "passport-local": "1.0.0",
@@ -32,9 +32,8 @@
     "util-extend": ">=1.0.1"
   },
   "devDependencies": {
-    "browserify": "~6.3.2",
-    "chai": "^1.10.0",
-    "chai-fs": "^0.1.0",
+    "browserify": "^10.2.4",
+    "chai": "^3.0.0",
     "grunt": ">=0.4.5",
     "grunt-browserify": ">=2.1.3",
     "grunt-contrib-copy": ">=0.5.0",
@@ -49,11 +48,11 @@
     "grunt-simple-mocha": ">=0.4.0",
     "jquery": "^2.1.3",
     "js-dom": "0.0.1",
-    "jsdoc": "3.3.0-alpha10",
-    "mocha": "2.0.1",
-    "supertest": "^0.15.0",
+    "jsdoc": "^3.3.2",
+    "mocha": "^2.2.5",
+    "supertest": "^1.0.1",
     "uglify-js": "^2.4.15",
-    "uglifyify": "^2.5.0"
+    "uglifyify": "^3.0.1"
   },
   "keywords": [
     "periodicjs",
@@ -68,10 +67,10 @@
     "url": "https://github.com/typesettin/periodicjs.ext.login/issues"
   },
   "homepage": "https://github.com/typesettin/periodicjs.ext.login",
-  "_id": "periodicjs.ext.login@5.0.10",
-  "_shasum": "db77473bc7ee582970239c60a5578b659e9eb057",
-  "_from": "periodicjs.ext.login@latest",
-  "_resolved": "https://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-5.0.10.tgz",
+  "_id": "periodicjs.ext.login@5.0.12",
+  "_shasum": "a2108c924e891593a7725c32bb5a346ab07f77c3",
+  "_from": "periodicjs.ext.login@>=5.0.1 <6.0.0",
+  "_resolved": "https://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-5.0.12.tgz",
   "gitHead": "4664b50397714fe9aad5c9b1e77d1707525c107c",
   "_npmVersion": "2.9.0",
   "_npmUser": {
@@ -85,10 +84,10 @@
     }
   ],
   "dist": {
-    "shasum": "db77473bc7ee582970239c60a5578b659e9eb057",
-    "tarball": "http://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-5.0.10.tgz"
+    "shasum": "a2108c924e891593a7725c32bb5a346ab07f77c3",
+    "tarball": "http://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-5.0.12.tgz"
   },
   "directories": {},
-  "_nodeVersion": "0.10.33",
+  "_nodeVersion": "0.10.31",
   "readme": "ERROR: No README data found!"
 }
