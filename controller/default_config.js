@@ -31,5 +31,16 @@ module.exports = {
 		ttl: '3600000',
 		resetTokenExpiresMinutes: '60',
 		secret: 'periodicjs'
-	}
+	},
+	timeout: {
+	  attempt_interval: {
+	  	time: 10,
+	  	unit: 'minutes'
+	  },
+	  freeze_interval: {
+	  	time: 1,
+	  	unit: 'hours'
+	  },
+	  use_limiter: true
+  }
 };
