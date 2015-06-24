@@ -68,8 +68,9 @@ module.exports = function (periodic) {
 	authRouter.post('/login', authController.login);
 	authRouter.get('/logout', authController.logout);
 	//token controller & router
-	authRouter.get('/forgot', userController.forgot);
-	authRouter.post('/forgot', tokenController.forgot);
+	var forgotPasswordRoute = loginExtSettings.routes.forgot_password.custom || loginExtSettings.routes.forgotPasswordRoute.default;
+	authRouter.get('/' + forgotPasswordRoute, userController.forgot);
+	authRouter.post('/' + forgotPasswordRoute, tokenController.forgot);
 	authRouter.get('/reset/:token', tokenController.get_token, tokenController.reset);
 	authRouter.post('/reset/:token', tokenController.get_token, tokenController.token);
 

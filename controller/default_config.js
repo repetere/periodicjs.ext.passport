@@ -42,5 +42,11 @@ module.exports = {
 	  	unit: 'hours'
 	  },
 	  use_limiter: true
+  },
+  routes: {
+  	forgot_password: {
+  		default: 'forgot',
+  		custom: 'reset-password'
+  	}
   }
 };
