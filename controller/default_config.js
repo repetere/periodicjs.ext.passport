@@ -45,8 +45,7 @@ module.exports = {
   },
   routes: {
   	forgot_password: {
-  		default: 'forgot',
-  		custom: 'reset-password'
+  		default: 'forgot'
   	}
   }
 };
