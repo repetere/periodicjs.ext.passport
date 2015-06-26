@@ -48,7 +48,6 @@ var linkSocialAccount = function (options) {
 };
 
 var limitLoginAttempts = function (user) {
-	logger.silly('limitLoginAttempts', user);
 	user.extensionattributes = user.extensionattributes || {};
 	if(!user.extensionattributes.login){
 		user.extensionattributes.login = {
@@ -60,22 +59,17 @@ var limitLoginAttempts = function (user) {
 	}
 	user.extensionattributes.login.attempts++;
 	if (!user.extensionattributes.login.flagged) {
-		logger.silly('In not flagged');
 		if (moment(user.extensionattributes.login.timestamp).isBefore(moment().subtract(loginExtSettings.timeout.attempt_interval.time, loginExtSettings.timeout.attempt_interval.unit))) {
-			logger.silly('Reset attempts');
 			user.extensionattributes.login.attempts = 1;
 			user.extensionattributes.login.timestamp = moment();
 		}
-		else if (user.extensionattributes.login.attempts >= 5 && moment(user.extensionattributes.login.timestamp).isAfter(moment().subtract(loginExtSettings.timeout.attempt_interval.time, loginExtSettings.timeout.attempt_interval.unit))) {
-			logger.silly('Freeze Account');
+		else if (user.extensionattributes.login.attempts >= loginExtSettings.timeout.attempts && moment(user.extensionattributes.login.timestamp).isAfter(moment().subtract(loginExtSettings.timeout.attempt_interval.time, loginExtSettings.timeout.attempt_interval.unit))) {
 			user.extensionattributes.login.flagged = true;
 			user.extensionattributes.login.freezeTime = moment();
 		}
 	}
 	else {
-		logger.silly('In flagged');
 		if (moment(user.extensionattributes.login.freezeTime).isBefore(moment().subtract(loginExtSettings.timeout.freeze_interval.time, loginExtSettings.timeout.freeze_interval.unit))) {
-			logger.silly('Unfreeze acount');
 			user.extensionattributes.login.attempts = 1;
 			user.extensionattributes.login.timestamp = moment();
 			user.extensionattributes.login.flagged = false;
@@ -129,7 +123,7 @@ var loginAttemptsError = function (user, done) {
 			return done(err);
 		}
 		else {
-			console.log('End', typeof done);
+			logger.info('Sending account lockout email', result);
 			return done(new Error('Your Account is Currently Blocked'), false, {
 				message: 'Your Account is Currently Blocked'
 			});
@@ -153,7 +147,7 @@ var authenticateUser = function (options) {
 			nonusercallback();
 		}
 		else {
-			logger.silly('login found exiting user');
+			logger.silly('login found existing user');
 			if (loginExtSettings.timeout.use_limiter) {
 				limitAttemptUser = limitLoginAttempts(user);
 			}

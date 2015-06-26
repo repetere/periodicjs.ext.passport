@@ -33,8 +33,9 @@ module.exports = {
 		secret: 'periodicjs'
 	},
 	timeout: {
+		attempts: 10,
 	  attempt_interval: {
-	  	time: 10,
+	  	time: 5,
 	  	unit: 'minutes'
 	  },
 	  freeze_interval: {
@@ -46,6 +47,29 @@ module.exports = {
   routes: {
   	forgot_password: {
   		default: 'forgot'
+  	}
+  },
+  complexitySettings: {
+  	useComplexity: true,
+  	settings: {
+  		weak: {
+  			uppercase: 1,
+  			lowercase: 1,
+  			min: 8
+  		},
+  		medium: {
+  			uppercase: 1,
+  			lowercase: 1,
+  			digit: 1,
+  			min: 8
+  		},
+  		strong: {
+  			uppercase: 1,
+  			lowercase: 1,
+  			digit: 1,
+  			special: 1,
+  			min: 8
+  		}
   	}
   }
 };
