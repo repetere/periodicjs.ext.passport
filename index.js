@@ -6,14 +6,7 @@ var path = require('path'),
 	loginExtSettings,
 	appenvironment,
 	settingJSON,
-	// activate_middleware,
-	Extensions = require('periodicjs.core.extensions'),
-	CoreExtension = new Extensions({
-		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
-	}),
-	loginExtSettingsFile = path.resolve(CoreExtension.getconfigdir({
-		extname: 'periodicjs.ext.login'
-	}), './settings.json'),
+	loginExtSettingsFile = path.join(process.cwd(), 'content/config/extensions/periodicjs.ext.login/settings.json'),
 	defaultExtSettings = require('./controller/default_config');
 
 /**
