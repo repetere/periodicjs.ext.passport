@@ -66,8 +66,8 @@ var invalidateUserToken = function (req, res, next, cb) {
 
 var resetPassword = function (req, res, next, user, cb) {
 	var err;
-	console.log('loginExtSettings', loginExtSettings);
-	console.log('req.body', req.body);
+	// console.log('loginExtSettings', loginExtSettings);
+	// console.log('req.body', req.body);
 	if (req.body.password) {
 		var validate = User.checkValidation({
 			newuser: req.body,
@@ -370,8 +370,8 @@ var token = function (req, res, next) {
 			emailResetPasswordNotification
 		],
 		function (err, results) {
-			console.log('These are the err', err);
-			console.log('These are the results', results);
+			// console.log('These are the err', err);
+			// console.log('These are the results', results);
 			CoreController.respondInKind({
 				req : req,
 				res : res,
@@ -439,7 +439,7 @@ var get_user_activation_token = function (req, res, next) {
 	User.findOne({
 		'attributes.user_activation_token_link': req.params.token
 	}, function (err, user_with_activation_token) {
-		console.log('user_with_activation_token', user_with_activation_token);
+		// console.log('user_with_activation_token', user_with_activation_token);
 		if (err) {
 			req.flash('error', err.message);
 			res.redirect(loginExtSettings.settings.authLoginPath);

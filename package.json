@@ -11,6 +11,13 @@
     "email": "yaw.etse@gmail.com",
     "url": "http://about.me/yawjosephetse"
   },
+  "contributors": [
+    {
+      "name": "Jan Bialostok",
+      "email": "janbialostok@gmail.com",
+      "url": "https://github.com/janbialostok"
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/typesettin/periodicjs.ext.login.git"

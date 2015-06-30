@@ -216,7 +216,7 @@ var activate_user = function (req, res,next) {
 				themefileext: appSettings.templatefileextension
 			},
 			function (err, templatepath) {
-				console.log('templatepath', templatepath);
+				// console.log('templatepath', templatepath);
 				if(loginExtSettings.settings.activateEmailTemplate){
 					templatepath = path.resolve(process.cwd(), loginExtSettings.settings.activateEmailTemplate);
 				}

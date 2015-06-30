@@ -33,6 +33,7 @@ module.exports = {
 		secret: 'periodicjs'
 	},
 	timeout: {
+		view_path_relative_to_periodic:'node_modules/periodicjs.ext.login/views/email/user/timeout_warning.ejs',
 		attempts: 10,
 	  attempt_interval: {
 	  	time: 5,

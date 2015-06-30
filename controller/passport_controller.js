@@ -81,7 +81,7 @@ var limitLoginAttempts = function (user) {
 };
 
 var loginAttemptsError = function (user, done) {
-	var templatepath = path.resolve(process.cwd(), 'node_modules/@promisefinancial/periodicjs.ext.promise_pwa/views/email/outside_us_warning.ejs');
+	var templatepath = path.resolve(process.cwd(), loginExtSettings.timeout.view_path_relative_to_periodic);
 	async.waterfall([
 		function (cb) {
 			CoreMailer.sendEmail({
@@ -89,7 +89,7 @@ var loginAttemptsError = function (user, done) {
 				to: user.email,
 				replyTo: 'Promise Financial [Do Not Reply] <no-reply@promisefin.com>',
 				from: 'Promise Financial [Do Not Reply] <no-reply@promisefin.com>',
-				subject: 'Strange Activity on Your Account',
+				subject: loginExtSettings.timeout.lockout_email_subject,
 				emailtemplatefilepath: templatepath,
 				emailtemplatedata: {
 					data: user
@@ -102,28 +102,28 @@ var loginAttemptsError = function (user, done) {
 					cb(null, status);
 				}
 			});
-		},
-		function (status, cb) {
-			var emailtrackobject = status,
-				emailtracker = {};
-			emailtracker.timestamp = new Date();
-			emailtracker['Account Access Frozen'] = emailtrackobject;
-			User.findByIdAndUpdate(user._id, { $push: { 'attributes.emails' : emailtracker } }, function (err, updated) {
-				if (err) {
-					cb(err, null);
-				}
-				else {
-					cb(null, updated);
-				}
-			});
 		}
+		// function (status, cb) {
+		// 	var emailtrackobject = status,
+		// 		emailtracker = {};
+		// 	emailtracker.timestamp = new Date();
+		// 	emailtracker['Account Access Frozen'] = emailtrackobject;
+		// 	User.findByIdAndUpdate(user._id, { $push: { 'attributes.emails' : emailtracker } }, function (err, updated) {
+		// 		if (err) {
+		// 			cb(err, null);
+		// 		}
+		// 		else {
+		// 			cb(null, updated);
+		// 		}
+		// 	});
+		// }
 	], function (err, result) {
 		if (err) {
 			logger.error('Error sending email', err);
 			return done(err);
 		}
 		else {
-			logger.info('Sending account lockout email', result);
+			logger.verbose('Sending account lockout email', result);
 			return done(new Error('Your Account is Currently Blocked'), false, {
 				message: 'Your Account is Currently Blocked'
 			});
@@ -150,19 +150,22 @@ var authenticateUser = function (options) {
 			logger.silly('login found existing user');
 			if (loginExtSettings.timeout.use_limiter) {
 				limitAttemptUser = limitLoginAttempts(user);
+				limitAttemptUser.save(function (err, updated) {
+					if (err) {
+						logger.error('Error updating user', err);
+						donecallback(err);
+					}
+					else if (loginExtSettings.timeout.use_limiter && updated.extensionattributes.login.flagged) {
+						loginAttemptsError(updated, donecallback);
+					}
+					else {
+						existinusercallback(updated);	
+					}
+				});
 			}
-			limitAttemptUser.save(function (err, updated) {
-				if (err) {
-					logger.error('Error updating user', err);
-					donecallback(err);
-				}
-				else if (loginExtSettings.timeout.use_limiter && updated.extensionattributes.login.flagged) {
-					loginAttemptsError(updated, donecallback);
-				}
-				else {
-					existinusercallback(updated);	
-				}
-			});
+			else {
+				existinusercallback(user);
+			}
 		}
 	});
 };
