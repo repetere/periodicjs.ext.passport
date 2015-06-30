@@ -34,6 +34,7 @@ module.exports = {
 	},
 	timeout: {
 		view_path_relative_to_periodic:'node_modules/periodicjs.ext.login/views/email/user/timeout_warning.ejs',
+		lockout_email_subject:'User Account Lockout Notification',
 		attempts: 10,
 	  attempt_interval: {
 	  	time: 5,
