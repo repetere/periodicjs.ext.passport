@@ -2,7 +2,7 @@
 
 var CoreUtilities,
 	CoreController,
-	CoreMailer = require('periodicjs.core.mailer'),
+	CoreMailer,
 	extend = require('utils-merge'),
 	jwt = require('jsonwebtoken'),
 	appSettings,
@@ -347,6 +347,7 @@ var controller = function (resources) {
 	User = mongoose.model('User');
 	CoreController = resources.core.controller;
 	CoreUtilities = resources.core.utilities;
+	CoreMailer = resources.core.extension.mailer;
 	loginExtSettings = resources.app.controller.extension.login.loginExtSettings;
 	appenvironment = appSettings.application.environment;
 

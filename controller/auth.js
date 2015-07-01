@@ -20,6 +20,7 @@ var passport = require('passport'),
  * @param  {object} res
  * @return {object} reponds with an error page or sends user to authenicated in resource
  */
+
 var login = function (req, res, next) {
 	if (configError) {
 		next(configError);
@@ -29,6 +30,10 @@ var login = function (req, res, next) {
 	
 			if (err) {
 				logger.error(err);
+				if (err.message === 'Your Account is Currently Blocked') {
+					req.flash('error', 'Your account is currently blocked');
+					return res.redirect(loginExtSettings.settings.authLoginPath);
+				}
 				return next(err);
 			}
 			if (!user) {
@@ -211,7 +216,7 @@ var activate_user = function (req, res,next) {
 				themefileext: appSettings.templatefileextension
 			},
 			function (err, templatepath) {
-				console.log('templatepath', templatepath);
+				// console.log('templatepath', templatepath);
 				if(loginExtSettings.settings.activateEmailTemplate){
 					templatepath = path.resolve(process.cwd(), loginExtSettings.settings.activateEmailTemplate);
 				}

@@ -6,14 +6,7 @@ var path = require('path'),
 	loginExtSettings,
 	appenvironment,
 	settingJSON,
-	// activate_middleware,
-	Extensions = require('periodicjs.core.extensions'),
-	CoreExtension = new Extensions({
-		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
-	}),
-	loginExtSettingsFile = path.resolve(CoreExtension.getconfigdir({
-		extname: 'periodicjs.ext.login'
-	}), './settings.json'),
+	loginExtSettingsFile = path.join(process.cwd(), 'content/config/extensions/periodicjs.ext.login/settings.json'),
 	defaultExtSettings = require('./controller/default_config');
 
 /**
@@ -68,8 +61,8 @@ module.exports = function (periodic) {
 	authRouter.post('/login', authController.login);
 	authRouter.get('/logout', authController.logout);
 	//token controller & router
-	authRouter.get('/forgot', userController.forgot);
-	authRouter.post('/forgot', tokenController.forgot);
+	authRouter.get('/' + loginExtSettings.routes.forgot_password.default, userController.forgot);
+	authRouter.post('/' + loginExtSettings.routes.forgot_password.default, tokenController.forgot);
 	authRouter.get('/reset/:token', tokenController.get_token, tokenController.reset);
 	authRouter.post('/reset/:token', tokenController.get_token, tokenController.token);
 

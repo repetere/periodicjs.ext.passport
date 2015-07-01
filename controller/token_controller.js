@@ -8,6 +8,7 @@ var async = require('async'),
 	CoreUtilities,
 	CoreMailer,
 	jwt = require('jsonwebtoken'),
+	moment = require('moment'),
 	loginExtSettings,
 	logger,
 	merge = require('utils-merge'),
@@ -65,17 +66,25 @@ var invalidateUserToken = function (req, res, next, cb) {
 
 var resetPassword = function (req, res, next, user, cb) {
 	var err;
-	//console.log('loginExtSettings', loginExtSettings);
+	// console.log('loginExtSettings', loginExtSettings);
+	// console.log('req.body', req.body);
 	if (req.body.password) {
+		var validate = User.checkValidation({
+			newuser: req.body,
+			checkusername: false,
+			checkemail: false,
+			checkpassword: true,
+			useComplexity: loginExtSettings.complexitySettings.useComplexity,
+			complexity: loginExtSettings.complexitySettings.settings.medium
+		});
 		if (req.body.password !== req.body.passwordconfirm) {
-			err = new Error('Passwords do not match');
+			err = new Error('Passwords do not match in token');
 			req.flash('error', err);
 			cb(err, null);
 		}
-		else if (req.body.password === undefined || req.body.password.length < loginExtSettings.new_user_validation.length_of_password) {
-			err = new Error('Password is too short');
-			req.flash('error', err);
-			cb(err, null);
+		else if (validate !== null) {
+			req.flash('error', validate);
+			cb(validate, null);
 		}
 		else {
 			var salt = bcrypt.genSaltSync(10),
@@ -83,6 +92,9 @@ var resetPassword = function (req, res, next, user, cb) {
 			user.password = hash;
 			cb(null, user, req);
 		}
+	}
+	else{
+		cb(new Error('Invalid Empty Password'),null);
 	}
 };
 
@@ -93,6 +105,12 @@ var resetPassword = function (req, res, next, user, cb) {
 function saveUser(user, req, cb) {
 	user.markModified('attributes');
 	user.markModified('password');
+	if (user.extensionattributes && user.extensionattributes.login && user.extensionattributes.login.flagged) {
+		user.extensionattributes.login.flagged = false;
+		user.extensionattributes.login.attempts = 0;
+		user.extensionattributes.login.timestamp = moment().subtract(loginExtSettings.timeout.attempt_interval.time, loginExtSettings.timeout.attempt_interval.unit);
+		user.markModified('extensionattributes');
+	}
 	user.save(function (err, usr) {
 		if (err) {
 			cb(err, null);
@@ -314,7 +332,6 @@ var reset = function (req, res) {
 					res.redirect(loginExtSettings.settings.authLoginPath);
 				}
 				else {
-
 					CoreController.getPluginViewDefaultTemplate({
 							viewname: 'user/reset',
 							themefileext: appSettings.templatefileextension,
@@ -352,12 +369,14 @@ var token = function (req, res, next) {
 			saveUser,
 			emailResetPasswordNotification
 		],
-		function (err , results ) {
+		function (err, results) {
+			// console.log('These are the err', err);
+			// console.log('These are the results', results);
 			CoreController.respondInKind({
 				req : req,
 				res : res,
 				err : err,
-				responseData : results,
+				responseData : results || {},
 				callback:function(req,res/*,responseData*/){
 						if (err) {
 							req.flash('error', err.message);
@@ -420,7 +439,7 @@ var get_user_activation_token = function (req, res, next) {
 	User.findOne({
 		'attributes.user_activation_token_link': req.params.token
 	}, function (err, user_with_activation_token) {
-		console.log('user_with_activation_token', user_with_activation_token);
+		// console.log('user_with_activation_token', user_with_activation_token);
 		if (err) {
 			req.flash('error', err.message);
 			res.redirect(loginExtSettings.settings.authLoginPath);

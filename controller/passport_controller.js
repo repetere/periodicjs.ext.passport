@@ -4,11 +4,16 @@ var logger,
 	User,
 	passport,
 	loginExtSettings,
+	path = require('path'),
 	merge = require('utils-merge'),
+	async = require('async'),
+	moment = require('moment'),
 	FacebookStrategy = require('passport-facebook').Strategy,
 	InstagramStrategy = require('passport-instagram').Strategy,
 	TwitterStrategy = require('passport-twitter').Strategy,
-	LocalStrategy = require('passport-local').Strategy;
+	LocalStrategy = require('passport-local').Strategy,
+	CoreController,
+	CoreMailer;
 
 var linkSocialAccount = function (options) {
 	var done = options.donecallback,
@@ -42,13 +47,96 @@ var linkSocialAccount = function (options) {
 		});
 };
 
+var limitLoginAttempts = function (user) {
+	user.extensionattributes = user.extensionattributes || {};
+	if(!user.extensionattributes.login){
+		user.extensionattributes.login = {
+			attempts: 0,
+			timestamp: moment(),
+			flagged: false,
+			freezeTime: moment()
+		};
+	}
+	user.extensionattributes.login.attempts++;
+	if (!user.extensionattributes.login.flagged) {
+		if (moment(user.extensionattributes.login.timestamp).isBefore(moment().subtract(loginExtSettings.timeout.attempt_interval.time, loginExtSettings.timeout.attempt_interval.unit))) {
+			user.extensionattributes.login.attempts = 1;
+			user.extensionattributes.login.timestamp = moment();
+		}
+		else if (user.extensionattributes.login.attempts >= loginExtSettings.timeout.attempts && moment(user.extensionattributes.login.timestamp).isAfter(moment().subtract(loginExtSettings.timeout.attempt_interval.time, loginExtSettings.timeout.attempt_interval.unit))) {
+			user.extensionattributes.login.flagged = true;
+			user.extensionattributes.login.freezeTime = moment();
+		}
+	}
+	else {
+		if (moment(user.extensionattributes.login.freezeTime).isBefore(moment().subtract(loginExtSettings.timeout.freeze_interval.time, loginExtSettings.timeout.freeze_interval.unit))) {
+			user.extensionattributes.login.attempts = 1;
+			user.extensionattributes.login.timestamp = moment();
+			user.extensionattributes.login.flagged = false;
+			user.extensionattributes.login.freezeTime = moment();
+		}
+	}
+	user.markModified('extensionattributes');
+	return user;
+};
+
+var loginAttemptsError = function (user, done) {
+	var templatepath = path.resolve(process.cwd(), loginExtSettings.timeout.view_path_relative_to_periodic);
+	async.waterfall([
+		function (cb) {
+			CoreMailer.sendEmail({
+				appenvironment: 'development',
+				to: user.email,
+				replyTo: 'Promise Financial [Do Not Reply] <no-reply@promisefin.com>',
+				from: 'Promise Financial [Do Not Reply] <no-reply@promisefin.com>',
+				subject: loginExtSettings.timeout.lockout_email_subject,
+				emailtemplatefilepath: templatepath,
+				emailtemplatedata: {
+					data: user
+				}
+			}, function (err, status) {
+				if (err) {
+					cb(err, null);
+				}
+				else {
+					cb(null, status);
+				}
+			});
+		}
+		// function (status, cb) {
+		// 	var emailtrackobject = status,
+		// 		emailtracker = {};
+		// 	emailtracker.timestamp = new Date();
+		// 	emailtracker['Account Access Frozen'] = emailtrackobject;
+		// 	User.findByIdAndUpdate(user._id, { $push: { 'attributes.emails' : emailtracker } }, function (err, updated) {
+		// 		if (err) {
+		// 			cb(err, null);
+		// 		}
+		// 		else {
+		// 			cb(null, updated);
+		// 		}
+		// 	});
+		// }
+	], function (err, result) {
+		if (err) {
+			logger.error('Error sending email', err);
+			return done(err);
+		}
+		else {
+			logger.verbose('Sending account lockout email', result);
+			return done(new Error('Your Account is Currently Blocked'), false, {
+				message: 'Your Account is Currently Blocked'
+			});
+		}
+	});
+};
 
 var authenticateUser = function (options) {
-	var username = options.username,
-		donecallback = options.done,
+	var donecallback = options.donecallback,
 		nonusercallback = options.nonusercallback,
 		existinusercallback = options.existinusercallback,
-		exitinguserquery = options.exitinguserquery;
+		exitinguserquery = options.exitinguserquery,
+		limitAttemptUser;
 	User.findOne(exitinguserquery, function (err, user) {
 		if (err) {
 			logger.silly('login error');
@@ -59,8 +147,25 @@ var authenticateUser = function (options) {
 			nonusercallback();
 		}
 		else {
-			logger.silly('login found exiting user');
-			existinusercallback(user);
+			logger.silly('login found existing user');
+			if (loginExtSettings.timeout.use_limiter) {
+				limitAttemptUser = limitLoginAttempts(user);
+				limitAttemptUser.save(function (err, updated) {
+					if (err) {
+						logger.error('Error updating user', err);
+						donecallback(err);
+					}
+					else if (loginExtSettings.timeout.use_limiter && updated.extensionattributes.login.flagged) {
+						loginAttemptsError(updated, donecallback);
+					}
+					else {
+						existinusercallback(updated);	
+					}
+				});
+			}
+			else {
+				existinusercallback(user);
+			}
 		}
 	});
 };
@@ -100,8 +205,12 @@ var usePassport = function () {
 						if (err) {
 							return done(err);
 						}
-
 						if (isMatch) {
+							if (user.extensionattributes && user.extensionattributes.login && user.extensionattributes.login.attempts) {
+								user.extensionattributes.login.attempts = 0;
+								user.markModified('extensionattributes');
+								user.save();
+							}
 							return done(null, user);
 						}
 						else {
@@ -305,6 +414,9 @@ var passportController = function (resources, passportResources) {
 	User = passportResources.User;
 	passport = passportResources.passport;
 	loginExtSettings = passportResources.loginExtSettings;
+	CoreController = resources.core.controller;
+	CoreMailer = resources.core.extension.mailer;
+
 	return {
 		usePassport: usePassport,
 		deserialize: deserialize,
