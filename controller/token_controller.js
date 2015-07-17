@@ -174,11 +174,12 @@ var emailForgotPasswordLink = function (user, req, cb) {
 				cb(err);
 			}
 			else {
-				// console.log('user for forgot password', user);
+				console.log('emailForgotPasswordLink templatepath',templatepath);
 				if (templatepath === 'email/user/forgot_password_link') {
 					templatepath = path.resolve(process.cwd(), 'node_modules/periodicjs.ext.login/views', templatepath + '.' + appSettings.templatefileextension);
 				}
-				CoreMailer.sendEmail({
+				// console.log('user for forgot password', user);
+				var coreMailerOptions = {
 					appenvironment: appenvironment,
 					to: user.email,
 					from: appSettings.fromemail || appSettings.adminnotificationemail,
@@ -191,7 +192,11 @@ var emailForgotPasswordLink = function (user, req, cb) {
 						hostname: req.headers.host,
 						filename: templatepath
 					}
-				}, cb);
+				};
+				if(loginExtSettings.settings.adminbccemail || appSettings.adminbccemail){
+					coreMailerOptions.bcc = loginExtSettings.settings.adminbccemail || appSettings.adminbccemail;
+				}
+				CoreMailer.sendEmail(coreMailerOptions, cb);
 			}
 		}
 	);
@@ -209,10 +214,11 @@ var emailResetPasswordNotification = function (user, req, cb) {
 			}
 			else {
 				// console.log('user for forgot password', user);
+				
 				if (templatepath === 'email/user/reset_password_notification') {
 					templatepath = path.resolve(process.cwd(), 'node_modules/periodicjs.ext.login/views', templatepath + '.' + appSettings.templatefileextension);
 				}
-				CoreMailer.sendEmail({
+				var coreMailerOptions = {
 					appenvironment: appenvironment,
 					to: user.email,
 					from: appSettings.fromemail || appSettings.adminnotificationemail,
@@ -225,7 +231,11 @@ var emailResetPasswordNotification = function (user, req, cb) {
 						hostname: req.headers.host,
 						filename: templatepath
 					}
-				}, cb);
+				};
+				if(loginExtSettings.settings.adminbccemail || appSettings.adminbccemail){
+					coreMailerOptions.bcc = loginExtSettings.settings.adminbccemail || appSettings.adminbccemail;
+				}
+				CoreMailer.sendEmail(coreMailerOptions, cb);
 			}
 		}
 	);
@@ -359,7 +369,7 @@ var reset = function (req, res) {
 
 //POST change the users old password to the new password in the form
 var token = function (req, res, next) {
-	var user_token = req.controllerData.token;
+	var user_token = req.params.token;//req.controllerData.token;
 	waterfall([
 			function (cb) {
 				cb(null, req, res, next);
@@ -378,11 +388,14 @@ var token = function (req, res, next) {
 				err : err,
 				responseData : results || {},
 				callback:function(req,res/*,responseData*/){
+					// console.log('err',err,'/auth/reset/' + user_token);
 						if (err) {
+							// console.log('return to reset');
 							req.flash('error', err.message);
 							res.redirect('/auth/reset/' + user_token);
 						}
 						else {
+							// console.log('no return to x');
 							req.flash('success', 'Password Sucessfully Changed!');
 							res.redirect(loginExtSettings.settings.authLoginPath);
 						}

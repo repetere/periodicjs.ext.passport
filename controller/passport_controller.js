@@ -4,6 +4,7 @@ var logger,
 	User,
 	passport,
 	loginExtSettings,
+	appSettings,
 	path = require('path'),
 	merge = require('utils-merge'),
 	async = require('async'),
@@ -84,7 +85,7 @@ var loginAttemptsError = function (user, done) {
 	var templatepath = path.resolve(process.cwd(), loginExtSettings.timeout.view_path_relative_to_periodic);
 	async.waterfall([
 		function (cb) {
-			CoreMailer.sendEmail({
+			var coreMailerOptions = {
 				appenvironment: 'development',
 				to: user.email,
 				replyTo: 'Promise Financial [Do Not Reply] <no-reply@promisefin.com>',
@@ -94,7 +95,11 @@ var loginAttemptsError = function (user, done) {
 				emailtemplatedata: {
 					data: user
 				}
-			}, function (err, status) {
+			};
+			if(loginExtSettings.settings.adminbccemail || appSettings.adminbccemail){
+				coreMailerOptions.bcc = loginExtSettings.settings.adminbccemail || appSettings.adminbccemail;
+			}
+			CoreMailer.sendEmail(coreMailerOptions, function (err, status) {
 				if (err) {
 					cb(err, null);
 				}
@@ -410,6 +415,7 @@ var deserialize = function () {
 	});
 };
 var passportController = function (resources, passportResources) {
+	appSettings = resources.settings;
 	logger = resources.logger;
 	User = passportResources.User;
 	passport = passportResources.passport;

@@ -231,7 +231,7 @@ var activate_user = function (req, res,next) {
 					});
 				}
 				else {
-					CoreMailer.sendEmail({
+					var coreMailerOptions = {
 						appenvironment: appSettings.application.environment,
 						to: req.user.email,
 						// cc: appSettings.adminnotificationemail,
@@ -245,7 +245,11 @@ var activate_user = function (req, res,next) {
 							appname: appSettings.name,
 							filename: templatepath
 						}
-					}, function (sendemailerr, emailstatus) {
+					};
+					if(loginExtSettings.settings.adminbccemail || appSettings.adminbccemail){
+						coreMailerOptions.bcc = loginExtSettings.settings.adminbccemail || appSettings.adminbccemail;
+					}
+					CoreMailer.sendEmail(coreMailerOptions, function (sendemailerr, emailstatus) {
 						if (sendemailerr) {
 							CoreController.handleDocumentQueryErrorResponse({
 								err: sendemailerr,

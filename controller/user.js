@@ -98,6 +98,9 @@ var create = function (req, res) {
 			}
 		},
 		finalnewusersettings;
+	if(loginExtSettings.settings.adminbccemail || appSettings.adminbccemail){
+		newuseroptions.welcomeemaildata.bcc = loginExtSettings.settings.adminbccemail || appSettings.adminbccemail;
+	}
 	finalnewusersettings = extend(newuseroptions, loginExtSettings.new_user_validation);
 	// console.log('finalnewusersettings',finalnewusersettings);
 	User.createNewUserAccount(
