@@ -177,7 +177,6 @@ var defaultAjaxFormie = function (formElement) {
 			window.showPreloader();
 		},
 		successcallback: function (response) {
-			window.endPreloader();
 			if (response.body && response.body.result && response.body.result === 'error') {
 				window.showStylieNotification({
 					message: response.body.data.error.message || response.body.data.error,
@@ -205,6 +204,7 @@ var defaultAjaxFormie = function (formElement) {
 					});
 				}
 			}
+			window.endPreloader();
 		},
 		errorcallback: function (error, response) {
 			// console.log('error', error);
