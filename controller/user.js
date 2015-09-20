@@ -98,7 +98,7 @@ var create = function (req, res) {
 			}
 		},
 		finalnewusersettings;
-	if(loginExtSettings.settings.adminbccemail || appSettings.adminbccemail){
+	if (loginExtSettings.settings.adminbccemail || appSettings.adminbccemail) {
 		newuseroptions.welcomeemaildata.bcc = loginExtSettings.settings.adminbccemail || appSettings.adminbccemail;
 	}
 	finalnewusersettings = extend(newuseroptions, loginExtSettings.new_user_validation);
@@ -153,32 +153,32 @@ var finishregistration = function (req, res) {
 	);
 };
 
-var verify_user_activation = function(options,callback){
+var verify_user_activation = function (options, callback) {
 	try {
 		var user = options.user;
 		User.findOne({
-			email: user.email
-		},
-		function (err, userToUpdate) {
-			if(err){
-				throw err;
-			}
-			var decoded = jwt.verify(userToUpdate.attributes.user_activation_token, loginExtSettings.token.secret);
-			if (decoded.email === userToUpdate.email) {
-				userToUpdate.activated = true;
-				userToUpdate.save(function (err, userSaved) {
-					if (err) {
-						throw err;
-					}
-					else {
-						callback(err,userSaved);
-					}
-				});
-			}
-			else {
-				throw new Error('activation token is invalid');
-			}
-		});
+				email: user.email
+			},
+			function (err, userToUpdate) {
+				if (err) {
+					throw err;
+				}
+				var decoded = jwt.verify(userToUpdate.attributes.user_activation_token, loginExtSettings.token.secret);
+				if (decoded.email === userToUpdate.email) {
+					userToUpdate.activated = true;
+					userToUpdate.save(function (err, userSaved) {
+						if (err) {
+							throw err;
+						}
+						else {
+							callback(err, userSaved);
+						}
+					});
+				}
+				else {
+					throw new Error('activation token is invalid');
+				}
+			});
 	}
 	catch (err) {
 		callback(err);
@@ -267,10 +267,10 @@ var updateuserregistration = function (req, res) {
 						else {
 							var forwardUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoginPath;
 							req.flash('info', 'updated user account');
-							if(loginExtSettings.settings.activationCompletePath){
+							if (loginExtSettings.settings.activationCompletePath) {
 								res.redirect(loginExtSettings.settings.activationCompletePath);
 							}
-							else{
+							else {
 								res.redirect(forwardUrl);
 							}
 

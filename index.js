@@ -3,6 +3,7 @@
 var path = require('path'),
 	fs = require('fs-extra'),
 	extend = require('utils-merge'),
+	stylietreeview = require('stylie.treeview'),
 	loginExtSettings,
 	appenvironment,
 	settingJSON,
@@ -22,6 +23,7 @@ var path = require('path'),
 module.exports = function (periodic) {
 	// periodic = express,app,logger,config,db,mongoose
 	//console.log('before defaultExtSettings', defaultExtSettings);
+	periodic.app.locals.stylietreeview = stylietreeview;
 
 	appenvironment = periodic.settings.application.environment;
 	settingJSON = fs.readJsonSync(loginExtSettingsFile);

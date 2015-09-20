@@ -33,45 +33,45 @@ module.exports = {
 		secret: 'periodicjs'
 	},
 	timeout: {
-		view_path_relative_to_periodic:'node_modules/periodicjs.ext.login/views/email/user/timeout_warning.ejs',
-		lockout_email_subject:'User Account Lockout Notification',
+		view_path_relative_to_periodic: 'node_modules/periodicjs.ext.login/views/email/user/timeout_warning.ejs',
+		lockout_email_subject: 'User Account Lockout Notification',
 		attempts: 10,
-	  attempt_interval: {
-	  	time: 5,
-	  	unit: 'minutes'
-	  },
-	  freeze_interval: {
-	  	time: 1,
-	  	unit: 'hours'
-	  },
-	  use_limiter: true
-  },
-  routes: {
-  	forgot_password: {
-  		default: 'forgot'
-  	}
-  },
-  complexitySettings: {
-  	useComplexity: true,
-  	settings: {
-  		weak: {
-  			uppercase: 1,
-  			lowercase: 1,
-  			min: 8
-  		},
-  		medium: {
-  			uppercase: 1,
-  			lowercase: 1,
-  			digit: 1,
-  			min: 8
-  		},
-  		strong: {
-  			uppercase: 1,
-  			lowercase: 1,
-  			digit: 1,
-  			special: 1,
-  			min: 8
-  		}
-  	}
-  }
+		attempt_interval: {
+			time: 5,
+			unit: 'minutes'
+		},
+		freeze_interval: {
+			time: 1,
+			unit: 'hours'
+		},
+		use_limiter: true
+	},
+	routes: {
+		forgot_password: {
+			default: 'forgot'
+		}
+	},
+	complexitySettings: {
+		useComplexity: true,
+		settings: {
+			weak: {
+				uppercase: 1,
+				lowercase: 1,
+				min: 8
+			},
+			medium: {
+				uppercase: 1,
+				lowercase: 1,
+				digit: 1,
+				min: 8
+			},
+			strong: {
+				uppercase: 1,
+				lowercase: 1,
+				digit: 1,
+				special: 1,
+				min: 8
+			}
+		}
+	}
 };

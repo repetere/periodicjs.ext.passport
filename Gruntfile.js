@@ -92,6 +92,19 @@ module.exports = function (grunt) {
 				}]
 			}
 		},
+		less: {
+			development: {
+				options: {
+					sourceMap: true,
+					sourceMapURL: 'login.css.map',
+					yuicompress: true,
+					compress: true
+				},
+				files: {
+					'public/stylesheets/login.css': 'resources/stylesheets/login.less'
+				}
+			}
+		},
 		copy: {
 			main: {
 				cwd: 'public',
@@ -108,9 +121,10 @@ module.exports = function (grunt) {
 					'index.js',
 					'controller/**/*.js',
 					'resources/**/*.js',
+					'resources/**/*.less',
 					'test/**/*.js',
 				],
-				tasks: ['lint', 'packagejs', 'copy', /*'doc',*/ 'test'],
+				tasks: ['lint', 'packagejs', 'less', 'copy' /*, 'doc', 'test'*/ ],
 				options: {
 					interrupt: true
 				}
@@ -126,7 +140,7 @@ module.exports = function (grunt) {
 		}
 	}
 
-	grunt.registerTask('default', ['jshint', 'simplemocha']);
+	grunt.registerTask('default', ['jshint', 'simplemocha', 'packagejs', 'less', 'copy']);
 	grunt.registerTask('lint', 'jshint', 'jsbeautifier');
 	grunt.registerTask('packagejs', ['browserify', 'uglify']);
 	grunt.registerTask('doc', 'jsdoc');

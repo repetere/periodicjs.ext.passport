@@ -26,10 +26,17 @@ var login = function (req, res, next) {
 		next(configError);
 	}
 	else {
-		passport.authenticate('local', function (err, user /*, info*/) {
-	
+		passport.authenticate('local', function (err, user /*, info*/ ) {
+			var resOptions = {
+				req: req,
+				res: res,
+				err: err,
+			};
 			if (err) {
-				logger.error(err);
+				CoreController.logError({
+					req: req,
+					err: err
+				});
 				if (err.message === 'Your Account is Currently Blocked') {
 					req.flash('error', 'Your account is currently blocked');
 					return res.redirect(loginExtSettings.settings.authLoginPath);
@@ -38,18 +45,56 @@ var login = function (req, res, next) {
 			}
 			if (!user) {
 				req.flash('error', 'invalid credentials, did you forget your password?');
-				return res.redirect(loginExtSettings.settings.authLoginPath);
+
+				resOptions.redirecturl = loginExtSettings.settings.authLoginPath;
+				return next(new Error('invalid credentials, did you forget your password?'));
+				// return CoreController.respondInKind(resOptions);
+				// CoreController.logError({
+				// 	req: req,
+				// 	err: err
+				// });
+				// CoreController.handleDocumentQueryErrorResponse({
+				// 	err: err,
+				// 	res: res,
+				// 	req: req,
+				// });
+				// return res.redirect(loginExtSettings.settings.authLoginPath);
 			}
 			req.logIn(user, function (err) {
 				if (err) {
-					logger.error(err);
+					CoreController.logError({
+						req: req,
+						err: err
+					});
+					// resOptions.err = err;
+					// CoreController.handleDocumentQueryErrorResponse({
+					// 	err: err,
+					// 	res: res,
+					// 	req: req,
+					// });
 					return next(err);
 				}
 				if (req.session.return_url) {
-					return res.redirect(req.session.return_url);
+					resOptions.responseData = {
+						result: 'success',
+						data: {
+							redirecturl: req.session.return_url
+						}
+					};
+					resOptions.redirecturl = req.session.return_url;
+					return CoreController.respondInKind(resOptions);
+					// return res.redirect(req.session.return_url);
 				}
 				else {
-					res.redirect(loginExtSettings.settings.authLoggedInHomepage);
+					resOptions.redirecturl = loginExtSettings.settings.authLoggedInHomepage;
+					resOptions.responseData = {
+						result: 'success',
+						data: {
+							redirecturl: loginExtSettings.settings.authLoggedInHomepage
+						}
+					};
+					return CoreController.respondInKind(resOptions);
+					// res.redirect(loginExtSettings.settings.authLoggedInHomepage);
 				}
 			});
 		})(req, res, next);
@@ -63,12 +108,29 @@ var login = function (req, res, next) {
  * @return {object} sends user to logout resource
  */
 var logout = function (req, res) {
+	// console.log('req.flash() pre logout', req.flash());
 	req.logout();
 	req.session.destroy(function (err) {
+		// console.log('req.flash() post logout', req.flash());
+		var resOptions = {
+			req: req,
+			res: res,
+			err: err,
+		};
 		if (err) {
-			logger.error(err);
+			logger.error('failed logout', err);
 		}
-		res.redirect(loginExtSettings.settings.authLogoutPath);
+		req.flash = function () {
+			return {};
+		};
+		resOptions.redirecturl = loginExtSettings.settings.authLoggedInHomepage;
+		resOptions.responseData = {
+			result: 'success',
+			data: {
+				redirecturl: loginExtSettings.settings.authLoggedInHomepage
+			}
+		};
+		CoreController.respondInKind(resOptions);
 	});
 };
 
@@ -208,7 +270,7 @@ var get_activation = function (req, res) {
 };
 
 //POST to auth/user/activate 
-var activate_user = function (req, res,next) {
+var activate_user = function (req, res, next) {
 	var emailviewname = loginExtSettings.settings.activateEmailTemplate || 'email/user/welcome_with_validation';
 	if (req.isAuthenticated()) {
 		CoreController.getPluginViewDefaultTemplate({
@@ -217,7 +279,7 @@ var activate_user = function (req, res,next) {
 			},
 			function (err, templatepath) {
 				// console.log('templatepath', templatepath);
-				if(loginExtSettings.settings.activateEmailTemplate){
+				if (loginExtSettings.settings.activateEmailTemplate) {
 					templatepath = path.resolve(process.cwd(), loginExtSettings.settings.activateEmailTemplate);
 				}
 				else if (templatepath === emailviewname) {
@@ -246,7 +308,7 @@ var activate_user = function (req, res,next) {
 							filename: templatepath
 						}
 					};
-					if(loginExtSettings.settings.adminbccemail || appSettings.adminbccemail){
+					if (loginExtSettings.settings.adminbccemail || appSettings.adminbccemail) {
 						coreMailerOptions.bcc = loginExtSettings.settings.adminbccemail || appSettings.adminbccemail;
 					}
 					CoreMailer.sendEmail(coreMailerOptions, function (sendemailerr, emailstatus) {
@@ -260,11 +322,11 @@ var activate_user = function (req, res,next) {
 						else {
 							logger.silly('emailstatus', emailstatus);
 							req.flash('info', 'user activation token email sent to ' + req.user.email);
-							if(req.controllerData && req.controllerData.sendemailstatus){
-								 req.controllerData.activate_user_emailstatus = emailstatus;
-								 next();
+							if (req.controllerData && req.controllerData.sendemailstatus) {
+								req.controllerData.activate_user_emailstatus = emailstatus;
+								next();
 							}
-							else{
+							else {
 								res.redirect(loginExtSettings.settings.authLoggedInHomepage);
 							}
 						}

@@ -27,7 +27,7 @@ var encode = function (data) {
 };
 
 var decode = function (data, cb) {
-logger.debug('jwt decode data',data);
+	logger.debug('jwt decode data', data);
 	jwt.verify(data, loginExtSettings.token.secret, {}, function (err, decoded_token) {
 		if (err) {
 			logger.error('Error from JWT.verify', err);
@@ -93,8 +93,8 @@ var resetPassword = function (req, res, next, user, cb) {
 			cb(null, user, req);
 		}
 	}
-	else{
-		cb(new Error('Invalid Empty Password'),null);
+	else {
+		cb(new Error('Invalid Empty Password'), null);
 	}
 };
 
@@ -174,7 +174,7 @@ var emailForgotPasswordLink = function (user, req, cb) {
 				cb(err);
 			}
 			else {
-				console.log('emailForgotPasswordLink templatepath',templatepath);
+				console.log('emailForgotPasswordLink templatepath', templatepath);
 				if (templatepath === 'email/user/forgot_password_link') {
 					templatepath = path.resolve(process.cwd(), 'node_modules/periodicjs.ext.login/views', templatepath + '.' + appSettings.templatefileextension);
 				}
@@ -193,7 +193,7 @@ var emailForgotPasswordLink = function (user, req, cb) {
 						filename: templatepath
 					}
 				};
-				if(loginExtSettings.settings.adminbccemail || appSettings.adminbccemail){
+				if (loginExtSettings.settings.adminbccemail || appSettings.adminbccemail) {
 					coreMailerOptions.bcc = loginExtSettings.settings.adminbccemail || appSettings.adminbccemail;
 				}
 				CoreMailer.sendEmail(coreMailerOptions, cb);
@@ -214,7 +214,7 @@ var emailResetPasswordNotification = function (user, req, cb) {
 			}
 			else {
 				// console.log('user for forgot password', user);
-				
+
 				if (templatepath === 'email/user/reset_password_notification') {
 					templatepath = path.resolve(process.cwd(), 'node_modules/periodicjs.ext.login/views', templatepath + '.' + appSettings.templatefileextension);
 				}
@@ -232,7 +232,7 @@ var emailResetPasswordNotification = function (user, req, cb) {
 						filename: templatepath
 					}
 				};
-				if(loginExtSettings.settings.adminbccemail || appSettings.adminbccemail){
+				if (loginExtSettings.settings.adminbccemail || appSettings.adminbccemail) {
 					coreMailerOptions.bcc = loginExtSettings.settings.adminbccemail || appSettings.adminbccemail;
 				}
 				CoreMailer.sendEmail(coreMailerOptions, cb);
@@ -254,24 +254,24 @@ var forgot = function (req, res, next) {
 	];
 
 	waterfall(arr,
-		function (err , results ) {
+		function (err, results) {
 			CoreController.respondInKind({
-				req : req,
-				res : res,
-				err : err,
-				responseData : results,
-				callback:function(req,res/*,responseData*/){
+				req: req,
+				res: res,
+				err: err,
+				responseData: results,
+				callback: function (req, res /*,responseData*/ ) {
 					if (err) {
 						req.flash('error', err.message);
 						res.redirect('/auth/forgot');
 					}
 					else {
 						req.flash('info', 'Password reset instructions were sent to your email address');
-						if(req.controllerData && req.controllerData.sendemailstatus){
-					 		req.controllerData.password_reset_emailstatus = results;
+						if (req.controllerData && req.controllerData.sendemailstatus) {
+							req.controllerData.password_reset_emailstatus = results;
 							next();
 						}
-						else{
+						else {
 							res.redirect(loginExtSettings.settings.authLoginPath);
 						}
 					}
@@ -279,7 +279,7 @@ var forgot = function (req, res, next) {
 			});
 
 
-			
+
 		});
 };
 
@@ -369,7 +369,7 @@ var reset = function (req, res) {
 
 //POST change the users old password to the new password in the form
 var token = function (req, res, next) {
-	var user_token = req.params.token;//req.controllerData.token;
+	var user_token = req.params.token; //req.controllerData.token;
 	waterfall([
 			function (cb) {
 				cb(null, req, res, next);
@@ -383,22 +383,22 @@ var token = function (req, res, next) {
 			// console.log('These are the err', err);
 			// console.log('These are the results', results);
 			CoreController.respondInKind({
-				req : req,
-				res : res,
-				err : err,
-				responseData : results || {},
-				callback:function(req,res/*,responseData*/){
+				req: req,
+				res: res,
+				err: err,
+				responseData: results || {},
+				callback: function (req, res /*,responseData*/ ) {
 					// console.log('err',err,'/auth/reset/' + user_token);
-						if (err) {
-							// console.log('return to reset');
-							req.flash('error', err.message);
-							res.redirect('/auth/reset/' + user_token);
-						}
-						else {
-							// console.log('no return to x');
-							req.flash('success', 'Password Sucessfully Changed!');
-							res.redirect(loginExtSettings.settings.authLoginPath);
-						}
+					if (err) {
+						// console.log('return to reset');
+						req.flash('error', err.message);
+						res.redirect('/auth/reset/' + user_token);
+					}
+					else {
+						// console.log('no return to x');
+						req.flash('success', 'Password Sucessfully Changed!');
+						res.redirect(loginExtSettings.settings.authLoginPath);
+					}
 				}
 			});
 		});
@@ -472,7 +472,7 @@ var get_user_activation_token = function (req, res, next) {
 	});
 };
 
-var generate_activation_attributes = function(options,callback){
+var generate_activation_attributes = function (options, callback) {
 	var activationData = options.activationData;
 
 	try {
@@ -482,21 +482,21 @@ var generate_activation_attributes = function(options,callback){
 		var salt = bcrypt.genSaltSync(10),
 			expires = getTokenExpiresTime(),
 			user_activation_token = encode({
-				email: activationData.email 
+				email: activationData.email
 			});
 		activationData.attributes = activationData.attributes || {};
 		activationData.attributes.user_activation_token = user_activation_token;
 		activationData.attributes.user_activation_token_link = CoreUtilities.makeNiceName(bcrypt.hashSync(activationData.attributes.user_activation_token, salt));
 		activationData.attributes.reset_activation_expires_millis = expires;
 
-		callback(null,activationData);
+		callback(null, activationData);
 	}
 	catch (e) {
-		callback(e,null);
+		callback(e, null);
 	}
 };
 
-var update_activation_attributes = function(options,callback){
+var update_activation_attributes = function (options, callback) {
 	try {
 		var updatedActivationData = options.updatedActivationData;
 
@@ -507,17 +507,17 @@ var update_activation_attributes = function(options,callback){
 				callback(err);
 			}
 			else if (!user_to_update || !user_to_update) {
-				callback( Error('invalid user activation token'));
+				callback(Error('invalid user activation token'));
 			}
 			else {
-				user_to_update.attributes = merge(user_to_update.attributes,updatedActivationData.attributes);
+				user_to_update.attributes = merge(user_to_update.attributes, updatedActivationData.attributes);
 				user_to_update.markModified('attributes');
 				user_to_update.save(function (err /*, usr */ ) {
 					if (err) {
 						callback(err);
 					}
 					else {
-						callback(null,user_to_update);
+						callback(null, user_to_update);
 					}
 				});
 			}

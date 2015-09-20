@@ -1,5 +1,5 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-(function (process){
+(function (process,global){
 /*!
  * async
  * https://github.com/caolan/async
@@ -7,18 +7,32 @@
  * Copyright 2010-2014 Caolan McMahon
  * Released under the MIT license
  */
-/*jshint onevar: false, indent:4 */
-/*global setImmediate: false, setTimeout: false, console: false */
 (function () {
 
     var async = {};
+    function noop() {}
+    function identity(v) {
+        return v;
+    }
+    function toBool(v) {
+        return !!v;
+    }
+    function notId(v) {
+        return !v;
+    }
 
     // global on the server, window in the browser
-    var root, previous_async;
+    var previous_async;
 
-    root = this;
+    // Establish the root object, `window` (`self`) in the browser, `global`
+    // on the server, or `this` in some virtual machines. We use `self`
+    // instead of `window` for `WebWorker` support.
+    var root = typeof self === 'object' && self.self === self && self ||
+            typeof global === 'object' && global.global === global && global ||
+            this;
+
     if (root != null) {
-      previous_async = root.async;
+        previous_async = root.async;
     }
 
     async.noConflict = function () {
@@ -27,12 +41,19 @@
     };
 
     function only_once(fn) {
-        var called = false;
         return function() {
-            if (called) throw new Error("Callback was already called.");
-            called = true;
-            fn.apply(root, arguments);
-        }
+            if (fn === null) throw new Error("Callback was already called.");
+            fn.apply(this, arguments);
+            fn = null;
+        };
+    }
+
+    function _once(fn) {
+        return function() {
+            if (fn === null) return;
+            fn.apply(this, arguments);
+            fn = null;
+        };
     }
 
     //// cross-browser compatiblity functions ////
@@ -43,40 +64,72 @@
         return _toString.call(obj) === '[object Array]';
     };
 
-    var _each = function (arr, iterator) {
-        if (arr.forEach) {
-            return arr.forEach(iterator);
-        }
-        for (var i = 0; i < arr.length; i += 1) {
-            iterator(arr[i], i, arr);
-        }
+    // Ported from underscore.js isObject
+    var _isObject = function(obj) {
+        var type = typeof obj;
+        return type === 'function' || type === 'object' && !!obj;
     };
 
-    var _map = function (arr, iterator) {
-        if (arr.map) {
-            return arr.map(iterator);
-        }
-        var results = [];
-        _each(arr, function (x, i, a) {
-            results.push(iterator(x, i, a));
-        });
-        return results;
-    };
+    function _isArrayLike(arr) {
+        return _isArray(arr) || (
+            // has a positive integer length property
+            typeof arr.length === "number" &&
+            arr.length >= 0 &&
+            arr.length % 1 === 0
+        );
+    }
 
-    var _reduce = function (arr, iterator, memo) {
-        if (arr.reduce) {
-            return arr.reduce(iterator, memo);
+    function _each(coll, iterator) {
+        return _isArrayLike(coll) ?
+            _arrayEach(coll, iterator) :
+            _forEachOf(coll, iterator);
+    }
+
+    function _arrayEach(arr, iterator) {
+        var index = -1,
+            length = arr.length;
+
+        while (++index < length) {
+            iterator(arr[index], index, arr);
         }
-        _each(arr, function (x, i, a) {
+    }
+
+    function _map(arr, iterator) {
+        var index = -1,
+            length = arr.length,
+            result = Array(length);
+
+        while (++index < length) {
+            result[index] = iterator(arr[index], index, arr);
+        }
+        return result;
+    }
+
+    function _range(count) {
+        return _map(Array(count), function (v, i) { return i; });
+    }
+
+    function _reduce(arr, iterator, memo) {
+        _arrayEach(arr, function (x, i, a) {
             memo = iterator(memo, x, i, a);
         });
         return memo;
-    };
+    }
 
-    var _keys = function (obj) {
-        if (Object.keys) {
-            return Object.keys(obj);
+    function _forEachOf(object, iterator) {
+        _arrayEach(_keys(object), function (key) {
+            iterator(object[key], key);
+        });
+    }
+
+    function _indexOf(arr, item) {
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i] === item) return i;
         }
+        return -1;
+    }
+
+    var _keys = Object.keys || function (obj) {
         var keys = [];
         for (var k in obj) {
             if (obj.hasOwnProperty(k)) {
@@ -86,311 +139,337 @@
         return keys;
     };
 
+    function _keyIterator(coll) {
+        var i = -1;
+        var len;
+        var keys;
+        if (_isArrayLike(coll)) {
+            len = coll.length;
+            return function next() {
+                i++;
+                return i < len ? i : null;
+            };
+        } else {
+            keys = _keys(coll);
+            len = keys.length;
+            return function next() {
+                i++;
+                return i < len ? keys[i] : null;
+            };
+        }
+    }
+
+    // Similar to ES6's rest param (http://ariya.ofilabs.com/2013/03/es6-and-rest-parameter.html)
+    // This accumulates the arguments passed into an array, after a given index.
+    // From underscore.js (https://github.com/jashkenas/underscore/pull/2140).
+    function _restParam(func, startIndex) {
+        startIndex = startIndex == null ? func.length - 1 : +startIndex;
+        return function() {
+            var length = Math.max(arguments.length - startIndex, 0);
+            var rest = Array(length);
+            for (var index = 0; index < length; index++) {
+                rest[index] = arguments[index + startIndex];
+            }
+            switch (startIndex) {
+                case 0: return func.call(this, rest);
+                case 1: return func.call(this, arguments[0], rest);
+            }
+            // Currently unused but handle cases outside of the switch statement:
+            // var args = Array(startIndex + 1);
+            // for (index = 0; index < startIndex; index++) {
+            //     args[index] = arguments[index];
+            // }
+            // args[startIndex] = rest;
+            // return func.apply(this, args);
+        };
+    }
+
+    function _withoutIndex(iterator) {
+        return function (value, index, callback) {
+            return iterator(value, callback);
+        };
+    }
+
     //// exported async module functions ////
 
     //// nextTick implementation with browser-compatible fallback ////
-    if (typeof process === 'undefined' || !(process.nextTick)) {
-        if (typeof setImmediate === 'function') {
-            async.nextTick = function (fn) {
-                // not a direct alias for IE10 compatibility
-                setImmediate(fn);
-            };
-            async.setImmediate = async.nextTick;
-        }
-        else {
-            async.nextTick = function (fn) {
-                setTimeout(fn, 0);
-            };
-            async.setImmediate = async.nextTick;
-        }
-    }
-    else {
-        async.nextTick = process.nextTick;
-        if (typeof setImmediate !== 'undefined') {
-            async.setImmediate = function (fn) {
-              // not a direct alias for IE10 compatibility
-              setImmediate(fn);
-            };
-        }
-        else {
-            async.setImmediate = async.nextTick;
-        }
-    }
 
+    // capture the global reference to guard against fakeTimer mocks
+    var _setImmediate = typeof setImmediate === 'function' && setImmediate;
+
+    var _delay = _setImmediate ? function(fn) {
+        // not a direct alias for IE10 compatibility
+        _setImmediate(fn);
+    } : function(fn) {
+        setTimeout(fn, 0);
+    };
+
+    if (typeof process === 'object' && typeof process.nextTick === 'function') {
+        async.nextTick = process.nextTick;
+    } else {
+        async.nextTick = _delay;
+    }
+    async.setImmediate = _setImmediate ? _delay : async.nextTick;
+
+
+    async.forEach =
     async.each = function (arr, iterator, callback) {
-        callback = callback || function () {};
-        if (!arr.length) {
-            return callback();
-        }
+        return async.eachOf(arr, _withoutIndex(iterator), callback);
+    };
+
+    async.forEachSeries =
+    async.eachSeries = function (arr, iterator, callback) {
+        return async.eachOfSeries(arr, _withoutIndex(iterator), callback);
+    };
+
+
+    async.forEachLimit =
+    async.eachLimit = function (arr, limit, iterator, callback) {
+        return _eachOfLimit(limit)(arr, _withoutIndex(iterator), callback);
+    };
+
+    async.forEachOf =
+    async.eachOf = function (object, iterator, callback) {
+        callback = _once(callback || noop);
+        object = object || [];
+        var size = _isArrayLike(object) ? object.length : _keys(object).length;
         var completed = 0;
-        _each(arr, function (x) {
-            iterator(x, only_once(done) );
+        if (!size) {
+            return callback(null);
+        }
+        _each(object, function (value, key) {
+            iterator(object[key], key, only_once(done));
         });
         function done(err) {
-          if (err) {
-              callback(err);
-              callback = function () {};
-          }
-          else {
-              completed += 1;
-              if (completed >= arr.length) {
-                  callback();
-              }
-          }
+            if (err) {
+                callback(err);
+            }
+            else {
+                completed += 1;
+                if (completed >= size) {
+                    callback(null);
+                }
+            }
         }
     };
-    async.forEach = async.each;
 
-    async.eachSeries = function (arr, iterator, callback) {
-        callback = callback || function () {};
-        if (!arr.length) {
-            return callback();
-        }
-        var completed = 0;
-        var iterate = function () {
-            iterator(arr[completed], function (err) {
+    async.forEachOfSeries =
+    async.eachOfSeries = function (obj, iterator, callback) {
+        callback = _once(callback || noop);
+        obj = obj || [];
+        var nextKey = _keyIterator(obj);
+        var key = nextKey();
+        function iterate() {
+            var sync = true;
+            if (key === null) {
+                return callback(null);
+            }
+            iterator(obj[key], key, only_once(function (err) {
                 if (err) {
                     callback(err);
-                    callback = function () {};
                 }
                 else {
-                    completed += 1;
-                    if (completed >= arr.length) {
-                        callback();
-                    }
-                    else {
-                        iterate();
+                    key = nextKey();
+                    if (key === null) {
+                        return callback(null);
+                    } else {
+                        if (sync) {
+                            async.nextTick(iterate);
+                        } else {
+                            iterate();
+                        }
                     }
                 }
-            });
-        };
+            }));
+            sync = false;
+        }
         iterate();
     };
-    async.forEachSeries = async.eachSeries;
 
-    async.eachLimit = function (arr, limit, iterator, callback) {
-        var fn = _eachLimit(limit);
-        fn.apply(null, [arr, iterator, callback]);
+
+
+    async.forEachOfLimit =
+    async.eachOfLimit = function (obj, limit, iterator, callback) {
+        _eachOfLimit(limit)(obj, iterator, callback);
     };
-    async.forEachLimit = async.eachLimit;
 
-    var _eachLimit = function (limit) {
+    function _eachOfLimit(limit) {
 
-        return function (arr, iterator, callback) {
-            callback = callback || function () {};
-            if (!arr.length || limit <= 0) {
-                return callback();
+        return function (obj, iterator, callback) {
+            callback = _once(callback || noop);
+            obj = obj || [];
+            var nextKey = _keyIterator(obj);
+            if (limit <= 0) {
+                return callback(null);
             }
-            var completed = 0;
-            var started = 0;
+            var done = false;
             var running = 0;
+            var errored = false;
 
             (function replenish () {
-                if (completed >= arr.length) {
-                    return callback();
+                if (done && running <= 0) {
+                    return callback(null);
                 }
 
-                while (running < limit && started < arr.length) {
-                    started += 1;
+                while (running < limit && !errored) {
+                    var key = nextKey();
+                    if (key === null) {
+                        done = true;
+                        if (running <= 0) {
+                            callback(null);
+                        }
+                        return;
+                    }
                     running += 1;
-                    iterator(arr[started - 1], function (err) {
+                    iterator(obj[key], key, only_once(function (err) {
+                        running -= 1;
                         if (err) {
                             callback(err);
-                            callback = function () {};
+                            errored = true;
                         }
                         else {
-                            completed += 1;
-                            running -= 1;
-                            if (completed >= arr.length) {
-                                callback();
-                            }
-                            else {
-                                replenish();
-                            }
+                            replenish();
                         }
-                    });
+                    }));
                 }
             })();
         };
-    };
+    }
 
 
-    var doParallel = function (fn) {
-        return function () {
-            var args = Array.prototype.slice.call(arguments);
-            return fn.apply(null, [async.each].concat(args));
+    function doParallel(fn) {
+        return function (obj, iterator, callback) {
+            return fn(async.eachOf, obj, iterator, callback);
         };
-    };
-    var doParallelLimit = function(limit, fn) {
-        return function () {
-            var args = Array.prototype.slice.call(arguments);
-            return fn.apply(null, [_eachLimit(limit)].concat(args));
+    }
+    function doParallelLimit(fn) {
+        return function (obj, limit, iterator, callback) {
+            return fn(_eachOfLimit(limit), obj, iterator, callback);
         };
-    };
-    var doSeries = function (fn) {
-        return function () {
-            var args = Array.prototype.slice.call(arguments);
-            return fn.apply(null, [async.eachSeries].concat(args));
+    }
+    function doSeries(fn) {
+        return function (obj, iterator, callback) {
+            return fn(async.eachOfSeries, obj, iterator, callback);
         };
-    };
+    }
 
-
-    var _asyncMap = function (eachfn, arr, iterator, callback) {
-        arr = _map(arr, function (x, i) {
-            return {index: i, value: x};
+    function _asyncMap(eachfn, arr, iterator, callback) {
+        callback = _once(callback || noop);
+        var results = [];
+        eachfn(arr, function (value, index, callback) {
+            iterator(value, function (err, v) {
+                results[index] = v;
+                callback(err);
+            });
+        }, function (err) {
+            callback(err, results);
         });
-        if (!callback) {
-            eachfn(arr, function (x, callback) {
-                iterator(x.value, function (err) {
-                    callback(err);
-                });
-            });
-        } else {
-            var results = [];
-            eachfn(arr, function (x, callback) {
-                iterator(x.value, function (err, v) {
-                    results[x.index] = v;
-                    callback(err);
-                });
-            }, function (err) {
-                callback(err, results);
-            });
-        }
-    };
+    }
+
     async.map = doParallel(_asyncMap);
     async.mapSeries = doSeries(_asyncMap);
-    async.mapLimit = function (arr, limit, iterator, callback) {
-        return _mapLimit(limit)(arr, iterator, callback);
-    };
-
-    var _mapLimit = function(limit) {
-        return doParallelLimit(limit, _asyncMap);
-    };
+    async.mapLimit = doParallelLimit(_asyncMap);
 
     // reduce only has a series version, as doing reduce in parallel won't
     // work in many situations.
+    async.inject =
+    async.foldl =
     async.reduce = function (arr, memo, iterator, callback) {
-        async.eachSeries(arr, function (x, callback) {
+        async.eachOfSeries(arr, function (x, i, callback) {
             iterator(memo, x, function (err, v) {
                 memo = v;
                 callback(err);
             });
         }, function (err) {
-            callback(err, memo);
+            callback(err || null, memo);
         });
     };
-    // inject alias
-    async.inject = async.reduce;
-    // foldl alias
-    async.foldl = async.reduce;
 
+    async.foldr =
     async.reduceRight = function (arr, memo, iterator, callback) {
-        var reversed = _map(arr, function (x) {
-            return x;
-        }).reverse();
+        var reversed = _map(arr, identity).reverse();
         async.reduce(reversed, memo, iterator, callback);
     };
-    // foldr alias
-    async.foldr = async.reduceRight;
 
-    var _filter = function (eachfn, arr, iterator, callback) {
+    function _filter(eachfn, arr, iterator, callback) {
         var results = [];
-        arr = _map(arr, function (x, i) {
-            return {index: i, value: x};
-        });
-        eachfn(arr, function (x, callback) {
-            iterator(x.value, function (v) {
+        eachfn(arr, function (x, index, callback) {
+            iterator(x, function (v) {
                 if (v) {
-                    results.push(x);
+                    results.push({index: index, value: x});
                 }
                 callback();
             });
-        }, function (err) {
+        }, function () {
             callback(_map(results.sort(function (a, b) {
                 return a.index - b.index;
             }), function (x) {
                 return x.value;
             }));
         });
-    };
-    async.filter = doParallel(_filter);
-    async.filterSeries = doSeries(_filter);
-    // select alias
-    async.select = async.filter;
-    async.selectSeries = async.filterSeries;
+    }
 
-    var _reject = function (eachfn, arr, iterator, callback) {
-        var results = [];
-        arr = _map(arr, function (x, i) {
-            return {index: i, value: x};
-        });
-        eachfn(arr, function (x, callback) {
-            iterator(x.value, function (v) {
-                if (!v) {
-                    results.push(x);
-                }
-                callback();
+    async.select =
+    async.filter = doParallel(_filter);
+
+    async.selectLimit =
+    async.filterLimit = doParallelLimit(_filter);
+
+    async.selectSeries =
+    async.filterSeries = doSeries(_filter);
+
+    function _reject(eachfn, arr, iterator, callback) {
+        _filter(eachfn, arr, function(value, cb) {
+            iterator(value, function(v) {
+                cb(!v);
             });
-        }, function (err) {
-            callback(_map(results.sort(function (a, b) {
-                return a.index - b.index;
-            }), function (x) {
-                return x.value;
-            }));
-        });
-    };
+        }, callback);
+    }
     async.reject = doParallel(_reject);
+    async.rejectLimit = doParallelLimit(_reject);
     async.rejectSeries = doSeries(_reject);
 
-    var _detect = function (eachfn, arr, iterator, main_callback) {
-        eachfn(arr, function (x, callback) {
-            iterator(x, function (result) {
-                if (result) {
-                    main_callback(x);
-                    main_callback = function () {};
-                }
-                else {
+    function _createTester(eachfn, check, getResult) {
+        return function(arr, limit, iterator, cb) {
+            function done() {
+                if (cb) cb(getResult(false, void 0));
+            }
+            function iteratee(x, _, callback) {
+                if (!cb) return callback();
+                iterator(x, function (v) {
+                    if (cb && check(v)) {
+                        cb(getResult(true, x));
+                        cb = iterator = false;
+                    }
                     callback();
-                }
-            });
-        }, function (err) {
-            main_callback();
-        });
-    };
-    async.detect = doParallel(_detect);
-    async.detectSeries = doSeries(_detect);
+                });
+            }
+            if (arguments.length > 3) {
+                eachfn(arr, limit, iteratee, done);
+            } else {
+                cb = iterator;
+                iterator = limit;
+                eachfn(arr, iteratee, done);
+            }
+        };
+    }
 
-    async.some = function (arr, iterator, main_callback) {
-        async.each(arr, function (x, callback) {
-            iterator(x, function (v) {
-                if (v) {
-                    main_callback(true);
-                    main_callback = function () {};
-                }
-                callback();
-            });
-        }, function (err) {
-            main_callback(false);
-        });
-    };
-    // any alias
-    async.any = async.some;
+    async.any =
+    async.some = _createTester(async.eachOf, toBool, identity);
 
-    async.every = function (arr, iterator, main_callback) {
-        async.each(arr, function (x, callback) {
-            iterator(x, function (v) {
-                if (!v) {
-                    main_callback(false);
-                    main_callback = function () {};
-                }
-                callback();
-            });
-        }, function (err) {
-            main_callback(true);
-        });
-    };
-    // all alias
-    async.all = async.every;
+    async.someLimit = _createTester(async.eachOfLimit, toBool, identity);
+
+    async.all =
+    async.every = _createTester(async.eachOf, notId, notId);
+
+    async.everyLimit = _createTester(async.eachOfLimit, notId, notId);
+
+    function _findGetResult(v, x) {
+        return x;
+    }
+    async.detect = _createTester(async.eachOf, identity, _findGetResult);
+    async.detectSeries = _createTester(async.eachOfSeries, identity, _findGetResult);
+    async.detectLimit = _createTester(async.eachOfLimit, identity, _findGetResult);
 
     async.sortBy = function (arr, iterator, callback) {
         async.map(arr, function (x, callback) {
@@ -407,147 +486,189 @@
                 return callback(err);
             }
             else {
-                var fn = function (left, right) {
-                    var a = left.criteria, b = right.criteria;
-                    return a < b ? -1 : a > b ? 1 : 0;
-                };
-                callback(null, _map(results.sort(fn), function (x) {
+                callback(null, _map(results.sort(comparator), function (x) {
                     return x.value;
                 }));
             }
+
         });
+
+        function comparator(left, right) {
+            var a = left.criteria, b = right.criteria;
+            return a < b ? -1 : a > b ? 1 : 0;
+        }
     };
 
     async.auto = function (tasks, callback) {
-        callback = callback || function () {};
+        callback = _once(callback || noop);
         var keys = _keys(tasks);
-        var remainingTasks = keys.length
+        var remainingTasks = keys.length;
         if (!remainingTasks) {
-            return callback();
+            return callback(null);
         }
 
         var results = {};
 
         var listeners = [];
-        var addListener = function (fn) {
+        function addListener(fn) {
             listeners.unshift(fn);
-        };
-        var removeListener = function (fn) {
-            for (var i = 0; i < listeners.length; i += 1) {
-                if (listeners[i] === fn) {
-                    listeners.splice(i, 1);
-                    return;
-                }
-            }
-        };
-        var taskComplete = function () {
-            remainingTasks--
-            _each(listeners.slice(0), function (fn) {
+        }
+        function removeListener(fn) {
+            var idx = _indexOf(listeners, fn);
+            if (idx >= 0) listeners.splice(idx, 1);
+        }
+        function taskComplete() {
+            remainingTasks--;
+            _arrayEach(listeners.slice(0), function (fn) {
                 fn();
             });
-        };
+        }
 
         addListener(function () {
             if (!remainingTasks) {
-                var theCallback = callback;
-                // prevent final callback from calling itself if it errors
-                callback = function () {};
-
-                theCallback(null, results);
+                callback(null, results);
             }
         });
 
-        _each(keys, function (k) {
+        _arrayEach(keys, function (k) {
             var task = _isArray(tasks[k]) ? tasks[k]: [tasks[k]];
-            var taskCallback = function (err) {
-                var args = Array.prototype.slice.call(arguments, 1);
+            var taskCallback = _restParam(function(err, args) {
                 if (args.length <= 1) {
                     args = args[0];
                 }
                 if (err) {
                     var safeResults = {};
-                    _each(_keys(results), function(rkey) {
-                        safeResults[rkey] = results[rkey];
+                    _forEachOf(results, function(val, rkey) {
+                        safeResults[rkey] = val;
                     });
                     safeResults[k] = args;
                     callback(err, safeResults);
-                    // stop subsequent errors hitting callback multiple times
-                    callback = function () {};
                 }
                 else {
                     results[k] = args;
                     async.setImmediate(taskComplete);
                 }
-            };
-            var requires = task.slice(0, Math.abs(task.length - 1)) || [];
-            var ready = function () {
+            });
+            var requires = task.slice(0, task.length - 1);
+            // prevent dead-locks
+            var len = requires.length;
+            var dep;
+            while (len--) {
+                if (!(dep = tasks[requires[len]])) {
+                    throw new Error('Has inexistant dependency');
+                }
+                if (_isArray(dep) && _indexOf(dep, k) >= 0) {
+                    throw new Error('Has cyclic dependencies');
+                }
+            }
+            function ready() {
                 return _reduce(requires, function (a, x) {
                     return (a && results.hasOwnProperty(x));
                 }, true) && !results.hasOwnProperty(k);
-            };
+            }
             if (ready()) {
                 task[task.length - 1](taskCallback, results);
             }
             else {
-                var listener = function () {
-                    if (ready()) {
-                        removeListener(listener);
-                        task[task.length - 1](taskCallback, results);
-                    }
-                };
                 addListener(listener);
+            }
+            function listener() {
+                if (ready()) {
+                    removeListener(listener);
+                    task[task.length - 1](taskCallback, results);
+                }
             }
         });
     };
 
+
+
     async.retry = function(times, task, callback) {
         var DEFAULT_TIMES = 5;
+        var DEFAULT_INTERVAL = 0;
+
         var attempts = [];
-        // Use defaults if times not passed
-        if (typeof times === 'function') {
+
+        var opts = {
+            times: DEFAULT_TIMES,
+            interval: DEFAULT_INTERVAL
+        };
+
+        function parseTimes(acc, t){
+            if(typeof t === 'number'){
+                acc.times = parseInt(t, 10) || DEFAULT_TIMES;
+            } else if(typeof t === 'object'){
+                acc.times = parseInt(t.times, 10) || DEFAULT_TIMES;
+                acc.interval = parseInt(t.interval, 10) || DEFAULT_INTERVAL;
+            } else {
+                throw new Error('Unsupported argument type for \'times\': ' + typeof t);
+            }
+        }
+
+        var length = arguments.length;
+        if (length < 1 || length > 3) {
+            throw new Error('Invalid arguments - must be either (task), (task, callback), (times, task) or (times, task, callback)');
+        } else if (length <= 2 && typeof times === 'function') {
             callback = task;
             task = times;
-            times = DEFAULT_TIMES;
         }
-        // Make sure times is a number
-        times = parseInt(times, 10) || DEFAULT_TIMES;
-        var wrappedTask = function(wrappedCallback, wrappedResults) {
-            var retryAttempt = function(task, finalAttempt) {
+        if (typeof times !== 'function') {
+            parseTimes(opts, times);
+        }
+        opts.callback = callback;
+        opts.task = task;
+
+        function wrappedTask(wrappedCallback, wrappedResults) {
+            function retryAttempt(task, finalAttempt) {
                 return function(seriesCallback) {
                     task(function(err, result){
                         seriesCallback(!err || finalAttempt, {err: err, result: result});
                     }, wrappedResults);
                 };
-            };
-            while (times) {
-                attempts.push(retryAttempt(task, !(times-=1)));
             }
+
+            function retryInterval(interval){
+                return function(seriesCallback){
+                    setTimeout(function(){
+                        seriesCallback(null);
+                    }, interval);
+                };
+            }
+
+            while (opts.times) {
+
+                var finalAttempt = !(opts.times-=1);
+                attempts.push(retryAttempt(opts.task, finalAttempt));
+                if(!finalAttempt && opts.interval > 0){
+                    attempts.push(retryInterval(opts.interval));
+                }
+            }
+
             async.series(attempts, function(done, data){
                 data = data[data.length - 1];
-                (wrappedCallback || callback)(data.err, data.result);
+                (wrappedCallback || opts.callback)(data.err, data.result);
             });
         }
+
         // If a callback is passed, run this as a controll flow
-        return callback ? wrappedTask() : wrappedTask
+        return opts.callback ? wrappedTask() : wrappedTask;
     };
 
     async.waterfall = function (tasks, callback) {
-        callback = callback || function () {};
+        callback = _once(callback || noop);
         if (!_isArray(tasks)) {
-          var err = new Error('First argument to waterfall must be an array of functions');
-          return callback(err);
+            var err = new Error('First argument to waterfall must be an array of functions');
+            return callback(err);
         }
         if (!tasks.length) {
             return callback();
         }
-        var wrapIterator = function (iterator) {
-            return function (err) {
+        function wrapIterator(iterator) {
+            return _restParam(function (err, args) {
                 if (err) {
-                    callback.apply(null, arguments);
-                    callback = function () {};
+                    callback.apply(null, [err].concat(args));
                 }
                 else {
-                    var args = Array.prototype.slice.call(arguments, 1);
                     var next = iterator.next();
                     if (next) {
                         args.push(wrapIterator(next));
@@ -555,260 +676,244 @@
                     else {
                         args.push(callback);
                     }
-                    async.setImmediate(function () {
-                        iterator.apply(null, args);
-                    });
+                    ensureAsync(iterator).apply(null, args);
                 }
-            };
-        };
+            });
+        }
         wrapIterator(async.iterator(tasks))();
     };
 
-    var _parallel = function(eachfn, tasks, callback) {
-        callback = callback || function () {};
-        if (_isArray(tasks)) {
-            eachfn.map(tasks, function (fn, callback) {
-                if (fn) {
-                    fn(function (err) {
-                        var args = Array.prototype.slice.call(arguments, 1);
-                        if (args.length <= 1) {
-                            args = args[0];
-                        }
-                        callback.call(null, err, args);
-                    });
+    function _parallel(eachfn, tasks, callback) {
+        callback = callback || noop;
+        var results = _isArrayLike(tasks) ? [] : {};
+
+        eachfn(tasks, function (task, key, callback) {
+            task(_restParam(function (err, args) {
+                if (args.length <= 1) {
+                    args = args[0];
                 }
-            }, callback);
-        }
-        else {
-            var results = {};
-            eachfn.each(_keys(tasks), function (k, callback) {
-                tasks[k](function (err) {
-                    var args = Array.prototype.slice.call(arguments, 1);
-                    if (args.length <= 1) {
-                        args = args[0];
-                    }
-                    results[k] = args;
-                    callback(err);
-                });
-            }, function (err) {
-                callback(err, results);
-            });
-        }
-    };
+                results[key] = args;
+                callback(err);
+            }));
+        }, function (err) {
+            callback(err, results);
+        });
+    }
 
     async.parallel = function (tasks, callback) {
-        _parallel({ map: async.map, each: async.each }, tasks, callback);
+        _parallel(async.eachOf, tasks, callback);
     };
 
     async.parallelLimit = function(tasks, limit, callback) {
-        _parallel({ map: _mapLimit(limit), each: _eachLimit(limit) }, tasks, callback);
+        _parallel(_eachOfLimit(limit), tasks, callback);
     };
 
-    async.series = function (tasks, callback) {
-        callback = callback || function () {};
-        if (_isArray(tasks)) {
-            async.mapSeries(tasks, function (fn, callback) {
-                if (fn) {
-                    fn(function (err) {
-                        var args = Array.prototype.slice.call(arguments, 1);
-                        if (args.length <= 1) {
-                            args = args[0];
-                        }
-                        callback.call(null, err, args);
-                    });
-                }
-            }, callback);
-        }
-        else {
-            var results = {};
-            async.eachSeries(_keys(tasks), function (k, callback) {
-                tasks[k](function (err) {
-                    var args = Array.prototype.slice.call(arguments, 1);
-                    if (args.length <= 1) {
-                        args = args[0];
-                    }
-                    results[k] = args;
-                    callback(err);
-                });
-            }, function (err) {
-                callback(err, results);
-            });
-        }
+    async.series = function(tasks, callback) {
+        _parallel(async.eachOfSeries, tasks, callback);
     };
 
     async.iterator = function (tasks) {
-        var makeCallback = function (index) {
-            var fn = function () {
+        function makeCallback(index) {
+            function fn() {
                 if (tasks.length) {
                     tasks[index].apply(null, arguments);
                 }
                 return fn.next();
-            };
+            }
             fn.next = function () {
                 return (index < tasks.length - 1) ? makeCallback(index + 1): null;
             };
             return fn;
-        };
+        }
         return makeCallback(0);
     };
 
-    async.apply = function (fn) {
-        var args = Array.prototype.slice.call(arguments, 1);
-        return function () {
+    async.apply = _restParam(function (fn, args) {
+        return _restParam(function (callArgs) {
             return fn.apply(
-                null, args.concat(Array.prototype.slice.call(arguments))
+                null, args.concat(callArgs)
             );
-        };
-    };
+        });
+    });
 
-    var _concat = function (eachfn, arr, fn, callback) {
-        var r = [];
-        eachfn(arr, function (x, cb) {
+    function _concat(eachfn, arr, fn, callback) {
+        var result = [];
+        eachfn(arr, function (x, index, cb) {
             fn(x, function (err, y) {
-                r = r.concat(y || []);
+                result = result.concat(y || []);
                 cb(err);
             });
         }, function (err) {
-            callback(err, r);
+            callback(err, result);
         });
-    };
+    }
     async.concat = doParallel(_concat);
     async.concatSeries = doSeries(_concat);
 
     async.whilst = function (test, iterator, callback) {
+        callback = callback || noop;
         if (test()) {
-            iterator(function (err) {
+            var next = _restParam(function(err, args) {
                 if (err) {
-                    return callback(err);
+                    callback(err);
+                } else if (test.apply(this, args)) {
+                    iterator(next);
+                } else {
+                    callback(null);
                 }
-                async.whilst(test, iterator, callback);
             });
-        }
-        else {
-            callback();
+            iterator(next);
+        } else {
+            callback(null);
         }
     };
 
     async.doWhilst = function (iterator, test, callback) {
-        iterator(function (err) {
-            if (err) {
-                return callback(err);
-            }
-            var args = Array.prototype.slice.call(arguments, 1);
-            if (test.apply(null, args)) {
-                async.doWhilst(iterator, test, callback);
-            }
-            else {
-                callback();
-            }
-        });
+        var calls = 0;
+        return async.whilst(function() {
+            return ++calls <= 1 || test.apply(this, arguments);
+        }, iterator, callback);
     };
 
     async.until = function (test, iterator, callback) {
-        if (!test()) {
-            iterator(function (err) {
-                if (err) {
-                    return callback(err);
-                }
-                async.until(test, iterator, callback);
-            });
-        }
-        else {
-            callback();
-        }
+        return async.whilst(function() {
+            return !test.apply(this, arguments);
+        }, iterator, callback);
     };
 
     async.doUntil = function (iterator, test, callback) {
-        iterator(function (err) {
-            if (err) {
-                return callback(err);
-            }
-            var args = Array.prototype.slice.call(arguments, 1);
-            if (!test.apply(null, args)) {
-                async.doUntil(iterator, test, callback);
-            }
-            else {
-                callback();
-            }
-        });
+        return async.doWhilst(iterator, function() {
+            return !test.apply(this, arguments);
+        }, callback);
     };
 
-    async.queue = function (worker, concurrency) {
-        if (concurrency === undefined) {
+    async.during = function (test, iterator, callback) {
+        callback = callback || noop;
+
+        var next = _restParam(function(err, args) {
+            if (err) {
+                callback(err);
+            } else {
+                args.push(check);
+                test.apply(this, args);
+            }
+        });
+
+        var check = function(err, truth) {
+            if (err) {
+                callback(err);
+            } else if (truth) {
+                iterator(next);
+            } else {
+                callback(null);
+            }
+        };
+
+        test(check);
+    };
+
+    async.doDuring = function (iterator, test, callback) {
+        var calls = 0;
+        async.during(function(next) {
+            if (calls++ < 1) {
+                next(null, true);
+            } else {
+                test.apply(this, arguments);
+            }
+        }, iterator, callback);
+    };
+
+    function _queue(worker, concurrency, payload) {
+        if (concurrency == null) {
             concurrency = 1;
         }
+        else if(concurrency === 0) {
+            throw new Error('Concurrency must not be zero');
+        }
         function _insert(q, data, pos, callback) {
-          if (!q.started){
+            if (callback != null && typeof callback !== "function") {
+                throw new Error("task callback must be a function");
+            }
             q.started = true;
-          }
-          if (!_isArray(data)) {
-              data = [data];
-          }
-          if(data.length == 0) {
-             // call drain immediately if there are no tasks
-             return async.setImmediate(function() {
-                 if (q.drain) {
-                     q.drain();
-                 }
-             });
-          }
-          _each(data, function(task) {
-              var item = {
-                  data: task,
-                  callback: typeof callback === 'function' ? callback : null
-              };
+            if (!_isArray(data)) {
+                data = [data];
+            }
+            if(data.length === 0 && q.idle()) {
+                // call drain immediately if there are no tasks
+                return async.setImmediate(function() {
+                    q.drain();
+                });
+            }
+            _arrayEach(data, function(task) {
+                var item = {
+                    data: task,
+                    callback: callback || noop
+                };
 
-              if (pos) {
-                q.tasks.unshift(item);
-              } else {
-                q.tasks.push(item);
-              }
+                if (pos) {
+                    q.tasks.unshift(item);
+                } else {
+                    q.tasks.push(item);
+                }
 
-              if (q.saturated && q.tasks.length === q.concurrency) {
-                  q.saturated();
-              }
-              async.setImmediate(q.process);
-          });
+                if (q.tasks.length === q.concurrency) {
+                    q.saturated();
+                }
+            });
+            async.setImmediate(q.process);
+        }
+        function _next(q, tasks) {
+            return function(){
+                workers -= 1;
+                var args = arguments;
+                _arrayEach(tasks, function (task) {
+                    task.callback.apply(task, args);
+                });
+                if (q.tasks.length + workers === 0) {
+                    q.drain();
+                }
+                q.process();
+            };
         }
 
         var workers = 0;
         var q = {
             tasks: [],
             concurrency: concurrency,
-            saturated: null,
-            empty: null,
-            drain: null,
+            payload: payload,
+            saturated: noop,
+            empty: noop,
+            drain: noop,
             started: false,
             paused: false,
             push: function (data, callback) {
-              _insert(q, data, false, callback);
+                _insert(q, data, false, callback);
             },
             kill: function () {
-              q.drain = null;
-              q.tasks = [];
+                q.drain = noop;
+                q.tasks = [];
             },
             unshift: function (data, callback) {
-              _insert(q, data, true, callback);
+                _insert(q, data, true, callback);
             },
             process: function () {
                 if (!q.paused && workers < q.concurrency && q.tasks.length) {
-                    var task = q.tasks.shift();
-                    if (q.empty && q.tasks.length === 0) {
-                        q.empty();
+                    while(workers < q.concurrency && q.tasks.length){
+                        var tasks = q.payload ?
+                            q.tasks.splice(0, q.payload) :
+                            q.tasks.splice(0, q.tasks.length);
+
+                        var data = _map(tasks, function (task) {
+                            return task.data;
+                        });
+
+                        if (q.tasks.length === 0) {
+                            q.empty();
+                        }
+                        workers += 1;
+                        var cb = only_once(_next(q, tasks));
+                        worker(data, cb);
                     }
-                    workers += 1;
-                    var next = function () {
-                        workers -= 1;
-                        if (task.callback) {
-                            task.callback.apply(task, arguments);
-                        }
-                        if (q.drain && q.tasks.length + workers === 0) {
-                            q.drain();
-                        }
-                        q.process();
-                    };
-                    var cb = only_once(next);
-                    worker(task.data, cb);
                 }
             },
             length: function () {
@@ -821,78 +926,88 @@
                 return q.tasks.length + workers === 0;
             },
             pause: function () {
-                if (q.paused === true) { return; }
                 q.paused = true;
-                q.process();
             },
             resume: function () {
                 if (q.paused === false) { return; }
                 q.paused = false;
-                q.process();
+                var resumeCount = Math.min(q.concurrency, q.tasks.length);
+                // Need to call q.process once per concurrent
+                // worker to preserve full concurrency after pause
+                for (var w = 1; w <= resumeCount; w++) {
+                    async.setImmediate(q.process);
+                }
             }
         };
         return q;
-    };
-    
-    async.priorityQueue = function (worker, concurrency) {
-        
-        function _compareTasks(a, b){
-          return a.priority - b.priority;
-        };
-        
-        function _binarySearch(sequence, item, compare) {
-          var beg = -1,
-              end = sequence.length - 1;
-          while (beg < end) {
-            var mid = beg + ((end - beg + 1) >>> 1);
-            if (compare(item, sequence[mid]) >= 0) {
-              beg = mid;
-            } else {
-              end = mid - 1;
-            }
-          }
-          return beg;
-        }
-        
-        function _insert(q, data, priority, callback) {
-          if (!q.started){
-            q.started = true;
-          }
-          if (!_isArray(data)) {
-              data = [data];
-          }
-          if(data.length == 0) {
-             // call drain immediately if there are no tasks
-             return async.setImmediate(function() {
-                 if (q.drain) {
-                     q.drain();
-                 }
-             });
-          }
-          _each(data, function(task) {
-              var item = {
-                  data: task,
-                  priority: priority,
-                  callback: typeof callback === 'function' ? callback : null
-              };
-              
-              q.tasks.splice(_binarySearch(q.tasks, item, _compareTasks) + 1, 0, item);
+    }
 
-              if (q.saturated && q.tasks.length === q.concurrency) {
-                  q.saturated();
-              }
-              async.setImmediate(q.process);
-          });
+    async.queue = function (worker, concurrency) {
+        var q = _queue(function (items, cb) {
+            worker(items[0], cb);
+        }, concurrency, 1);
+
+        return q;
+    };
+
+    async.priorityQueue = function (worker, concurrency) {
+
+        function _compareTasks(a, b){
+            return a.priority - b.priority;
         }
-        
+
+        function _binarySearch(sequence, item, compare) {
+            var beg = -1,
+                end = sequence.length - 1;
+            while (beg < end) {
+                var mid = beg + ((end - beg + 1) >>> 1);
+                if (compare(item, sequence[mid]) >= 0) {
+                    beg = mid;
+                } else {
+                    end = mid - 1;
+                }
+            }
+            return beg;
+        }
+
+        function _insert(q, data, priority, callback) {
+            if (callback != null && typeof callback !== "function") {
+                throw new Error("task callback must be a function");
+            }
+            q.started = true;
+            if (!_isArray(data)) {
+                data = [data];
+            }
+            if(data.length === 0) {
+                // call drain immediately if there are no tasks
+                return async.setImmediate(function() {
+                    q.drain();
+                });
+            }
+            _arrayEach(data, function(task) {
+                var item = {
+                    data: task,
+                    priority: priority,
+                    callback: typeof callback === 'function' ? callback : noop
+                };
+
+                q.tasks.splice(_binarySearch(q.tasks, item, _compareTasks) + 1, 0, item);
+
+                if (q.tasks.length === q.concurrency) {
+                    q.saturated();
+                }
+                async.setImmediate(q.process);
+            });
+        }
+
         // Start with a normal queue
         var q = async.queue(worker, concurrency);
-        
+
         // Override push to accept second parameter representing priority
         q.push = function (data, priority, callback) {
-          _insert(q, data, priority, callback);
+            _insert(q, data, priority, callback);
         };
-        
+
         // Remove unshift function
         delete q.unshift;
 
@@ -900,93 +1015,27 @@
     };
 
     async.cargo = function (worker, payload) {
-        var working     = false,
-            tasks       = [];
-
-        var cargo = {
-            tasks: tasks,
-            payload: payload,
-            saturated: null,
-            empty: null,
-            drain: null,
-            drained: true,
-            push: function (data, callback) {
-                if (!_isArray(data)) {
-                    data = [data];
-                }
-                _each(data, function(task) {
-                    tasks.push({
-                        data: task,
-                        callback: typeof callback === 'function' ? callback : null
-                    });
-                    cargo.drained = false;
-                    if (cargo.saturated && tasks.length === payload) {
-                        cargo.saturated();
-                    }
-                });
-                async.setImmediate(cargo.process);
-            },
-            process: function process() {
-                if (working) return;
-                if (tasks.length === 0) {
-                    if(cargo.drain && !cargo.drained) cargo.drain();
-                    cargo.drained = true;
-                    return;
-                }
-
-                var ts = typeof payload === 'number'
-                            ? tasks.splice(0, payload)
-                            : tasks.splice(0, tasks.length);
-
-                var ds = _map(ts, function (task) {
-                    return task.data;
-                });
-
-                if(cargo.empty) cargo.empty();
-                working = true;
-                worker(ds, function () {
-                    working = false;
-
-                    var args = arguments;
-                    _each(ts, function (data) {
-                        if (data.callback) {
-                            data.callback.apply(null, args);
-                        }
-                    });
-
-                    process();
-                });
-            },
-            length: function () {
-                return tasks.length;
-            },
-            running: function () {
-                return working;
-            }
-        };
-        return cargo;
+        return _queue(worker, 1, payload);
     };
 
-    var _console_fn = function (name) {
-        return function (fn) {
-            var args = Array.prototype.slice.call(arguments, 1);
-            fn.apply(null, args.concat([function (err) {
-                var args = Array.prototype.slice.call(arguments, 1);
-                if (typeof console !== 'undefined') {
+    function _console_fn(name) {
+        return _restParam(function (fn, args) {
+            fn.apply(null, args.concat([_restParam(function (err, args) {
+                if (typeof console === 'object') {
                     if (err) {
                         if (console.error) {
                             console.error(err);
                         }
                     }
                     else if (console[name]) {
-                        _each(args, function (x) {
+                        _arrayEach(args, function (x) {
                             console[name](x);
                         });
                     }
                 }
-            }]));
-        };
-    };
+            })]));
+        });
+    }
     async.log = _console_fn('log');
     async.dir = _console_fn('dir');
     /*async.info = _console_fn('info');
@@ -996,11 +1045,8 @@
     async.memoize = function (fn, hasher) {
         var memo = {};
         var queues = {};
-        hasher = hasher || function (x) {
-            return x;
-        };
-        var memoized = function () {
-            var args = Array.prototype.slice.call(arguments);
+        hasher = hasher || identity;
+        var memoized = _restParam(function memoized(args) {
             var callback = args.pop();
             var key = hasher.apply(null, args);
             if (key in memo) {
@@ -1013,106 +1059,159 @@
             }
             else {
                 queues[key] = [callback];
-                fn.apply(null, args.concat([function () {
-                    memo[key] = arguments;
+                fn.apply(null, args.concat([_restParam(function (args) {
+                    memo[key] = args;
                     var q = queues[key];
                     delete queues[key];
                     for (var i = 0, l = q.length; i < l; i++) {
-                      q[i].apply(null, arguments);
+                        q[i].apply(null, args);
                     }
-                }]));
+                })]));
             }
-        };
+        });
         memoized.memo = memo;
         memoized.unmemoized = fn;
         return memoized;
     };
 
     async.unmemoize = function (fn) {
-      return function () {
-        return (fn.unmemoized || fn).apply(null, arguments);
-      };
+        return function () {
+            return (fn.unmemoized || fn).apply(null, arguments);
+        };
     };
 
-    async.times = function (count, iterator, callback) {
-        var counter = [];
-        for (var i = 0; i < count; i++) {
-            counter.push(i);
-        }
-        return async.map(counter, iterator, callback);
-    };
+    function _times(mapper) {
+        return function (count, iterator, callback) {
+            mapper(_range(count), iterator, callback);
+        };
+    }
 
-    async.timesSeries = function (count, iterator, callback) {
-        var counter = [];
-        for (var i = 0; i < count; i++) {
-            counter.push(i);
-        }
-        return async.mapSeries(counter, iterator, callback);
+    async.times = _times(async.map);
+    async.timesSeries = _times(async.mapSeries);
+    async.timesLimit = function (count, limit, iterator, callback) {
+        return async.mapLimit(_range(count), limit, iterator, callback);
     };
 
     async.seq = function (/* functions... */) {
         var fns = arguments;
-        return function () {
+        return _restParam(function (args) {
             var that = this;
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+
+            var callback = args[args.length - 1];
+            if (typeof callback == 'function') {
+                args.pop();
+            } else {
+                callback = noop;
+            }
+
             async.reduce(fns, args, function (newargs, fn, cb) {
-                fn.apply(that, newargs.concat([function () {
-                    var err = arguments[0];
-                    var nextargs = Array.prototype.slice.call(arguments, 1);
+                fn.apply(that, newargs.concat([_restParam(function (err, nextargs) {
                     cb(err, nextargs);
-                }]))
+                })]));
             },
             function (err, results) {
                 callback.apply(that, [err].concat(results));
             });
-        };
+        });
     };
 
     async.compose = function (/* functions... */) {
-      return async.seq.apply(null, Array.prototype.reverse.call(arguments));
+        return async.seq.apply(null, Array.prototype.reverse.call(arguments));
     };
 
-    var _applyEach = function (eachfn, fns /*args...*/) {
-        var go = function () {
-            var that = this;
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
-            return eachfn(fns, function (fn, cb) {
-                fn.apply(that, args.concat([cb]));
-            },
-            callback);
-        };
-        if (arguments.length > 2) {
-            var args = Array.prototype.slice.call(arguments, 2);
-            return go.apply(this, args);
-        }
-        else {
-            return go;
-        }
-    };
-    async.applyEach = doParallel(_applyEach);
-    async.applyEachSeries = doSeries(_applyEach);
+
+    function _applyEach(eachfn) {
+        return _restParam(function(fns, args) {
+            var go = _restParam(function(args) {
+                var that = this;
+                var callback = args.pop();
+                return eachfn(fns, function (fn, _, cb) {
+                    fn.apply(that, args.concat([cb]));
+                },
+                callback);
+            });
+            if (args.length) {
+                return go.apply(this, args);
+            }
+            else {
+                return go;
+            }
+        });
+    }
+
+    async.applyEach = _applyEach(async.eachOf);
+    async.applyEachSeries = _applyEach(async.eachOfSeries);
+
 
     async.forever = function (fn, callback) {
+        var done = only_once(callback || noop);
+        var task = ensureAsync(fn);
         function next(err) {
             if (err) {
-                if (callback) {
-                    return callback(err);
-                }
-                throw err;
+                return done(err);
             }
-            fn(next);
+            task(next);
         }
         next();
     };
 
+    function ensureAsync(fn) {
+        return _restParam(function (args) {
+            var callback = args.pop();
+            args.push(function () {
+                var innerArgs = arguments;
+                if (sync) {
+                    async.setImmediate(function () {
+                        callback.apply(null, innerArgs);
+                    });
+                } else {
+                    callback.apply(null, innerArgs);
+                }
+            });
+            var sync = true;
+            fn.apply(this, args);
+            sync = false;
+        });
+    }
+
+    async.ensureAsync = ensureAsync;
+
+    async.constant = _restParam(function(values) {
+        var args = [null].concat(values);
+        return function (callback) {
+            return callback.apply(this, args);
+        };
+    });
+
+    async.wrapSync =
+    async.asyncify = function asyncify(func) {
+        return _restParam(function (args) {
+            var callback = args.pop();
+            var result;
+            try {
+                result = func.apply(this, args);
+            } catch (e) {
+                return callback(e);
+            }
+            // if result is Promise object
+            if (_isObject(result) && typeof result.then === "function") {
+                result.then(function(value) {
+                    callback(null, value);
+                })["catch"](function(err) {
+                    callback(err.message ? err : new Error(err));
+                });
+            } else {
+                callback(null, result);
+            }
+        });
+    };
+
     // Node.js
-    if (typeof module !== 'undefined' && module.exports) {
+    if (typeof module === 'object' && module.exports) {
         module.exports = async;
     }
     // AMD / RequireJS
-    else if (typeof define !== 'undefined' && define.amd) {
+    else if (typeof define === 'function' && define.amd) {
         define([], function () {
             return async;
         });
@@ -1124,8 +1223,8 @@
 
 }());
 
-}).call(this,require('_process'))
-},{"_process":6}],2:[function(require,module,exports){
+}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"_process":14}],2:[function(require,module,exports){
 /*
  * classie
  * http://github.amexpub.com/modules/classie
@@ -1135,7 +1234,229 @@
 
 module.exports = require('./lib/classie');
 
-},{"./lib/classie":3}],3:[function(require,module,exports){
+},{"./lib/classie":4}],3:[function(require,module,exports){
+/* 
+ * classList.js: Cross-browser full element.classList implementation.
+ * 2014-07-23
+ *
+ * By Eli Grey, http://eligrey.com
+ * Public Domain.
+ * NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
+ */
+
+/*global self, document, DOMException, DOMTokenList */
+
+/*! @source http://purl.eligrey.com/github/classList.js/blob/master/classList.js*/
+
+if ("document" in self) {
+
+    // Full polyfill for browsers with no classList support
+    if (!("classList" in document.createElement("_")) || document.createElementNS && !("classList" in document.createElementNS("http://www.w3.org/2000/svg", "g"))) {
+
+        (function(view) {
+
+            "use strict";
+
+            if (!('Element' in view)) {
+                return;
+            }
+
+            var classListProp = "classList",
+                protoProp = "prototype",
+                elemCtrProto = view.Element[protoProp],
+                objCtr = Object,
+                strTrim = String[protoProp].trim || function() {
+                    return this.replace(/^\s+|\s+$/g, "");
+                }, arrIndexOf = Array[protoProp].indexOf || function(item) {
+                    var
+                    i = 0,
+                        len = this.length;
+                    for (; i < len; i++) {
+                        if (i in this && this[i] === item) {
+                            return i;
+                        }
+                    }
+                    return -1;
+                },
+                // Vendors: please allow content code to instantiate DOMExceptions
+                DOMEx = function(type, message) {
+                    this.name = type;
+                    this.code = DOMException[type];
+                    this.message = message;
+                }, checkTokenAndGetIndex = function(classList, token) {
+                    if (token === "") {
+                        throw new DOMEx(
+                            "SYNTAX_ERR", "An invalid or illegal string was specified");
+                    }
+                    if (/\s/.test(token)) {
+                        throw new DOMEx(
+                            "INVALID_CHARACTER_ERR", "String contains an invalid character");
+                    }
+                    return arrIndexOf.call(classList, token);
+                }, ClassList = function(elem) {
+                    var
+                    trimmedClasses = strTrim.call(elem.getAttribute("class") || ""),
+                        classes = trimmedClasses ? trimmedClasses.split(/\s+/) : [],
+                        i = 0,
+                        len = classes.length;
+                    for (; i < len; i++) {
+                        this.push(classes[i]);
+                    }
+                    this._updateClassName = function() {
+                        elem.setAttribute("class", this.toString());
+                    };
+                }, classListProto = ClassList[protoProp] = [],
+                classListGetter = function() {
+                    return new ClassList(this);
+                };
+            // Most DOMException implementations don't allow calling DOMException's toString()
+            // on non-DOMExceptions. Error's toString() is sufficient here.
+            DOMEx[protoProp] = Error[protoProp];
+            classListProto.item = function(i) {
+                return this[i] || null;
+            };
+            classListProto.contains = function(token) {
+                token += "";
+                return checkTokenAndGetIndex(this, token) !== -1;
+            };
+            classListProto.add = function() {
+                var
+                tokens = arguments,
+                    i = 0,
+                    l = tokens.length,
+                    token, updated = false;
+                do {
+                    token = tokens[i] + "";
+                    if (checkTokenAndGetIndex(this, token) === -1) {
+                        this.push(token);
+                        updated = true;
+                    }
+                }
+                while (++i < l);
+
+                if (updated) {
+                    this._updateClassName();
+                }
+            };
+            classListProto.remove = function() {
+                var
+                tokens = arguments,
+                    i = 0,
+                    l = tokens.length,
+                    token, updated = false,
+                    index;
+                do {
+                    token = tokens[i] + "";
+                    index = checkTokenAndGetIndex(this, token);
+                    while (index !== -1) {
+                        this.splice(index, 1);
+                        updated = true;
+                        index = checkTokenAndGetIndex(this, token);
+                    }
+                }
+                while (++i < l);
+
+                if (updated) {
+                    this._updateClassName();
+                }
+            };
+            classListProto.toggle = function(token, force) {
+                token += "";
+
+                var
+                result = this.contains(token),
+                    method = result ?
+                        force !== true && "remove" :
+                        force !== false && "add";
+
+                if (method) {
+                    this[method](token);
+                }
+
+                if (force === true || force === false) {
+                    return force;
+                } else {
+                    return !result;
+                }
+            };
+            classListProto.toString = function() {
+                return this.join(" ");
+            };
+
+            if (objCtr.defineProperty) {
+                var classListPropDesc = {
+                    get: classListGetter,
+                    enumerable: true,
+                    configurable: true
+                };
+                try {
+                    objCtr.defineProperty(elemCtrProto, classListProp, classListPropDesc);
+                } catch (ex) { // IE 8 doesn't support enumerable:true
+                    if (ex.number === -0x7FF5EC54) {
+                        classListPropDesc.enumerable = false;
+                        objCtr.defineProperty(elemCtrProto, classListProp, classListPropDesc);
+                    }
+                }
+            } else if (objCtr[protoProp].__defineGetter__) {
+                elemCtrProto.__defineGetter__(classListProp, classListGetter);
+            }
+
+        }(self));
+
+    } else {
+        // There is full or partial native classList support, so just check if we need
+        // to normalize the add/remove and toggle APIs.
+
+        (function() {
+            "use strict";
+
+            var testElement = document.createElement("_");
+
+            testElement.classList.add("c1", "c2");
+
+            // Polyfill for IE 10/11 and Firefox <26, where classList.add and
+            // classList.remove exist but support only one argument at a time.
+            if (!testElement.classList.contains("c2")) {
+                var createMethod = function(method) {
+                    var original = DOMTokenList.prototype[method];
+
+                    DOMTokenList.prototype[method] = function(token) {
+                        var i, len = arguments.length;
+
+                        for (i = 0; i < len; i++) {
+                            token = arguments[i];
+                            original.call(this, token);
+                        }
+                    };
+                };
+                createMethod('add');
+                createMethod('remove');
+            }
+
+            testElement.classList.toggle("c3", false);
+
+            // Polyfill for IE 10 and Firefox <24, where classList.toggle does not
+            // support the second argument.
+            if (testElement.classList.contains("c3")) {
+                var _toggle = DOMTokenList.prototype.toggle;
+
+                DOMTokenList.prototype.toggle = function(token, force) {
+                    if (1 in arguments && !this.contains(token) === !force) {
+                        return force;
+                    } else {
+                        return _toggle.call(this, token);
+                    }
+                };
+
+            }
+
+            testElement = null;
+        }());
+    }
+
+}
+
+},{}],4:[function(require,module,exports){
 /*!
  * classie - class helper functions
  * from bonzo https://github.com/ded/bonzo
@@ -1150,47 +1471,75 @@ module.exports = require('./lib/classie');
 /*global define: false */
 'use strict';
 
-  // class helper functions from bonzo https://github.com/ded/bonzo
+// class helper functions from bonzo https://github.com/ded/bonzo
+var classList = require('./class_list_ployfill'),
+    classie;
 
-  function classReg( className ) {
+function classReg(className) {
     return new RegExp("(^|\\s+)" + className + "(\\s+|$)");
-  }
+}
 
-  // classList support for class management
-  // altho to be fair, the api sucks because it won't accept multiple classes at once
-  var hasClass, addClass, removeClass;
+function noop() {}
 
-  if (typeof document === "object" && 'classList' in document.documentElement ) {
-    hasClass = function( elem, c ) {
-      return elem.classList.contains( c );
-    };
-    addClass = function( elem, c ) {
-      elem.classList.add( c );
-    };
-    removeClass = function( elem, c ) {
-      elem.classList.remove( c );
-    };
-  }
-  else {
-    hasClass = function( elem, c ) {
-      return classReg( c ).test( elem.className );
-    };
-    addClass = function( elem, c ) {
-      if ( !hasClass( elem, c ) ) {
-        elem.className = elem.className + ' ' + c;
-      }
-    };
-    removeClass = function( elem, c ) {
-      elem.className = elem.className.replace( classReg( c ), ' ' );
-    };
-  }
+function isArr(classes) {
+    if (Array.isArray(classes)) {
+        return true;
+    } else if (Object.prototype.toString.call(classes) === '[object Array]') {
+        return true;
+    } else {
+        return false;
+    }
+}
 
-  function toggleClass( elem, c ) {
-    var fn = hasClass( elem, c ) ? removeClass : addClass;
-    fn( elem, c );
-  }
+function removeMultiple() {
+    var c = arguments[1],
+        elem = arguments[0];
+    c.forEach(function(value) {
+        if (classie.has(elem, value)) {
+            noop();
+        }
+        classie.removeClass(elem, value);
+    });
+}
 
-  var classie = {
+
+function addMultiple() {
+    var c = arguments[1],
+        elem = arguments[0];
+    c.forEach(function(value) {
+        if (classie.has(elem, value)) {
+            noop();
+        }
+        classie.addClass(elem, value);
+    });
+}
+
+function hasClass(elem, c) {
+    return elem.classList.contains(c);
+}
+
+function addClass(elem, c) {
+    if (isArr(c)) {
+        addMultiple.apply(this, arguments);
+    } else {
+        elem.classList.add(c);
+    }
+}
+
+function removeClass(elem, c) {
+    if (isArr(c)) {
+        removeMultiple.apply(this, arguments);
+    } else {
+        elem.classList.remove(c);
+    }
+}
+
+function toggleClass(elem, c) {
+    var fn = hasClass(elem, c) ? removeClass : addClass;
+    fn(elem, c);
+}
+
+var classie = {
     // full names
     hasClass: hasClass,
     addClass: addClass,
@@ -1201,24 +1550,2043 @@ module.exports = require('./lib/classie');
     add: addClass,
     remove: removeClass,
     toggle: toggleClass
-  };
+};
 
-  // transport
+// transport
 
-  if ( typeof module === "object" && module && typeof module.exports === "object" ) {
+if (typeof module === "object" && module && typeof module.exports === "object") {
     // commonjs / browserify
     module.exports = classie;
-  } else {
+} else {
     // AMD
     define(classie);
+}
+
+},{"./class_list_ployfill":3}],5:[function(require,module,exports){
+/*
+ * formie
+ * http://github.amexpub.com/modules/formie
+ *
+ * Copyright (c) 2013 AmexPub. All rights reserved.
+ */
+
+'use strict';
+
+module.exports = require('./lib/formie');
+
+},{"./lib/formie":6}],6:[function(require,module,exports){
+/*
+ * formie
+ * http://github.com/yawetse/formie
+ *
+ * Copyright (c) 2014 Yaw Joseph Etse. All rights reserved.
+ */
+'use strict';
+
+var async = require('async'),
+	// classie = require('classie'),
+	events = require('events'),
+	forbject = require('forbject'),
+	querystring = require('querystring'),
+	request = require('superagent'),
+	util = require('util'),
+	extend = require('util-extend'),
+	jsonpscript,
+	documentHeadElement;
+
+/**
+ * A module that represents a formie object, a componentTab is a page composition tool.
+ * @{@link https://github.com/typesettin/formie}
+ * @author Yaw Joseph Etse
+ * @copyright Copyright (c) 2014 Typesettin. All rights reserved.
+ * @license MIT
+ * @constructor formie
+ * @requires module:async
+ * @requires module:classie
+ * @requires module:events
+ * @requires module:forbject
+ * @requires module:querystring
+ * @requires module:superagent
+ * @requires module:util-extend
+ * @requires module:util
+ * @param {object} options configuration options
+ * @example 
+		ajaxsubmitclassname: 'formie',
+		ajaxsubmitfileuploadclassname: 'formie-file',
+		ajaxformselector: '#formie',
+		jsonp: false,
+		autosubmitselectors: '.autoFormSubmit',
+		autosubmitelements: [],
+		preventsubmitselectors: '.noFormSubmit',
+		preventsubmitelements: [],
+		headers: {},
+		queryparameters: {},
+		postdata: {},
+		beforesubmitcallback: null,
+		errorcallback: null,
+		successcallback: null
+ */
+var formie = function (options) {
+	events.EventEmitter.call(this);
+
+	var defaultOptions = {
+		//ajaxsubmitclassname: 'formie',
+		ajaxsubmitfileuploadclassname: 'formie-file',
+		ajaxformselector: '#formie',
+		autosubmitselectors: '.autoFormSubmit',
+		autosubmitelements: [],
+		preventsubmitselectors: '.noFormSubmit',
+		preventsubmitelements: [],
+		headers: {},
+		queryparameters: {},
+		postdata: {},
+		beforesubmitcallback: null,
+		errorcallback: null,
+		successcallback: null
+	};
+	this.options = extend(defaultOptions, options);
+
+	this.init = this._init;
+	this.ajaxSubmitFormie = this.__ajaxSubmitFormie;
+	this.submitOnChangeListeners = this.__submitOnChangeListeners;
+	this.autoSubmitFormOnChange = this.__autoSubmitFormOnChange;
+	this.preventEnterSubmitListeners = this.__preventEnterSubmitListeners;
+	this.preventSubmitOnEnter = this.__preventSubmitOnEnter;
+	this.ajaxFormEventListers = this.__ajaxFormEventListers;
+	this.submit = this.__submit;
+	this.init();
+	// this.render = this._render;
+	// this.addBinder = this._addBinder;
+};
+
+util.inherits(formie, events.EventEmitter);
+
+/**
+ * asynchronously submit from data, supports, POST, GET, and GET JSONP
+ * @param  {object} e       form submit event
+ * @param  {object} element form html element
+ * @return {Function} ajaxResponseHandler(error, response)
+ * @emits submitted(formieData)
+ */
+formie.prototype.__ajaxSubmitFormie = function (e, element) {
+
+	if (e) {
+		e.preventDefault();
+	}
+	var f = (element) ? element : e.target,
+		beforefn,
+		errorfn,
+		successfn,
+		formieDataFromForm,
+		formieData,
+		ajaxResponseHandler = function (err, response) {
+			if (err && this.options.errorcallback) {
+				errorfn = this.options.errorcallback;
+				if (typeof errorfn === 'function') {
+					errorfn(err, response);
+				}
+				else if (typeof window[errorfn] === 'function') {
+					errorfn = window[errorfn];
+					errorfn(err, response);
+				}
+			}
+			else if (this.options.successcallback) {
+				successfn = this.options.successcallback;
+				if (typeof successfn === 'function') {
+					successfn(response);
+				}
+				else if (typeof window[successfn] === 'function') {
+					successfn = window[successfn];
+					successfn(response);
+				}
+			}
+			this.emit('submitted', formieData);
+		}.bind(this);
+
+	if (this.options.beforesubmitcallback) {
+		beforefn = this.options.beforesubmitcallback;
+		if (typeof beforefn === 'function') {
+			beforefn(e, f);
+		}
+		else if (typeof window[beforefn] === 'function') {
+			beforefn = window[beforefn];
+			beforefn(e, f);
+		}
+	}
+
+	formieDataFromForm = new forbject(f).getObject();
+	// console.log('f.getAttribute("enctype")', f.getAttribute('enctype'));
+
+	this.options.method = (f.getAttribute('method')) ? f.getAttribute('method').toLowerCase() : this.options.method.toLowerCase();
+	this.options.action = (f.getAttribute('action')) ? f.getAttribute('action') : (this.options.action) ? this.options.action : window.location.href;
+
+	if (this.options.jsonp) {
+		formieData = extend(formieDataFromForm, this.options.queryparameters);
+		// head element
+		documentHeadElement = (documentHeadElement) ? documentHeadElement : document.getElementsByTagName('head')[0];
+
+		// remove existing 
+		if (document.querySelector('#formie-jsonp')) {
+			documentHeadElement.removeChild(document.querySelector('#formie-jsonp'));
+		}
+
+		// Create a new script element
+		jsonpscript = document.createElement('script');
+
+		// Set its source to the JSONP API
+		jsonpscript.src = this.options.action + '?' + querystring.stringify(formieData);
+		jsonpscript.id = 'formie-jsonp';
+
+		window[formieData.callback] = this.options.successcallback;
+
+		// Stick the script element in the page <head>
+		documentHeadElement.appendChild(jsonpscript);
+	}
+	else if (f.getAttribute('enctype') === 'multipart/form-data') {
+		var formData = new FormData(f),
+			fileInputs = f.querySelectorAll('input[type="file"]'),
+			// reader = new FileReader(),
+			client = new XMLHttpRequest(),
+			asyncFunctions = [],
+			asyncFileReaderCB = function (fileinputname, file) {
+				return function (cb) {
+					var filereader = new FileReader();
+					if(/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent)){
+						filereader.readAsDataURL(file);
+						filereader.onload = function () {
+							// console.log('this is firefox');
+							// console.log('e', e);
+							// console.log('fileinputname', fileinputname);
+							// console.log('filereader.result', filereader.result);
+							// console.log('file.name', file.name);
+							// console.log('file.type', file.type);
+							var makeblob = function dataURItoBlob(dataURI) {
+							  // convert base64/URLEncoded data component to raw binary data held in a string
+							  var byteString;
+							  if (dataURI.split(',')[0].indexOf('base64') >= 0){
+						      byteString = atob(dataURI.split(',')[1]);
+							  }
+							  else{
+						      byteString = unescape(dataURI.split(',')[1]);
+							  }
+							  // separate out the mime component
+							  var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+							  // write the bytes of the string to a typed array
+							  var ia = new Uint8Array(byteString.length);
+							  for (var i = 0; i < byteString.length; i++) {
+							      ia[i] = byteString.charCodeAt(i);
+							  }
+
+							  return new Blob([ia], {type:mimeString});
+							};
+							formData.append(fileinputname, makeblob(filereader.result), file.name);
+							cb(null, file);
+						};
+					}
+					else{
+						filereader.readAsDataURL(file);
+						filereader.onload = function () {
+							formData.append(fileinputname, filereader.result, file.name);
+							cb(null, file);
+						};
+					}					
+				};
+			};
+
+		formieData = formieDataFromForm;
+		//loop through file inputs and append files to formData
+		if (fileInputs) {
+			for (var r = 0; r < fileInputs.length; r++) {
+				if (fileInputs[r].files.length > 0) {
+					for (var s = 0; s < fileInputs[r].files.length; s++) {
+						// reader.readAsDataURL(fileInputs[r].files[s]);
+						asyncFunctions.push(asyncFileReaderCB(fileInputs[r].name, fileInputs[r].files[s]));
+					}
+				}
+			}
+			async.parallel(
+				asyncFunctions,
+				function (err /* , results*/) {
+					// console.log('async err, results',err, results);
+					try {
+						if(err){
+							throw err;
+						}
+						client.open(this.options.method, this.options.action + '?' + querystring.stringify(this.options.queryparameters), true);
+						if (this.options.headers) {
+							for (var i in this.options.headers) {
+								client.setRequestHeader(i, this.options.headers[i]);
+							}
+						}
+						// console.log('client',client);
+						// console.log('formData',formData);
+						client.send(formData); /* Send to server */
+						// client.onreadystatechange = function () {}
+						client.onabort = function (err) {
+							ajaxResponseHandler(err);
+						};
+						client.onerror = function (err) {
+							ajaxResponseHandler(err);
+						};
+						client.onloadend = function () {
+							if (client.readyState === 4) {
+								if (client.status !== 200) {
+									ajaxResponseHandler(client.statusText, client);
+								}
+								else {
+									var res = {};
+									res.body = JSON.parse(client.response);
+									ajaxResponseHandler(null, res);
+								}
+							}
+						};
+					}
+					catch (e) {
+						ajaxResponseHandler(e);
+					}
+				}.bind(this)
+			);
+
+		}
+		// console.log('fileInputs', fileInputs, f, formData);
+	}
+	else if (this.options.method === 'get') {
+		formieData = extend(formieDataFromForm, this.options.queryparameters);
+		request
+			.get(this.options.action)
+			.set(this.options.headers)
+			.query(formieData)
+			.end(ajaxResponseHandler);
+	}
+	else if (this.options.method === 'delete' || this.options.method === 'del') {
+		formieData = extend(formieDataFromForm, this.options.queryparameters);
+		request
+			.del(this.options.action)
+			.set(this.options.headers)
+			.send(formieData)
+			.end(ajaxResponseHandler);
+	}
+	else if (this.options.method === 'post') {
+		formieData = extend(formieDataFromForm, this.options.postdata);
+		request
+			.post(this.options.action)
+			.set(this.options.headers)
+			.query(this.options.queryparameters)
+			.send(formieData)
+			.end(ajaxResponseHandler);
+	}
+	return false;
+};
+
+/**
+ * submit formie via ajax
+ */
+formie.prototype.__submit = function () {
+	this.ajaxSubmitFormie(null, this.options.form);
+};
+
+/**
+ * submit current form if html element has ajaxsubmitclassname class
+ * @emits autosubmitelement(element)
+ */
+formie.prototype.__autoSubmitFormOnChange = function () {
+	var formElement = (this.form) ? this.form : this.options.form;
+
+	this.ajaxSubmitFormie(null, formElement);
+	this.emit('autosubmitelement', formElement);
+	/*
+	// console.log('formElement', formElement);
+	if (classie.hasClass(formElement, this.options.ajaxsubmitclassname)) {
+		this.ajaxSubmitFormie(null, formElement);
+		this.emit('autosubmitelement', formElement);
+	}
+	else {
+		formElement.submit();
+	}
+	*/
+};
+
+/**
+ * add change listener for form elements with autosubmitselectors class
+ */
+formie.prototype.__submitOnChangeListeners = function () {
+	this.options.autosubmitelements = this.options.form.querySelectorAll(this.options.autosubmitselectors);
+
+	for (var x in this.options.autosubmitelements) {
+		if (typeof this.options.autosubmitelements[x] === 'object') {
+			this.options.autosubmitelements[x].addEventListener('change', this.autoSubmitFormOnChange.bind(this), false);
+		}
+	}
+};
+
+/**
+ * prevent element from submitting form when pressing enter key
+ * @param  {object} e keypress event
+ * @return {boolean}   also e.preventDefault();
+ * @emits prevententer(e.target)
+ */
+formie.prototype.__preventSubmitOnEnter = function (e) {
+	if (e.which === 13 || e.keyCode === 13) {
+		e.preventDefault();
+		this.emit('prevententer', e.target);
+		return false;
+	}
+};
+
+/**
+ * add keypress listeners to form elements that have preventsubmitselectors class to prevent submitting form on enter key
+ */
+formie.prototype.__preventEnterSubmitListeners = function () {
+
+	this.options.preventsubmitelements = this.options.form.querySelectorAll(this.options.preventsubmitselectors);
+	// console.log(this.options.preventsubmitelements);
+	for (var x in this.options.preventsubmitelements) {
+		if (typeof this.options.preventsubmitelements[x] === 'object') {
+			this.options.preventsubmitelements[x].addEventListener('keypress', this.preventSubmitOnEnter.bind(this), false);
+			this.options.preventsubmitelements[x].addEventListener('keydown', this.preventSubmitOnEnter.bind(this), false);
+		}
+	}
+	// document.addEventListener('keypress', preventSubmitOnEnter, false);
+};
+
+/**
+ * add submit event listener to formie form
+ */
+formie.prototype.__ajaxFormEventListers = function () {
+	this.options.form.addEventListener('submit', this.ajaxSubmitFormie.bind(this), false);
+};
+
+/**
+ * sets this.options.form, also adds event listener for formie form [this.ajaxFormEventListers()], adds auto submit form listeners [this.submitOnChangeListeners()], and prevent submit listeners [this.preventEnterSubmitListeners()]
+ * @emits initialized
+ */
+formie.prototype._init = function () {
+	this.options.form = (this.options.form) ? this.options.form : document.querySelector(this.options.ajaxformselector);
+
+	this.ajaxFormEventListers();
+	this.submitOnChangeListeners();
+	this.preventEnterSubmitListeners();
+	this.emit('initialized');
+};
+module.exports = formie;
+
+},{"async":1,"events":12,"forbject":7,"querystring":17,"superagent":9,"util":19,"util-extend":22}],7:[function(require,module,exports){
+/*
+ * forbject
+ * http://github.amexpub.com/modules/forbject
+ *
+ * Copyright (c) 2013 AmexPub. All rights reserved.
+ */
+
+'use strict';
+
+module.exports = require('./lib/forbject');
+
+},{"./lib/forbject":8}],8:[function(require,module,exports){
+/*
+ * forbject
+ * http://github.com/yawetse/forbject
+ * inspired by: https://github.com/serbanghita/formToObject.js
+ * Copyright (c) 2014 Yaw Joseph Etse. All rights reserved.
+ */
+'use strict';
+
+var events = require('events'),
+	extend = require('util-extend'),
+	util = require('util');
+
+/**
+ * A module that represents a forbject object, a componentTab is a page composition tool.
+ * @{@link https://github.com/typesettin/forbject}
+ * @author Yaw Joseph Etse
+ * @copyright Copyright (c) 2014 Typesettin. All rights reserved.
+ * @license MIT
+ * @constructor forbject
+ * @requires module:events
+ * @requires module:util
+ * @param {object} formRef element selector of form element or actual form element
+ */
+var forbject = function (formRef, options) {
+	events.EventEmitter.call(this);
+	var defaultOptions = {
+		autorefresh: false,
+		addelementsonrefresh: true,
+		valuefilter: false
+	},
+	testValuefilterReturn;
+	this.options = extend(defaultOptions, options);
+	if (!formRef) {
+		return false;
+	}
+
+	if(this.options.valuefilter){
+		testValuefilterReturn = this.options.valuefilter('test value');
+		if(typeof testValuefilterReturn === 'undefined'){
+			throw new Error('valuefilter must return a value');
+		}
+	}
+	this.formRef = formRef;
+	this.keyRegex = /[^\[\]]+/g;
+	this.$form = null;
+	this.$formElements = [];
+	this.formObj = {};
+	this.refresh = this._refresh;
+	this.getObject = this._getObject;
+	if (!this.setForm()) {
+		return false;
+	}
+	if (!this.setFormElements()) {
+		return false;
+	}
+	this.setFormObj();
+};
+
+util.inherits(forbject, events.EventEmitter);
+
+/**
+ * refresh form object key/value pair mapping
+ * @return {object} form object
+ * @emits refresh
+ */
+forbject.prototype._refresh = function () {
+	this.formObj = {};
+	if(this.options.addelementsonrefresh){
+		this.setFormElements();
+	}
+	this.setFormObj();
+	this.emit('refresh', this.formObj);
+};
+
+/**
+ * returns form object
+ * @return {object} form object
+ */
+forbject.prototype._getObject = function () {
+	return this.formObj;
+};
+
+/**
+ * Set the main form object we are working on.
+ * @return {object} Form Element Object
+ */
+forbject.prototype.setForm = function () {
+	try {
+		switch (typeof this.formRef) {
+		case 'string':
+			this.$form = document.querySelector(this.formRef);
+			break;
+		case 'object':
+			if (this.isDomNode(this.formRef)) {
+				this.$form = this.formRef;
+			}
+			break;
+		}
+		this.emit('init');
+		return this.$form;
+	}
+	catch (e) {
+		throw new Error(e);
+	}
+};
+
+
+/**
+ * Set the elements we need to parse.
+ * @return {number} number of form elements
+ */
+forbject.prototype.setFormElements = function () {
+	var autoRefreshOnValChange = function () {
+		this.refresh();
+		this.emit('autoRefreshOnValChange',this.getObject());
+	}.bind(this);
+	this.$formElements = this.$form.querySelectorAll('input, button, textarea, select');
+	if (this.options.autorefresh === true) {
+		for (var x = 0; x < this.$formElements.length; x++) {
+			this.$formElements[x].addEventListener('change', autoRefreshOnValChange, false);
+		}
+	}
+	return this.$formElements.length;
+};
+
+/**
+ * Check to see if the object is a HTML node.
+ * @param  {object}  node dom element
+ * @return {Boolean} if object is a dom node
+ */
+forbject.prototype.isDomNode = function (node) {
+	return typeof node === 'object' && 'nodeType' in node && node.nodeType === 1;
+};
+
+/**
+ * Iteration through arrays and objects. Compatible with IE.
+ * @param  {Array}   arr      array to iterate through
+ * @param  {Function} callback async callback
+ */
+forbject.prototype.forEach = function (arr, callback) {
+	if ([].forEach) {
+		return [].forEach.call(arr, callback);
+	}
+
+	var i;
+	for (i in arr) {
+		// Object.prototype.hasOwnProperty instead of arr.hasOwnProperty for IE8 compatibility.
+		if (Object.prototype.hasOwnProperty.call(arr, i)) {
+			callback.call(arr, arr[i]);
+		}
+	}
+
+	return;
+};
+
+/**
+ * Recursive method that adds keys and values of the corresponding fields.
+ * @param {object} result  form object
+ * @param {object} domNode element in form object
+ * @param {string} keys    regex result of form elements
+ * @param {object} value   value of domNode
+ */
+forbject.prototype.addChild = function (result, domNode, keys, value) {
+	value = (this.options.valuefilter) ? this.options.valuefilter(value) : value; 
+
+	// #1 - Single dimensional array.
+	if (keys.length === 1) {
+
+		// We're only interested in the radio that is checked.
+		if (domNode.nodeName === 'INPUT' && domNode.type === 'radio') {
+			if (domNode.checked) {
+				return result[keys] = value;
+			}
+			else {
+				return;
+			}
+		}
+
+		// Checkboxes are a special case. We have to grab each checked values
+		// and put them into an array.
+		if (domNode.nodeName === 'INPUT' && domNode.type === 'checkbox') {
+
+			if (domNode.checked) {
+
+				if (!result[keys]) {
+					result[keys] = [];
+				}
+				return result[keys].push(value);
+
+			}
+			else {
+				return;
+			}
+
+		}
+
+		// Multiple select is a special case.
+		// We have to grab each selected option and put them into an array.
+		if (domNode.nodeName === 'SELECT' && domNode.type === 'select-multiple') {
+
+			result[keys] = [];
+			var DOMchilds = domNode.querySelectorAll('option[selected]');
+			if (DOMchilds) {
+				this.forEach(DOMchilds, function (child) {
+					child.value = (this.options.valuefilter) ? this.options.valuefilter(child.value) : child.value; 
+
+					result[keys].push(child.value);
+				});
+			}
+			return;
+
+		}
+
+
+		// Fallback. The default one to one assign.
+		result[keys] = value;
+
+	}
+
+	// #2 - Multi dimensional array.
+	if (keys.length > 1) {
+
+		if (!result[keys[0]]) {
+			result[keys[0]] = {};
+		}
+
+		return this.addChild(result[keys[0]], domNode, keys.splice(1, keys.length), value);
+
+	}
+
+	return result;
+};
+
+/**
+ * iterate through form element items and append enabled elements to form object
+ */
+forbject.prototype.setFormObj = function () {
+	var test, i = 0;
+
+	for (i = 0; i < this.$formElements.length; i++) {
+		// Ignore the element if the 'name' attribute is empty.
+		// Ignore the 'disabled' elements.
+		if (this.$formElements[i].name && !this.$formElements[i].disabled) {
+			test = this.$formElements[i].name.match(this.keyRegex);
+			this.addChild(this.formObj, this.$formElements[i], test, this.$formElements[i].value);
+		}
+	}
+	this.emit('serialized', this.formObj);
+	return this.formObj;
+};
+module.exports = forbject;
+
+},{"events":12,"util":19,"util-extend":22}],9:[function(require,module,exports){
+/**
+ * Module dependencies.
+ */
+
+var Emitter = require('emitter');
+var reduce = require('reduce');
+
+/**
+ * Root reference for iframes.
+ */
+
+var root;
+if (typeof window !== 'undefined') { // Browser window
+  root = window;
+} else if (typeof self !== 'undefined') { // Web Worker
+  root = self;
+} else { // Other environments
+  root = this;
+}
+
+/**
+ * Noop.
+ */
+
+function noop(){};
+
+/**
+ * Check if `obj` is a host object,
+ * we don't want to serialize these :)
+ *
+ * TODO: future proof, move to compoent land
+ *
+ * @param {Object} obj
+ * @return {Boolean}
+ * @api private
+ */
+
+function isHost(obj) {
+  var str = {}.toString.call(obj);
+
+  switch (str) {
+    case '[object File]':
+    case '[object Blob]':
+    case '[object FormData]':
+      return true;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Determine XHR.
+ */
+
+request.getXHR = function () {
+  if (root.XMLHttpRequest
+      && (!root.location || 'file:' != root.location.protocol
+          || !root.ActiveXObject)) {
+    return new XMLHttpRequest;
+  } else {
+    try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP.6.0'); } catch(e) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP.3.0'); } catch(e) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch(e) {}
+  }
+  return false;
+};
+
+/**
+ * Removes leading and trailing whitespace, added to support IE.
+ *
+ * @param {String} s
+ * @return {String}
+ * @api private
+ */
+
+var trim = ''.trim
+  ? function(s) { return s.trim(); }
+  : function(s) { return s.replace(/(^\s*|\s*$)/g, ''); };
+
+/**
+ * Check if `obj` is an object.
+ *
+ * @param {Object} obj
+ * @return {Boolean}
+ * @api private
+ */
+
+function isObject(obj) {
+  return obj === Object(obj);
+}
+
+/**
+ * Serialize the given `obj`.
+ *
+ * @param {Object} obj
+ * @return {String}
+ * @api private
+ */
+
+function serialize(obj) {
+  if (!isObject(obj)) return obj;
+  var pairs = [];
+  for (var key in obj) {
+    if (null != obj[key]) {
+      pairs.push(encodeURIComponent(key)
+        + '=' + encodeURIComponent(obj[key]));
+    }
+  }
+  return pairs.join('&');
+}
+
+/**
+ * Expose serialization method.
+ */
+
+ request.serializeObject = serialize;
+
+ /**
+  * Parse the given x-www-form-urlencoded `str`.
+  *
+  * @param {String} str
+  * @return {Object}
+  * @api private
+  */
+
+function parseString(str) {
+  var obj = {};
+  var pairs = str.split('&');
+  var parts;
+  var pair;
+
+  for (var i = 0, len = pairs.length; i < len; ++i) {
+    pair = pairs[i];
+    parts = pair.split('=');
+    obj[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
   }
 
-  // If there is a window object, that at least has a document property,
-  // define classie
-  if ( typeof window === "object" && typeof window.document === "object" ) {
-    window.classie = classie;
+  return obj;
+}
+
+/**
+ * Expose parser.
+ */
+
+request.parseString = parseString;
+
+/**
+ * Default MIME type map.
+ *
+ *     superagent.types.xml = 'application/xml';
+ *
+ */
+
+request.types = {
+  html: 'text/html',
+  json: 'application/json',
+  xml: 'application/xml',
+  urlencoded: 'application/x-www-form-urlencoded',
+  'form': 'application/x-www-form-urlencoded',
+  'form-data': 'application/x-www-form-urlencoded'
+};
+
+/**
+ * Default serialization map.
+ *
+ *     superagent.serialize['application/xml'] = function(obj){
+ *       return 'generated xml here';
+ *     };
+ *
+ */
+
+ request.serialize = {
+   'application/x-www-form-urlencoded': serialize,
+   'application/json': JSON.stringify
+ };
+
+ /**
+  * Default parsers.
+  *
+  *     superagent.parse['application/xml'] = function(str){
+  *       return { object parsed from str };
+  *     };
+  *
+  */
+
+request.parse = {
+  'application/x-www-form-urlencoded': parseString,
+  'application/json': JSON.parse
+};
+
+/**
+ * Parse the given header `str` into
+ * an object containing the mapped fields.
+ *
+ * @param {String} str
+ * @return {Object}
+ * @api private
+ */
+
+function parseHeader(str) {
+  var lines = str.split(/\r?\n/);
+  var fields = {};
+  var index;
+  var line;
+  var field;
+  var val;
+
+  lines.pop(); // trailing CRLF
+
+  for (var i = 0, len = lines.length; i < len; ++i) {
+    line = lines[i];
+    index = line.indexOf(':');
+    field = line.slice(0, index).toLowerCase();
+    val = trim(line.slice(index + 1));
+    fields[field] = val;
   }
-},{}],4:[function(require,module,exports){
+
+  return fields;
+}
+
+/**
+ * Return the mime type for the given `str`.
+ *
+ * @param {String} str
+ * @return {String}
+ * @api private
+ */
+
+function type(str){
+  return str.split(/ *; */).shift();
+};
+
+/**
+ * Return header field parameters.
+ *
+ * @param {String} str
+ * @return {Object}
+ * @api private
+ */
+
+function params(str){
+  return reduce(str.split(/ *; */), function(obj, str){
+    var parts = str.split(/ *= */)
+      , key = parts.shift()
+      , val = parts.shift();
+
+    if (key && val) obj[key] = val;
+    return obj;
+  }, {});
+};
+
+/**
+ * Initialize a new `Response` with the given `xhr`.
+ *
+ *  - set flags (.ok, .error, etc)
+ *  - parse header
+ *
+ * Examples:
+ *
+ *  Aliasing `superagent` as `request` is nice:
+ *
+ *      request = superagent;
+ *
+ *  We can use the promise-like API, or pass callbacks:
+ *
+ *      request.get('/').end(function(res){});
+ *      request.get('/', function(res){});
+ *
+ *  Sending data can be chained:
+ *
+ *      request
+ *        .post('/user')
+ *        .send({ name: 'tj' })
+ *        .end(function(res){});
+ *
+ *  Or passed to `.send()`:
+ *
+ *      request
+ *        .post('/user')
+ *        .send({ name: 'tj' }, function(res){});
+ *
+ *  Or passed to `.post()`:
+ *
+ *      request
+ *        .post('/user', { name: 'tj' })
+ *        .end(function(res){});
+ *
+ * Or further reduced to a single call for simple cases:
+ *
+ *      request
+ *        .post('/user', { name: 'tj' }, function(res){});
+ *
+ * @param {XMLHTTPRequest} xhr
+ * @param {Object} options
+ * @api private
+ */
+
+function Response(req, options) {
+  options = options || {};
+  this.req = req;
+  this.xhr = this.req.xhr;
+  // responseText is accessible only if responseType is '' or 'text' and on older browsers
+  this.text = ((this.req.method !='HEAD' && (this.xhr.responseType === '' || this.xhr.responseType === 'text')) || typeof this.xhr.responseType === 'undefined')
+     ? this.xhr.responseText
+     : null;
+  this.statusText = this.req.xhr.statusText;
+  this.setStatusProperties(this.xhr.status);
+  this.header = this.headers = parseHeader(this.xhr.getAllResponseHeaders());
+  // getAllResponseHeaders sometimes falsely returns "" for CORS requests, but
+  // getResponseHeader still works. so we get content-type even if getting
+  // other headers fails.
+  this.header['content-type'] = this.xhr.getResponseHeader('content-type');
+  this.setHeaderProperties(this.header);
+  this.body = this.req.method != 'HEAD'
+    ? this.parseBody(this.text ? this.text : this.xhr.response)
+    : null;
+}
+
+/**
+ * Get case-insensitive `field` value.
+ *
+ * @param {String} field
+ * @return {String}
+ * @api public
+ */
+
+Response.prototype.get = function(field){
+  return this.header[field.toLowerCase()];
+};
+
+/**
+ * Set header related properties:
+ *
+ *   - `.type` the content type without params
+ *
+ * A response of "Content-Type: text/plain; charset=utf-8"
+ * will provide you with a `.type` of "text/plain".
+ *
+ * @param {Object} header
+ * @api private
+ */
+
+Response.prototype.setHeaderProperties = function(header){
+  // content-type
+  var ct = this.header['content-type'] || '';
+  this.type = type(ct);
+
+  // params
+  var obj = params(ct);
+  for (var key in obj) this[key] = obj[key];
+};
+
+/**
+ * Force given parser
+ * 
+ * Sets the body parser no matter type.
+ * 
+ * @param {Function}
+ * @api public
+ */
+
+Response.prototype.parse = function(fn){
+  this.parser = fn;
+  return this;
+};
+
+/**
+ * Parse the given body `str`.
+ *
+ * Used for auto-parsing of bodies. Parsers
+ * are defined on the `superagent.parse` object.
+ *
+ * @param {String} str
+ * @return {Mixed}
+ * @api private
+ */
+
+Response.prototype.parseBody = function(str){
+  var parse = this.parser || request.parse[this.type];
+  return parse && str && (str.length || str instanceof Object)
+    ? parse(str)
+    : null;
+};
+
+/**
+ * Set flags such as `.ok` based on `status`.
+ *
+ * For example a 2xx response will give you a `.ok` of __true__
+ * whereas 5xx will be __false__ and `.error` will be __true__. The
+ * `.clientError` and `.serverError` are also available to be more
+ * specific, and `.statusType` is the class of error ranging from 1..5
+ * sometimes useful for mapping respond colors etc.
+ *
+ * "sugar" properties are also defined for common cases. Currently providing:
+ *
+ *   - .noContent
+ *   - .badRequest
+ *   - .unauthorized
+ *   - .notAcceptable
+ *   - .notFound
+ *
+ * @param {Number} status
+ * @api private
+ */
+
+Response.prototype.setStatusProperties = function(status){
+  // handle IE9 bug: http://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
+  if (status === 1223) {
+    status = 204;
+  }
+
+  var type = status / 100 | 0;
+
+  // status / class
+  this.status = this.statusCode = status;
+  this.statusType = type;
+
+  // basics
+  this.info = 1 == type;
+  this.ok = 2 == type;
+  this.clientError = 4 == type;
+  this.serverError = 5 == type;
+  this.error = (4 == type || 5 == type)
+    ? this.toError()
+    : false;
+
+  // sugar
+  this.accepted = 202 == status;
+  this.noContent = 204 == status;
+  this.badRequest = 400 == status;
+  this.unauthorized = 401 == status;
+  this.notAcceptable = 406 == status;
+  this.notFound = 404 == status;
+  this.forbidden = 403 == status;
+};
+
+/**
+ * Return an `Error` representative of this response.
+ *
+ * @return {Error}
+ * @api public
+ */
+
+Response.prototype.toError = function(){
+  var req = this.req;
+  var method = req.method;
+  var url = req.url;
+
+  var msg = 'cannot ' + method + ' ' + url + ' (' + this.status + ')';
+  var err = new Error(msg);
+  err.status = this.status;
+  err.method = method;
+  err.url = url;
+
+  return err;
+};
+
+/**
+ * Expose `Response`.
+ */
+
+request.Response = Response;
+
+/**
+ * Initialize a new `Request` with the given `method` and `url`.
+ *
+ * @param {String} method
+ * @param {String} url
+ * @api public
+ */
+
+function Request(method, url) {
+  var self = this;
+  Emitter.call(this);
+  this._query = this._query || [];
+  this.method = method;
+  this.url = url;
+  this.header = {};
+  this._header = {};
+  this.on('end', function(){
+    var err = null;
+    var res = null;
+
+    try {
+      res = new Response(self);
+    } catch(e) {
+      err = new Error('Parser is unable to parse the response');
+      err.parse = true;
+      err.original = e;
+      return self.callback(err);
+    }
+
+    self.emit('response', res);
+
+    if (err) {
+      return self.callback(err, res);
+    }
+
+    if (res.status >= 200 && res.status < 300) {
+      return self.callback(err, res);
+    }
+
+    var new_err = new Error(res.statusText || 'Unsuccessful HTTP response');
+    new_err.original = err;
+    new_err.response = res;
+    new_err.status = res.status;
+
+    self.callback(new_err, res);
+  });
+}
+
+/**
+ * Mixin `Emitter`.
+ */
+
+Emitter(Request.prototype);
+
+/**
+ * Allow for extension
+ */
+
+Request.prototype.use = function(fn) {
+  fn(this);
+  return this;
+}
+
+/**
+ * Set timeout to `ms`.
+ *
+ * @param {Number} ms
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.timeout = function(ms){
+  this._timeout = ms;
+  return this;
+};
+
+/**
+ * Clear previous timeout.
+ *
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.clearTimeout = function(){
+  this._timeout = 0;
+  clearTimeout(this._timer);
+  return this;
+};
+
+/**
+ * Abort the request, and clear potential timeout.
+ *
+ * @return {Request}
+ * @api public
+ */
+
+Request.prototype.abort = function(){
+  if (this.aborted) return;
+  this.aborted = true;
+  this.xhr.abort();
+  this.clearTimeout();
+  this.emit('abort');
+  return this;
+};
+
+/**
+ * Set header `field` to `val`, or multiple fields with one object.
+ *
+ * Examples:
+ *
+ *      req.get('/')
+ *        .set('Accept', 'application/json')
+ *        .set('X-API-Key', 'foobar')
+ *        .end(callback);
+ *
+ *      req.get('/')
+ *        .set({ Accept: 'application/json', 'X-API-Key': 'foobar' })
+ *        .end(callback);
+ *
+ * @param {String|Object} field
+ * @param {String} val
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.set = function(field, val){
+  if (isObject(field)) {
+    for (var key in field) {
+      this.set(key, field[key]);
+    }
+    return this;
+  }
+  this._header[field.toLowerCase()] = val;
+  this.header[field] = val;
+  return this;
+};
+
+/**
+ * Remove header `field`.
+ *
+ * Example:
+ *
+ *      req.get('/')
+ *        .unset('User-Agent')
+ *        .end(callback);
+ *
+ * @param {String} field
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.unset = function(field){
+  delete this._header[field.toLowerCase()];
+  delete this.header[field];
+  return this;
+};
+
+/**
+ * Get case-insensitive header `field` value.
+ *
+ * @param {String} field
+ * @return {String}
+ * @api private
+ */
+
+Request.prototype.getHeader = function(field){
+  return this._header[field.toLowerCase()];
+};
+
+/**
+ * Set Content-Type to `type`, mapping values from `request.types`.
+ *
+ * Examples:
+ *
+ *      superagent.types.xml = 'application/xml';
+ *
+ *      request.post('/')
+ *        .type('xml')
+ *        .send(xmlstring)
+ *        .end(callback);
+ *
+ *      request.post('/')
+ *        .type('application/xml')
+ *        .send(xmlstring)
+ *        .end(callback);
+ *
+ * @param {String} type
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.type = function(type){
+  this.set('Content-Type', request.types[type] || type);
+  return this;
+};
+
+/**
+ * Set Accept to `type`, mapping values from `request.types`.
+ *
+ * Examples:
+ *
+ *      superagent.types.json = 'application/json';
+ *
+ *      request.get('/agent')
+ *        .accept('json')
+ *        .end(callback);
+ *
+ *      request.get('/agent')
+ *        .accept('application/json')
+ *        .end(callback);
+ *
+ * @param {String} accept
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.accept = function(type){
+  this.set('Accept', request.types[type] || type);
+  return this;
+};
+
+/**
+ * Set Authorization field value with `user` and `pass`.
+ *
+ * @param {String} user
+ * @param {String} pass
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.auth = function(user, pass){
+  var str = btoa(user + ':' + pass);
+  this.set('Authorization', 'Basic ' + str);
+  return this;
+};
+
+/**
+* Add query-string `val`.
+*
+* Examples:
+*
+*   request.get('/shoes')
+*     .query('size=10')
+*     .query({ color: 'blue' })
+*
+* @param {Object|String} val
+* @return {Request} for chaining
+* @api public
+*/
+
+Request.prototype.query = function(val){
+  if ('string' != typeof val) val = serialize(val);
+  if (val) this._query.push(val);
+  return this;
+};
+
+/**
+ * Write the field `name` and `val` for "multipart/form-data"
+ * request bodies.
+ *
+ * ``` js
+ * request.post('/upload')
+ *   .field('foo', 'bar')
+ *   .end(callback);
+ * ```
+ *
+ * @param {String} name
+ * @param {String|Blob|File} val
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.field = function(name, val){
+  if (!this._formData) this._formData = new root.FormData();
+  this._formData.append(name, val);
+  return this;
+};
+
+/**
+ * Queue the given `file` as an attachment to the specified `field`,
+ * with optional `filename`.
+ *
+ * ``` js
+ * request.post('/upload')
+ *   .attach(new Blob(['<a id="a"><b id="b">hey!</b></a>'], { type: "text/html"}))
+ *   .end(callback);
+ * ```
+ *
+ * @param {String} field
+ * @param {Blob|File} file
+ * @param {String} filename
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.attach = function(field, file, filename){
+  if (!this._formData) this._formData = new root.FormData();
+  this._formData.append(field, file, filename);
+  return this;
+};
+
+/**
+ * Send `data`, defaulting the `.type()` to "json" when
+ * an object is given.
+ *
+ * Examples:
+ *
+ *       // querystring
+ *       request.get('/search')
+ *         .end(callback)
+ *
+ *       // multiple data "writes"
+ *       request.get('/search')
+ *         .send({ search: 'query' })
+ *         .send({ range: '1..5' })
+ *         .send({ order: 'desc' })
+ *         .end(callback)
+ *
+ *       // manual json
+ *       request.post('/user')
+ *         .type('json')
+ *         .send('{"name":"tj"})
+ *         .end(callback)
+ *
+ *       // auto json
+ *       request.post('/user')
+ *         .send({ name: 'tj' })
+ *         .end(callback)
+ *
+ *       // manual x-www-form-urlencoded
+ *       request.post('/user')
+ *         .type('form')
+ *         .send('name=tj')
+ *         .end(callback)
+ *
+ *       // auto x-www-form-urlencoded
+ *       request.post('/user')
+ *         .type('form')
+ *         .send({ name: 'tj' })
+ *         .end(callback)
+ *
+ *       // defaults to x-www-form-urlencoded
+  *      request.post('/user')
+  *        .send('name=tobi')
+  *        .send('species=ferret')
+  *        .end(callback)
+ *
+ * @param {String|Object} data
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.send = function(data){
+  var obj = isObject(data);
+  var type = this.getHeader('Content-Type');
+
+  // merge
+  if (obj && isObject(this._data)) {
+    for (var key in data) {
+      this._data[key] = data[key];
+    }
+  } else if ('string' == typeof data) {
+    if (!type) this.type('form');
+    type = this.getHeader('Content-Type');
+    if ('application/x-www-form-urlencoded' == type) {
+      this._data = this._data
+        ? this._data + '&' + data
+        : data;
+    } else {
+      this._data = (this._data || '') + data;
+    }
+  } else {
+    this._data = data;
+  }
+
+  if (!obj || isHost(data)) return this;
+  if (!type) this.type('json');
+  return this;
+};
+
+/**
+ * Invoke the callback with `err` and `res`
+ * and handle arity check.
+ *
+ * @param {Error} err
+ * @param {Response} res
+ * @api private
+ */
+
+Request.prototype.callback = function(err, res){
+  var fn = this._callback;
+  this.clearTimeout();
+  fn(err, res);
+};
+
+/**
+ * Invoke callback with x-domain error.
+ *
+ * @api private
+ */
+
+Request.prototype.crossDomainError = function(){
+  var err = new Error('Origin is not allowed by Access-Control-Allow-Origin');
+  err.crossDomain = true;
+  this.callback(err);
+};
+
+/**
+ * Invoke callback with timeout error.
+ *
+ * @api private
+ */
+
+Request.prototype.timeoutError = function(){
+  var timeout = this._timeout;
+  var err = new Error('timeout of ' + timeout + 'ms exceeded');
+  err.timeout = timeout;
+  this.callback(err);
+};
+
+/**
+ * Enable transmission of cookies with x-domain requests.
+ *
+ * Note that for this to work the origin must not be
+ * using "Access-Control-Allow-Origin" with a wildcard,
+ * and also must set "Access-Control-Allow-Credentials"
+ * to "true".
+ *
+ * @api public
+ */
+
+Request.prototype.withCredentials = function(){
+  this._withCredentials = true;
+  return this;
+};
+
+/**
+ * Initiate request, invoking callback `fn(res)`
+ * with an instanceof `Response`.
+ *
+ * @param {Function} fn
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.end = function(fn){
+  var self = this;
+  var xhr = this.xhr = request.getXHR();
+  var query = this._query.join('&');
+  var timeout = this._timeout;
+  var data = this._formData || this._data;
+
+  // store callback
+  this._callback = fn || noop;
+
+  // state change
+  xhr.onreadystatechange = function(){
+    if (4 != xhr.readyState) return;
+
+    // In IE9, reads to any property (e.g. status) off of an aborted XHR will
+    // result in the error "Could not complete the operation due to error c00c023f"
+    var status;
+    try { status = xhr.status } catch(e) { status = 0; }
+
+    if (0 == status) {
+      if (self.timedout) return self.timeoutError();
+      if (self.aborted) return;
+      return self.crossDomainError();
+    }
+    self.emit('end');
+  };
+
+  // progress
+  var handleProgress = function(e){
+    if (e.total > 0) {
+      e.percent = e.loaded / e.total * 100;
+    }
+    self.emit('progress', e);
+  };
+  if (this.hasListeners('progress')) {
+    xhr.onprogress = handleProgress;
+  }
+  try {
+    if (xhr.upload && this.hasListeners('progress')) {
+      xhr.upload.onprogress = handleProgress;
+    }
+  } catch(e) {
+    // Accessing xhr.upload fails in IE from a web worker, so just pretend it doesn't exist.
+    // Reported here:
+    // https://connect.microsoft.com/IE/feedback/details/837245/xmlhttprequest-upload-throws-invalid-argument-when-used-from-web-worker-context
+  }
+
+  // timeout
+  if (timeout && !this._timer) {
+    this._timer = setTimeout(function(){
+      self.timedout = true;
+      self.abort();
+    }, timeout);
+  }
+
+  // querystring
+  if (query) {
+    query = request.serializeObject(query);
+    this.url += ~this.url.indexOf('?')
+      ? '&' + query
+      : '?' + query;
+  }
+
+  // initiate request
+  xhr.open(this.method, this.url, true);
+
+  // CORS
+  if (this._withCredentials) xhr.withCredentials = true;
+
+  // body
+  if ('GET' != this.method && 'HEAD' != this.method && 'string' != typeof data && !isHost(data)) {
+    // serialize stuff
+    var contentType = this.getHeader('Content-Type');
+    var serialize = request.serialize[contentType ? contentType.split(';')[0] : ''];
+    if (serialize) data = serialize(data);
+  }
+
+  // set header fields
+  for (var field in this.header) {
+    if (null == this.header[field]) continue;
+    xhr.setRequestHeader(field, this.header[field]);
+  }
+
+  // send stuff
+  this.emit('request', this);
+  xhr.send(data);
+  return this;
+};
+
+/**
+ * Faux promise support
+ *
+ * @param {Function} fulfill
+ * @param {Function} reject
+ * @return {Request}
+ */
+
+Request.prototype.then = function (fulfill, reject) {
+  return this.end(function(err, res) {
+    err ? reject(err) : fulfill(res);
+  });
+}
+
+/**
+ * Expose `Request`.
+ */
+
+request.Request = Request;
+
+/**
+ * Issue a request:
+ *
+ * Examples:
+ *
+ *    request('GET', '/users').end(callback)
+ *    request('/users').end(callback)
+ *    request('/users', callback)
+ *
+ * @param {String} method
+ * @param {String|Function} url or callback
+ * @return {Request}
+ * @api public
+ */
+
+function request(method, url) {
+  // callback
+  if ('function' == typeof url) {
+    return new Request('GET', method).end(url);
+  }
+
+  // url first
+  if (1 == arguments.length) {
+    return new Request('GET', method);
+  }
+
+  return new Request(method, url);
+}
+
+/**
+ * GET `url` with optional callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed|Function} data or fn
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.get = function(url, data, fn){
+  var req = request('GET', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.query(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * HEAD `url` with optional callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed|Function} data or fn
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.head = function(url, data, fn){
+  var req = request('HEAD', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.send(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * DELETE `url` with optional callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.del = function(url, fn){
+  var req = request('DELETE', url);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * PATCH `url` with optional `data` and callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed} data
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.patch = function(url, data, fn){
+  var req = request('PATCH', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.send(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * POST `url` with optional `data` and callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed} data
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.post = function(url, data, fn){
+  var req = request('POST', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.send(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * PUT `url` with optional `data` and callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed|Function} data or fn
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.put = function(url, data, fn){
+  var req = request('PUT', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.send(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * Expose `request`.
+ */
+
+module.exports = request;
+
+},{"emitter":10,"reduce":11}],10:[function(require,module,exports){
+
+/**
+ * Expose `Emitter`.
+ */
+
+module.exports = Emitter;
+
+/**
+ * Initialize a new `Emitter`.
+ *
+ * @api public
+ */
+
+function Emitter(obj) {
+  if (obj) return mixin(obj);
+};
+
+/**
+ * Mixin the emitter properties.
+ *
+ * @param {Object} obj
+ * @return {Object}
+ * @api private
+ */
+
+function mixin(obj) {
+  for (var key in Emitter.prototype) {
+    obj[key] = Emitter.prototype[key];
+  }
+  return obj;
+}
+
+/**
+ * Listen on the given `event` with `fn`.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.on =
+Emitter.prototype.addEventListener = function(event, fn){
+  this._callbacks = this._callbacks || {};
+  (this._callbacks[event] = this._callbacks[event] || [])
+    .push(fn);
+  return this;
+};
+
+/**
+ * Adds an `event` listener that will be invoked a single
+ * time then automatically removed.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.once = function(event, fn){
+  var self = this;
+  this._callbacks = this._callbacks || {};
+
+  function on() {
+    self.off(event, on);
+    fn.apply(this, arguments);
+  }
+
+  on.fn = fn;
+  this.on(event, on);
+  return this;
+};
+
+/**
+ * Remove the given callback for `event` or all
+ * registered callbacks.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.off =
+Emitter.prototype.removeListener =
+Emitter.prototype.removeAllListeners =
+Emitter.prototype.removeEventListener = function(event, fn){
+  this._callbacks = this._callbacks || {};
+
+  // all
+  if (0 == arguments.length) {
+    this._callbacks = {};
+    return this;
+  }
+
+  // specific event
+  var callbacks = this._callbacks[event];
+  if (!callbacks) return this;
+
+  // remove all handlers
+  if (1 == arguments.length) {
+    delete this._callbacks[event];
+    return this;
+  }
+
+  // remove specific handler
+  var cb;
+  for (var i = 0; i < callbacks.length; i++) {
+    cb = callbacks[i];
+    if (cb === fn || cb.fn === fn) {
+      callbacks.splice(i, 1);
+      break;
+    }
+  }
+  return this;
+};
+
+/**
+ * Emit `event` with the given args.
+ *
+ * @param {String} event
+ * @param {Mixed} ...
+ * @return {Emitter}
+ */
+
+Emitter.prototype.emit = function(event){
+  this._callbacks = this._callbacks || {};
+  var args = [].slice.call(arguments, 1)
+    , callbacks = this._callbacks[event];
+
+  if (callbacks) {
+    callbacks = callbacks.slice(0);
+    for (var i = 0, len = callbacks.length; i < len; ++i) {
+      callbacks[i].apply(this, args);
+    }
+  }
+
+  return this;
+};
+
+/**
+ * Return array of callbacks for `event`.
+ *
+ * @param {String} event
+ * @return {Array}
+ * @api public
+ */
+
+Emitter.prototype.listeners = function(event){
+  this._callbacks = this._callbacks || {};
+  return this._callbacks[event] || [];
+};
+
+/**
+ * Check if this emitter has `event` handlers.
+ *
+ * @param {String} event
+ * @return {Boolean}
+ * @api public
+ */
+
+Emitter.prototype.hasListeners = function(event){
+  return !! this.listeners(event).length;
+};
+
+},{}],11:[function(require,module,exports){
+
+/**
+ * Reduce `arr` with `fn`.
+ *
+ * @param {Array} arr
+ * @param {Function} fn
+ * @param {Mixed} initial
+ *
+ * TODO: combatible error handling?
+ */
+
+module.exports = function(arr, fn, initial){  
+  var idx = 0;
+  var len = arr.length;
+  var curr = arguments.length == 3
+    ? initial
+    : arr[idx++];
+
+  while (idx < len) {
+    curr = fn.call(null, curr, arr[idx], ++idx, arr);
+  }
+  
+  return curr;
+};
+},{}],12:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1521,7 +3889,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],5:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -1546,38 +3914,72 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],6:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
 var queue = [];
 var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
 
 function drainQueue() {
     if (draining) {
         return;
     }
+    var timeout = setTimeout(cleanUpNextTick);
     draining = true;
-    var currentQueue;
+
     var len = queue.length;
     while(len) {
         currentQueue = queue;
         queue = [];
-        var i = -1;
-        while (++i < len) {
-            currentQueue[i]();
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
         }
+        queueIndex = -1;
         len = queue.length;
     }
+    currentQueue = null;
     draining = false;
+    clearTimeout(timeout);
 }
+
 process.nextTick = function (fun) {
-    queue.push(fun);
-    if (!draining) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
         setTimeout(drainQueue, 0);
     }
 };
 
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
 process.title = 'browser';
 process.browser = true;
 process.env = {};
@@ -1599,21 +4001,199 @@ process.binding = function (name) {
     throw new Error('process.binding is not supported');
 };
 
-// TODO(shtylman)
 process.cwd = function () { return '/' };
 process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 process.umask = function() { return 0; };
 
-},{}],7:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+'use strict';
+
+// If obj.hasOwnProperty has been overridden, then calling
+// obj.hasOwnProperty(prop) will break.
+// See: https://github.com/joyent/node/issues/1707
+function hasOwnProperty(obj, prop) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+module.exports = function(qs, sep, eq, options) {
+  sep = sep || '&';
+  eq = eq || '=';
+  var obj = {};
+
+  if (typeof qs !== 'string' || qs.length === 0) {
+    return obj;
+  }
+
+  var regexp = /\+/g;
+  qs = qs.split(sep);
+
+  var maxKeys = 1000;
+  if (options && typeof options.maxKeys === 'number') {
+    maxKeys = options.maxKeys;
+  }
+
+  var len = qs.length;
+  // maxKeys <= 0 means that we should not limit keys count
+  if (maxKeys > 0 && len > maxKeys) {
+    len = maxKeys;
+  }
+
+  for (var i = 0; i < len; ++i) {
+    var x = qs[i].replace(regexp, '%20'),
+        idx = x.indexOf(eq),
+        kstr, vstr, k, v;
+
+    if (idx >= 0) {
+      kstr = x.substr(0, idx);
+      vstr = x.substr(idx + 1);
+    } else {
+      kstr = x;
+      vstr = '';
+    }
+
+    k = decodeURIComponent(kstr);
+    v = decodeURIComponent(vstr);
+
+    if (!hasOwnProperty(obj, k)) {
+      obj[k] = v;
+    } else if (isArray(obj[k])) {
+      obj[k].push(v);
+    } else {
+      obj[k] = [obj[k], v];
+    }
+  }
+
+  return obj;
+};
+
+var isArray = Array.isArray || function (xs) {
+  return Object.prototype.toString.call(xs) === '[object Array]';
+};
+
+},{}],16:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+'use strict';
+
+var stringifyPrimitive = function(v) {
+  switch (typeof v) {
+    case 'string':
+      return v;
+
+    case 'boolean':
+      return v ? 'true' : 'false';
+
+    case 'number':
+      return isFinite(v) ? v : '';
+
+    default:
+      return '';
+  }
+};
+
+module.exports = function(obj, sep, eq, name) {
+  sep = sep || '&';
+  eq = eq || '=';
+  if (obj === null) {
+    obj = undefined;
+  }
+
+  if (typeof obj === 'object') {
+    return map(objectKeys(obj), function(k) {
+      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
+      if (isArray(obj[k])) {
+        return map(obj[k], function(v) {
+          return ks + encodeURIComponent(stringifyPrimitive(v));
+        }).join(sep);
+      } else {
+        return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
+      }
+    }).join(sep);
+
+  }
+
+  if (!name) return '';
+  return encodeURIComponent(stringifyPrimitive(name)) + eq +
+         encodeURIComponent(stringifyPrimitive(obj));
+};
+
+var isArray = Array.isArray || function (xs) {
+  return Object.prototype.toString.call(xs) === '[object Array]';
+};
+
+function map (xs, f) {
+  if (xs.map) return xs.map(f);
+  var res = [];
+  for (var i = 0; i < xs.length; i++) {
+    res.push(f(xs[i], i));
+  }
+  return res;
+}
+
+var objectKeys = Object.keys || function (obj) {
+  var res = [];
+  for (var key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) res.push(key);
+  }
+  return res;
+};
+
+},{}],17:[function(require,module,exports){
+'use strict';
+
+exports.decode = exports.parse = require('./decode');
+exports.encode = exports.stringify = require('./encode');
+
+},{"./decode":15,"./encode":16}],18:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],8:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -2203,7 +4783,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":7,"_process":6,"inherits":5}],9:[function(require,module,exports){
+},{"./support/isBuffer":18,"_process":14,"inherits":13}],20:[function(require,module,exports){
 /*
  * pushie
  * http://github.amexpub.com/modules/pushie
@@ -2215,7 +4795,7 @@ function hasOwnProperty(obj, prop) {
 
 module.exports = require('./lib/pushie');
 
-},{"./lib/pushie":10}],10:[function(require,module,exports){
+},{"./lib/pushie":21}],21:[function(require,module,exports){
 /*
  * pushie
  * http://github.com/yawetse/pushie
@@ -2386,7 +4966,7 @@ pushie.prototype.__init = function () {
 };
 module.exports = pushie;
 
-},{"events":4,"util":8,"util-extend":11}],11:[function(require,module,exports){
+},{"events":12,"util":19,"util-extend":22}],22:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2421,18 +5001,16 @@ function extend(origin, add) {
   return origin;
 }
 
-},{}],12:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
-var ajaxlinks,
-	navlinks,
-	PushMenu = require('stylie.pushmenu'),
-	Pushie = require('pushie'),
-	asyncAdminPushie,
+var Pushie = require('pushie'),
 	async = require('async'),
 	classie = require('classie'),
+	Formie = require('formie'),
 	StylieNotification = require('stylie.notifications'),
-	StylieTable = require('stylie.tables'),
-	StyliePushMenu,
+	// StylieTable = require('stylie.tables'),
+	// StyliePushMenu,
+	asyncAdminPushie,
 	asyncHTMLWrapper,
 	asyncHTMLContentContainer,
 	asyncContentSelector = '#ts-asyncadmin-content-container',
@@ -2440,13 +5018,35 @@ var ajaxlinks,
 	asyncFlashFunctions = [],
 	request = require('superagent'),
 	mtpms,
-	menuElement,
+	menuElement, ajaxlinks,
+	navlinks,
+	mobile_nav_menu_overlay,
+	mobile_nav_menu,
 	menuTriggerElement,
+	AdminFormies = {},
 	nav_header,
 	preloaderElement;
 
-window.createAdminTable = function (options) {
-	return new StylieTable(options);
+var showPreloader = function (element) {
+	var plElement = element || preloaderElement;
+	classie.remove(plElement, 'hide');
+	classie.remove(plElement, 'hide-preloading');
+};
+
+var endPreloader = function (element) {
+	var plElement = element || preloaderElement;
+	classie.add(plElement, 'hide-preloading');
+	var t = setTimeout(function () {
+		clearTimeout(t);
+		classie.add(plElement, 'hide');
+	}, 400);
+};
+
+var handleUncaughtError = function (e) {
+	endPreloader();
+	window.showErrorNotificaton({
+		message: e.message
+	});
 };
 
 var preventDefaultClick = function (e) {
@@ -2462,24 +5062,37 @@ var initFlashMessage = function () {
 	});
 };
 
-var showPreloader = function (element) {
-	var plElement = element || preloaderElement;
-	classie.remove(plElement, 'hide');
-	classie.remove(plElement, 'hide-preloading');
-};
 window.showPreloader = showPreloader;
-
-var endPreloader = function (element) {
-	var plElement = element || preloaderElement;
-	classie.add(plElement, 'hide-preloading');
-	var t = setTimeout(function () {
-		clearTimeout(t);
-		classie.add(plElement, 'hide');
-	}, 400);
-};
 window.endPreloader = endPreloader;
 
+var isMobileNavOpen = function () {
+	return classie.has(mobile_nav_menu, 'slideOutLeft') || classie.has(mobile_nav_menu, 'initialState');
+};
+
+var closeMobileNav = function () {
+	classie.add(mobile_nav_menu_overlay, 'hide');
+	classie.add(mobile_nav_menu, 'slideOutLeft');
+	classie.remove(mobile_nav_menu, 'slideInLeft');
+};
+
+var controlMobileNav = function () {
+	if (isMobileNavOpen()) {
+		classie.remove(mobile_nav_menu, 'initialState');
+		classie.add(mobile_nav_menu, 'slideInLeft');
+		classie.remove(mobile_nav_menu, 'slideOutLeft');
+		classie.remove(mobile_nav_menu_overlay, 'hide');
+	}
+	else {
+		closeMobileNav();
+	}
+};
+
+var navOverlayClickHandler = function () {
+	closeMobileNav();
+};
+
 var loadAjaxPage = function (options) {
+	closeMobileNav();
 	var htmlDivElement = document.createElement('div'),
 		newPageTitle,
 		newPageContent,
@@ -2543,28 +5156,150 @@ var loadAjaxPage = function (options) {
 		});
 };
 
-var navlinkclickhandler = function (e) {
-	var etarget = e.target,
-		etargethref = etarget.href;
 
-	if (classie.has(etarget, 'async-admin-ajax-link')) {
-		e.preventDefault();
-		// console.log('etargethref', etargethref);
-		loadAjaxPage({
-			datahref: etargethref,
-			pushState: true
-		});
-		StyliePushMenu._resetMenu();
-		return false;
-	}
+var defaultAjaxFormie = function (formElement) {
+	var _csrfToken = formElement.querySelector('input[name="_csrf"]') || document.querySelector('input[name="_csrf"]');
+
+	return new Formie({
+		ajaxformselector: '#' + formElement.getAttribute('id'),
+		// headers: {'customheader':'customvalue'},
+		postdata: {
+			'_csrf': _csrfToken.value,
+			format: 'json'
+		},
+		queryparameters: {
+			'_csrf': _csrfToken.value,
+			format: 'json'
+		},
+		beforesubmitcallback: function (beforeEvent, formElement) {
+			var beforesubmitFunctionString = formElement.getAttribute('data-beforesubmitfunction'),
+				beforefn = window[beforesubmitFunctionString];
+			// is object a function?
+			if (typeof beforefn === 'function') {
+				beforefn(beforeEvent, formElement);
+			}
+			window.showPreloader();
+		},
+		successcallback: function (response) {
+			window.endPreloader();
+			if (response.body && response.body.result && response.body.result === 'error') {
+				window.showStylieNotification({
+					message: response.body.data.error.message || response.body.data.error,
+					type: 'error'
+				});
+			}
+			else {
+				if (response.body && response.body.result && response.body.result === 'success' && response.body.data.redirecturl) {
+					window.location = response.body.data.redirecturl;
+				}
+				window.showStylieNotification({
+					message: 'Successful'
+				});
+				var successsubmitFunctionString = formElement.getAttribute('data-successsubmitfunction'),
+					successfn = window[successsubmitFunctionString];
+				// is object a function?
+				if (typeof successfn === 'function') {
+					successfn(response);
+				}
+				if (formElement.getAttribute('data-successredirect-href')) {
+					var successredirecthref = formElement.getAttribute('data-successredirect-href');
+					loadAjaxPage({
+						datahref: successredirecthref,
+						pushState: true
+					});
+				}
+			}
+		},
+		errorcallback: function (error, response) {
+			// console.log('error', error);
+			// console.log('response.response', response.response);
+			// console.log('response', response);
+
+			try {
+				var errormessage, jsonmessage;
+				if (response.body && response.body.error && response.body.error.message) {
+					errormessage = response.body.error.message;
+				}
+				else if (response.body && response.body.result && response.body.result === 'error') {
+					errormessage = response.body.data.error.message || response.body.data.error;
+				}
+				else {
+					jsonmessage = JSON.parse(response.response);
+					errormessage = jsonmessage;
+				}
+				window.showErrorNotificaton({
+					message: errormessage
+				});
+			}
+			catch (e) {
+				if (error.message) {
+					window.showErrorNotificaton({
+						message: error.message
+					});
+				}
+				else {
+					window.showErrorNotificaton({
+						message: error
+					});
+				}
+			}
+
+			window.endPreloader();
+			var errorsubmitFunctionString = formElement.getAttribute('data-errorsubmitfunction'),
+				errorfn = window[errorsubmitFunctionString];
+			// is object a function?
+			if (typeof errorfn === 'function') {
+				errorfn(error, response);
+			}
+		}
+	});
 };
 
+var initAjaxFormies = function () {
+	var ajaxForm;
+	var ajaxforms = document.querySelectorAll('.async-admin-ajax-forms');
+
+	AdminFormies = {};
+	//console.log('ajaxforms', ajaxforms);
+	try {
+		if (ajaxforms && ajaxforms.length > 0) {
+			for (var x = 0; x < ajaxforms.length; x++) {
+				ajaxForm = ajaxforms[x];
+				//ajaxFormies[ajaxForm.getAttribute('name')] = 
+				AdminFormies[ajaxForm.id] = defaultAjaxFormie(ajaxForm);
+			}
+		}
+
+		window.AdminFormies = AdminFormies;
+	}
+	catch (e) {
+		handleUncaughtError(e);
+	}
+};
+// var navlinkclickhandler = function (e) {
+// 	var etarget = e.target,
+// 		etargethref = etarget.href;
+
+// 	if (classie.has(etarget, 'async-admin-ajax-link')) {
+// 		e.preventDefault();
+// 		// console.log('etargethref', etargethref);
+// 		loadAjaxPage({
+// 			datahref: etargethref,
+// 			pushState: true
+// 		});
+// 		// StyliePushMenu._resetMenu();
+// 		return false;
+// 	}
+// };
+
 var statecallback = function (data) {
-	// console.log('data', data);
-	loadAjaxPage({
-		datahref: data.datahref,
-		pushState: false
-	});
+	console.log('data', data);
+	if (data && data.datahref) {
+		loadAjaxPage({
+			datahref: data.datahref,
+			pushState: false
+		});
+	}
 };
 var pushstatecallback = function ( /*data*/ ) {
 	// console.log('data', data);
@@ -2641,6 +5376,21 @@ window.showStylieNotification = function (options) {
 	}).show();
 };
 
+var async_admin_ajax_link_handler = function (e) {
+	var etarget = e.target,
+		etargethref = etarget.href || etarget.getAttribute('data-ajax-href');
+
+	if (classie.has(etarget, 'async-admin-ajax-link')) {
+		e.preventDefault();
+		// console.log('etargethref', etargethref);
+		loadAjaxPage({
+			datahref: etargethref,
+			pushState: true
+		});
+		// StyliePushMenu._resetMenu();
+		return false;
+	}
+};
 
 window.addEventListener('load', function () {
 	asyncHTMLWrapper = document.querySelector('#ts-asyncadmin-content-wrapper');
@@ -2652,20 +5402,27 @@ window.addEventListener('load', function () {
 	mtpms = document.querySelector('main.ts-pushmenu-scroller');
 	ajaxlinks = document.querySelectorAll('.async-admin-ajax-link');
 	preloaderElement = document.querySelector('#ts-preloading');
+	mobile_nav_menu = document.getElementById('ts-nav-menu');
+	mobile_nav_menu_overlay = document.querySelector('.ts-nav-overlay');
 
 	for (var u = 0; u < ajaxlinks.length; u++) {
 		ajaxlinks[u].addEventListener('click', preventDefaultClick, false);
 	}
-
-	if (navlinks) {
-		navlinks.addEventListener('mousedown', navlinkclickhandler, false);
+	mobile_nav_menu_overlay.addEventListener('click', navOverlayClickHandler, false);
+	menuTriggerElement.addEventListener('click', controlMobileNav, false);
+	if (mobile_nav_menu) {
+		// mobile_nav_menu.addEventListener('mousedown', async_admin_ajax_link_handler, false);
+		mobile_nav_menu.addEventListener('click', async_admin_ajax_link_handler, false);
 	}
-	StyliePushMenu = new PushMenu({
-		el: menuElement,
-		trigger: menuTriggerElement,
-		type: 'overlap', // 'overlap', // 'cover',
-		// position: 'right'
-	});
+	// if (navlinks) {
+	// 	navlinks.addEventListener('mousedown', navlinkclickhandler, false);
+	// }
+	// StyliePushMenu = new PushMenu({
+	// 	el: menuElement,
+	// 	trigger: menuTriggerElement,
+	// 	type: 'overlap', // 'overlap', // 'cover',
+	// 	// position: 'right'
+	// });
 	asyncAdminPushie = new Pushie({
 		replacecallback: pushstatecallback,
 		pushcallback: pushstatecallback,
@@ -2673,10 +5430,11 @@ window.addEventListener('load', function () {
 	});
 	window.asyncHTMLWrapper = asyncHTMLWrapper;
 	initFlashMessage();
-	window.StyliePushMenu = StyliePushMenu;
+	initAjaxFormies();
+	// window.StyliePushMenu = StyliePushMenu;
 });
 
-},{"async":1,"classie":2,"pushie":9,"stylie.notifications":13,"stylie.pushmenu":20,"stylie.tables":27,"superagent":34}],13:[function(require,module,exports){
+},{"async":1,"classie":2,"formie":5,"pushie":20,"stylie.notifications":24,"superagent":31}],24:[function(require,module,exports){
 /*
  * stylie.notifications
  * https://github.com/typesettin/stylie.notifications
@@ -2688,7 +5446,7 @@ window.addEventListener('load', function () {
 
 module.exports = require('./lib/stylie.notifications');
 
-},{"./lib/stylie.notifications":14}],14:[function(require,module,exports){
+},{"./lib/stylie.notifications":25}],25:[function(require,module,exports){
 /*
  * stylie.notifications
  * https://github.com/typesettin/stylie.notifications
@@ -2885,11 +5643,13 @@ StylieNotifications.prototype._show = function () {
 };
 module.exports = StylieNotifications;
 
-},{"classie":15,"detectcss":17,"events":4,"util":8,"util-extend":19}],15:[function(require,module,exports){
+},{"classie":26,"detectcss":29,"events":12,"util":19,"util-extend":34}],26:[function(require,module,exports){
 arguments[4][2][0].apply(exports,arguments)
-},{"./lib/classie":16,"dup":2}],16:[function(require,module,exports){
+},{"./lib/classie":28,"dup":2}],27:[function(require,module,exports){
 arguments[4][3][0].apply(exports,arguments)
-},{"dup":3}],17:[function(require,module,exports){
+},{"dup":3}],28:[function(require,module,exports){
+arguments[4][4][0].apply(exports,arguments)
+},{"./class_list_ployfill":27,"dup":4}],29:[function(require,module,exports){
 /*
  * detectCSS
  * http://github.amexpub.com/modules/detectCSS
@@ -2899,7 +5659,7 @@ arguments[4][3][0].apply(exports,arguments)
 
 module.exports = require('./lib/detectCSS');
 
-},{"./lib/detectCSS":18}],18:[function(require,module,exports){
+},{"./lib/detectCSS":30}],30:[function(require,module,exports){
 /*
  * detectCSS
  * http://github.amexpub.com/modules
@@ -2938,558 +5698,7 @@ exports.prefixed = function(style){
     }
     return false;
 };
-},{}],19:[function(require,module,exports){
-arguments[4][11][0].apply(exports,arguments)
-},{"dup":11}],20:[function(require,module,exports){
-/*
- * stylie.pushmenu
- * https://github.com/typesettin/stylie.pushmenu
- *
- * Copyright (c) 2013 AmexPub. All rights reserved.
- */
-
-'use strict';
-
-module.exports = require('./lib/stylie.pushmenu');
-
-},{"./lib/stylie.pushmenu":21}],21:[function(require,module,exports){
-/*
- * stylie.pushmenu
- * https://github.com/typesettin/stylie.pushmenu
- *
- * Copyright (c) 2014 Yaw Joseph Etse. All rights reserved.
- */
-'use strict';
-
-var classie = require('classie'),
-	detectCSS = require('detectcss'),
-	extend = require('util-extend'),
-	events = require('events'),
-	util = require('util');
-
-/**
- * A module that represents a PushMenu object, a componentTab is a page composition tool.
- * @{@link https://github.com/typesettin/stylie.pushmenu}
- * @author Yaw Joseph Etse
- * @copyright Copyright (c) 2014 Typesettin. All rights reserved.
- * @license MIT
- * @constructor PushMenu
- * @requires module:util-extent
- * @requires module:util
- * @requires module:events
- * @param {object} el element of tab container
- * @param {object} options configuration options
- */
-var PushMenu = function (options) {
-	events.EventEmitter.call(this);
-
-	this.options = extend(this.options, options);
-	// console.log(this.options);
-	this._init();
-	// this.show = this._show;
-	// this.hide = this._hide;
-};
-
-util.inherits(PushMenu, events.EventEmitter);
-
-// taken from https://github.com/inuyaksa/jquery.nicescroll/blob/master/jquery.nicescroll.js
-var hasParent = function (e, id) {
-	if (!e) {
-		return false;
-	}
-	else {
-		var el = e.target || e.srcElement || e || false;
-		while (el && el.id !== id) {
-			el = el.parentNode || false;
-		}
-		return (el !== false);
-	}
-};
-
-// returns the depth of the element "e" relative to element with id=id
-// for this calculation only parents with classname = waypoint are considered
-var getLevelDepth = function (e, id, waypoint, cnt) {
-	cnt = cnt || 0;
-	if (e.id.indexOf(id) >= 0) {
-		return cnt;
-	}
-	else {
-		if (classie.has(e, waypoint)) {
-			++cnt;
-		}
-		return e.parentNode && getLevelDepth(e.parentNode, id, waypoint, cnt);
-	}
-};
-
-// returns the closest element to 'e' that has class "classname"
-var closest = function (e, classname) {
-	if (classie.has(e, classname)) {
-		return e;
-	}
-	return e.parentNode && closest(e.parentNode, classname);
-};
-
-
-/** module default configuration */
-PushMenu.prototype.options = {
-	el: null,
-	trigger: null,
-	// overlap: there will be a gap between open levels
-	// cover: the open levels will be on top of any previous open level
-	type: 'overlap', // overlap || cover
-	// space between each overlaped level
-	levelSpacing: 40,
-	level: 0,
-	// classname for the element (if any) that when clicked closes the current level
-	position: 'left',
-	backClass: 'ts-pushmenu-mp-back',
-	rightClass: 'ts-pushmenu-mp-right',
-	pushedClass: 'ts-pushmenu-mp-pushed',
-	levelClass: 'ts-pushmenu-mp-level',
-	levelSelector: 'div.ts-pushmenu-mp-level',
-	wrapperSelector: '#ts-pushmenu-mp-pusher',
-	menuOpenClass: 'ts-pushmenu-mp-level-open',
-	menuOverlayClass: 'ts-pushmenu-mp-level-overlay',
-};
-/**
- * initializes modals and shows current tab.
- * @emits modalsInitialized
- */
-PushMenu.prototype._init = function () {
-	var self = this;
-	// if menu is open or not
-	this.options.open = false;
-	this.options.type = (this.options.type === 'cover') ? 'cover' : 'overlap';
-	this.options.support = detectCSS.feature('transform');
-	// level depth
-	this.options.level = 0;
-	// the moving wrapper
-	this.options.wrapper = document.querySelector(this.options.wrapperSelector);
-	// the mp-level elements
-	this.options.levels = Array.prototype.slice.call(this.options.el.querySelectorAll(this.options.levelSelector));
-	// save the depth of each of these mp-level elements
-	this.options.levels.forEach(function (el /*, i*/ ) {
-		el.setAttribute('data-level', getLevelDepth(el, self.options.el.id, self.options.levelClass));
-		// console.log('levels i', i);
-	});
-	// the menu items
-	this.options.menuItems = Array.prototype.slice.call(this.options.el.querySelectorAll('li'));
-	// if type == "cover" these will serve as hooks to move back to the previous level
-	this.options.levelBack = Array.prototype.slice.call(this.options.el.querySelectorAll('.' + this.options.backClass));
-	// event type (if mobile use touch events)
-	// this.options.eventtype = mobilecheck() ? 'touchstart' : 'click';
-	// add the class mp-overlap or mp-cover to the main element depending on options.type
-	classie.add(this.options.el, 'ts-pushmenu-mp-' + this.options.type);
-	if (this.options.position === 'right') {
-		classie.add(this.options.el, this.options.rightClass);
-		classie.add(this.options.wrapper, this.options.rightClass);
-	}
-	// initialize / bind the necessary events
-	this._initEvents();
-	this.emit('modalsInitialized');
-};
-
-/**
- * handle tab click events.
- */
-PushMenu.prototype._initEvents = function () {
-	var self = this;
-
-	// the menu should close if clicking somewhere on the body
-	var bodyClickFn = function (el) {
-		self._resetMenu();
-		el.removeEventListener('click', bodyClickFn);
-	};
-
-	// open (or close) the menu
-	this.options.trigger.addEventListener('click', function (ev) {
-		ev.stopPropagation();
-		ev.preventDefault();
-		if (self.options.open) {
-			self._resetMenu();
-		}
-		else {
-			self._openMenu();
-			// the menu should close if clicking somewhere on the body (excluding clicks on the menu)
-			document.addEventListener('click', function (ev) {
-				if (self.options.open && !hasParent(ev.target, self.options.el.id)) {
-					bodyClickFn(this);
-				}
-			});
-		}
-	});
-
-	// opening a sub level menu
-	this.options.menuItems.forEach(function (el /*, i*/ ) {
-		// console.log('this.options.menuItems i', i);
-		// check if it has a sub level
-		var subLevel = el.querySelector(self.options.levelSelector);
-		if (subLevel) {
-			el.querySelector('a').addEventListener('click', function (ev) {
-				ev.preventDefault();
-				var level = closest(el, self.options.levelClass).getAttribute('data-level');
-				if (self.options.level <= level) {
-					ev.stopPropagation();
-					classie.add(closest(el, self.options.levelClass), self.options.menuOverlayClass);
-					self._openMenu(subLevel);
-				}
-			});
-		}
-	});
-
-	// closing the sub levels :
-	// by clicking on the visible part of the level element
-	this.options.levels.forEach(function (el /*, i*/ ) {
-		// console.log('this.options.levels i', i);
-		el.addEventListener('click', function (ev) {
-			ev.stopPropagation();
-			var level = el.getAttribute('data-level');
-			if (self.options.level > level) {
-				self.options.level = level;
-				// console.log('self.options.level', self.options.level)
-				classie.remove(ev.target, self.options.menuOverlayClass);
-				self._closeMenu();
-			}
-		});
-	});
-
-	// by clicking on a specific element
-	this.options.levelBack.forEach(function (el /*, i*/ ) {
-		// console.log('this.options.levelBack i', i);
-		el.addEventListener('click', function (ev) {
-			ev.preventDefault();
-			var level = closest(el, self.options.levelClass).getAttribute('data-level');
-			if (self.options.level <= level) {
-				ev.stopPropagation();
-				self.options.level = closest(el, self.options.levelClass).getAttribute('data-level') - 1;
-				self.options.level === 0 ? self._resetMenu() : self._closeMenu();
-			}
-		});
-	});
-	this.emit('modalsEventsInitialized');
-};
-
-/**
- * _openMenu a modal component.
- * @param {string} modal name
- * @emits showModal
- */
-PushMenu.prototype._openMenu = function (subLevel) {
-	// increment level depth
-	++this.options.level;
-
-	// move the main wrapper
-	var levelFactor = (this.options.level - 1) * this.options.levelSpacing,
-		translateVal;
-
-	if (this.options.position === 'right') {
-		translateVal = this.options.type === 'overlap' ? this.options.el.offsetWidth - levelFactor : this.options.el.offsetWidth;
-		translateVal = translateVal * -1;
-	}
-	else {
-		translateVal = this.options.type === 'overlap' ? this.options.el.offsetWidth + levelFactor : this.options.el.offsetWidth;
-	}
-
-	this._setTransform('translate3d(' + translateVal + 'px,0,0)');
-
-	if (subLevel) {
-		// reset transform for sublevel
-		this._setTransform('', subLevel);
-		// need to reset the translate value for the level menus that have the same level depth and are not open
-		for (var i = 0, len = this.options.levels.length; i < len; ++i) {
-			var levelEl = this.options.levels[i];
-			if (levelEl !== subLevel && !classie.has(levelEl, this.options.menuOpenClass)) {
-				if (this.options.position === 'right') {
-					this._setTransform('translate3d(100%,0,0) translate3d(' + 1 * levelFactor + 'px,0,0)', levelEl);
-				}
-				else {
-					this._setTransform('translate3d(-100%,0,0) translate3d(' + -1 * levelFactor + 'px,0,0)', levelEl);
-				}
-			}
-		}
-	}
-	// add class mp-pushed to main wrapper if opening the first time
-	if (this.options.level === 1) {
-		classie.add(this.options.wrapper, this.options.pushedClass);
-		this.options.open = true;
-	}
-	// add class mp-level-open to the opening level element
-	classie.add(subLevel || this.options.levels[0], this.options.menuOpenClass);
-};
-
-// close the menu
-PushMenu.prototype._resetMenu = function () {
-	this._setTransform('translate3d(0,0,0)');
-	this.options.level = 0;
-	// remove class mp-pushed from main wrapper
-	classie.remove(this.options.wrapper, this.options.pushedClass);
-	this._toggleLevels();
-	this.options.open = false;
-};
-// close sub menus
-PushMenu.prototype._closeMenu = function () {
-	var translateVal = this.options.type === 'overlap' ? this.options.el.offsetWidth + (this.options.level - 1) * this.options.levelSpacing : this.options.el.offsetWidth;
-	if (this.options.position === 'right') {
-		translateVal = translateVal * -1;
-	}
-	this._setTransform('translate3d(' + translateVal + 'px,0,0)');
-	this._toggleLevels();
-};
-// translate the el
-PushMenu.prototype._setTransform = function (val, el) {
-	el = el || this.options.wrapper;
-	el.style.WebkitTransform = val;
-	el.style.MozTransform = val;
-	el.style.transform = val;
-};
-// removes classes mp-level-open from closing levels
-PushMenu.prototype._toggleLevels = function () {
-	for (var i = 0, len = this.options.levels.length; i < len; ++i) {
-		var levelEl = this.options.levels[i];
-		if (levelEl.getAttribute('data-level') >= this.options.level + 1) {
-			classie.remove(levelEl, this.options.menuOpenClass);
-			classie.remove(levelEl, this.options.menuOverlayClass);
-		}
-		else if (Number(levelEl.getAttribute('data-level')) === this.options.level) {
-			classie.remove(levelEl, this.options.menuOverlayClass);
-		}
-	}
-};
-
-module.exports = PushMenu;
-
-},{"classie":22,"detectcss":24,"events":4,"util":8,"util-extend":26}],22:[function(require,module,exports){
-arguments[4][2][0].apply(exports,arguments)
-},{"./lib/classie":23,"dup":2}],23:[function(require,module,exports){
-arguments[4][3][0].apply(exports,arguments)
-},{"dup":3}],24:[function(require,module,exports){
-arguments[4][17][0].apply(exports,arguments)
-},{"./lib/detectCSS":25,"dup":17}],25:[function(require,module,exports){
-arguments[4][18][0].apply(exports,arguments)
-},{"dup":18}],26:[function(require,module,exports){
-arguments[4][11][0].apply(exports,arguments)
-},{"dup":11}],27:[function(require,module,exports){
-/*
- * stylie.tables
- * http://github.com/typesettin/stylie.tables
- *
- * Copyright (c) 2014 Typesettin. All rights reserved.
- */
-
-'use strict';
-
-module.exports = require('./lib/stylie.tables');
-
-},{"./lib/stylie.tables":28}],28:[function(require,module,exports){
-/*
- * stylie.tables
- * http://github.com/typesettin
- *
- * Copyright (c) 2013 Amex Pub. All rights reserved.
- */
-
-'use strict';
-
-var classie = require('classie'),
-	extend = require('util-extend'),
-	events = require('events'),
-	// Pushie = require('pushie'),
-	util = require('util'),
-	detectCSS = require('detectcss');
-
-var getEventTarget = function (e) {
-	e = e || window.event;
-	return e.target || e.srcElement;
-};
-
-/**
- * A module that represents a full with slideshow componenet object, a stylie.tables is a slideshow.
- * @{@link https://github.com/typesettin/stylie.tables}
- * @author Yaw Joseph Etse
- * @copyright Copyright (c) 2014 Typesettin. All rights reserved.
- * @license MIT
- * @constructor StylieTable
- * @requires module:util-extent
- * @requires module:util
- * @requires module:events
- * @requires module:hammerjs
- * @requires module:detectcss
- * @param {object} config {el -  element of tab container}
- * @param {object} options configuration options
- */
-var StylieTable = function (config) {
-	events.EventEmitter.call(this);
-	this.options = extend(this.options, config);
-
-	this._init(config);
-};
-
-util.inherits(StylieTable, events.EventEmitter);
-
-/** module default configuration */
-StylieTable.prototype.options = {
-	tableClass: 'ts-table ts-table-padding-md ts-text-left ts-table-border ts-width-100 ts-table-cell-border ts-sans-serif',
-	tableHeadClass: 'ts-table-head',
-	tableBodyClass: 'ts-table-body',
-	tableFootClass: 'ts-table-foot',
-	createTableHead: true,
-	mirrorTableHeaderFooter: true,
-	elementWrapper: document.querySelector('body'),
-	data: [{
-		'title': 'stylie',
-		'link': 'http://stylie.io',
-		'desc': 'css style guide generator'
-	}, {
-		'title': 'nachie',
-		'link': 'http://nachie.io',
-		'desc': 'generate ache files in javascript'
-	}],
-	keyfilters: {},
-	onCreateTable: function () {
-		return false;
-	},
-	onOpen: function () {
-		return false;
-	}
-};
-
-/**
- * initializes slideshow and shows current slide.
- * @emits tableInitialized
- */
-StylieTable.prototype._init = function (options) {
-	options = options || {};
-	this.options = extend(this.options, options);
-	this._createTable();
-	// this._initEvents(); // initialize/bind the events
-	// Function to create a table as a child of el.
-	this.emit('tableInitialized');
-};
-
-/**
- * initializes slideshow and shows current slide.
- * @emits slidesInitialized
- */
-StylieTable.prototype._createTable = function () {
-	var tableElement,
-		TableHeaderRowObject = [],
-		tHeadCells = [],
-		footerRows = [],
-		TableRowObject = [];
-
-	var tableRowCreate = function (options) {
-		for (var i = 0; i < options.tableRowData.length; ++i) {
-			var tr = options.tbl.insertRow();
-			for (var j = 0; j < options.tableRowData[i].length; ++j) {
-				var td = tr.insertCell();
-				if (typeof options.tableRowData[i][j].filterOptions !== 'undefined' && options.tableRowData[i][j].filterOptions.colstyle) {
-					td.setAttribute('style', options.tableRowData[i][j].filterOptions.colstyle);
-				}
-				//td.innerHTML = 'k';
-				console.log('options.tableRowData[i][j].filterOptions', options.tableRowData[i][j].filterOptions);
-				td.innerHTML = (typeof options.tableRowData[i][j].val !== 'undefined') ? options.tableRowData[i][j].val.toString() : '';
-
-				////options.tableRowData[i][j].val.toString(); //(document.createTextNode(options.tableRowData[i][j].toString()));
-			}
-		}
-	}
-
-	var tableCreate = function (options) {
-		var el = options.el,
-			tableRowData = options.tableBody,
-			tableHeadRowData = options.tableHead;
-
-		var tbl = document.createElement('table');
-		tbl.setAttribute('class', this.options.tableClass);
-
-		//create table body
-		tableRowCreate({
-			tableRowData: tableRowData,
-			tbl: tbl
-		});
-		tbl.tBodies[0].setAttribute('class', this.options.tableBodyClass);
-
-		//create table head
-		if (this.options.createTableHead) {
-			var tblHeader = tbl.createTHead();
-			tblHeader.setAttribute('class', this.options.tableHeadClass);
-			tableRowCreate({
-				tableRowData: tableHeadRowData,
-				tbl: tblHeader
-			});
-		}
-		//create table foot
-		if (this.options.mirrorTableHeaderFooter) {
-			console.log('footer');
-			var tblFooter = tbl.createTFoot();
-			tblFooter.setAttribute('class', this.options.tableFootClass);
-			tableRowCreate({
-				tableRowData: tableHeadRowData,
-				tbl: tblFooter
-			});
-		}
-
-		el.appendChild(tbl);
-		this.options.onCreateTable(tbl);
-	}.bind(this);
-	console.log(this.options.data);
-
-	//create table body
-	for (var i = 0; i < this.options.data.length; ++i) {
-		var cells = [],
-			dataObject = this.options.data[i];
-
-		for (var key in dataObject) {
-			if (typeof this.options.keyfilters[key] === 'undefined' || this.options.keyfilters[key].ignorekey !== true) {
-				cells.push({
-					val: dataObject[key] || '',
-					filterOptions: this.options.keyfilters[key]
-				});
-				if (this.options.createTableHead && i === 0) {
-					if (this.options.keyfilters[key] && typeof this.options.keyfilters[key].label !== 'undefined') {
-						tHeadCells.push({
-							val: this.options.keyfilters[key].label,
-							filterOptions: this.options.keyfilters[key]
-						});
-					}
-					else {
-						tHeadCells.push({
-							val: key,
-							filterOptions: this.options.keyfilters[key]
-						});
-					}
-				}
-			}
-		}
-		TableRowObject.push(cells);
-	}
-	TableHeaderRowObject.push(tHeadCells);
-
-	tableCreate({
-		el: this.options.elementWrapper,
-		tableBody: TableRowObject,
-		tableHead: TableHeaderRowObject
-	});
-};
-
-if (typeof window === 'object') {
-	window.StylieTable = StylieTable;
-}
-if (typeof module === 'object') {
-	module.exports = StylieTable;
-}
-
-},{"classie":29,"detectcss":31,"events":4,"util":8,"util-extend":33}],29:[function(require,module,exports){
-arguments[4][2][0].apply(exports,arguments)
-},{"./lib/classie":30,"dup":2}],30:[function(require,module,exports){
-arguments[4][3][0].apply(exports,arguments)
-},{"dup":3}],31:[function(require,module,exports){
-arguments[4][17][0].apply(exports,arguments)
-},{"./lib/detectCSS":32,"dup":17}],32:[function(require,module,exports){
-arguments[4][18][0].apply(exports,arguments)
-},{"dup":18}],33:[function(require,module,exports){
-arguments[4][11][0].apply(exports,arguments)
-},{"dup":11}],34:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -3502,7 +5711,7 @@ var reduce = require('reduce');
  */
 
 var root = 'undefined' == typeof window
-  ? this
+  ? (this || self)
   : window;
 
 /**
@@ -3539,9 +5748,10 @@ function isHost(obj) {
  * Determine XHR.
  */
 
-function getXHR() {
+request.getXHR = function () {
   if (root.XMLHttpRequest
-    && ('file:' != root.location.protocol || !root.ActiveXObject)) {
+      && (!root.location || 'file:' != root.location.protocol
+          || !root.ActiveXObject)) {
     return new XMLHttpRequest;
   } else {
     try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
@@ -3550,7 +5760,7 @@ function getXHR() {
     try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch(e) {}
   }
   return false;
-}
+};
 
 /**
  * Removes leading and trailing whitespace, added to support IE.
@@ -3786,9 +5996,11 @@ function Response(req, options) {
   options = options || {};
   this.req = req;
   this.xhr = this.req.xhr;
-  this.text = this.req.method !='HEAD' 
-     ? this.xhr.responseText 
+  // responseText is accessible only if responseType is '' or 'text' and on older browsers
+  this.text = ((this.req.method !='HEAD' && (this.xhr.responseType === '' || this.xhr.responseType === 'text')) || typeof this.xhr.responseType === 'undefined')
+     ? this.xhr.responseText
      : null;
+  this.statusText = this.req.xhr.statusText;
   this.setStatusProperties(this.xhr.status);
   this.header = this.headers = parseHeader(this.xhr.getAllResponseHeaders());
   // getAllResponseHeaders sometimes falsely returns "" for CORS requests, but
@@ -3797,7 +6009,7 @@ function Response(req, options) {
   this.header['content-type'] = this.xhr.getResponseHeader('content-type');
   this.setHeaderProperties(this.header);
   this.body = this.req.method != 'HEAD'
-    ? this.parseBody(this.text)
+    ? this.parseBody(this.text ? this.text : this.xhr.response)
     : null;
 }
 
@@ -3848,7 +6060,7 @@ Response.prototype.setHeaderProperties = function(header){
 
 Response.prototype.parseBody = function(str){
   var parse = request.parse[this.type];
-  return parse && str && str.length
+  return parse && str && (str.length || str instanceof Object)
     ? parse(str)
     : null;
 };
@@ -3875,6 +6087,11 @@ Response.prototype.parseBody = function(str){
  */
 
 Response.prototype.setStatusProperties = function(status){
+  // handle IE9 bug: http://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
+  if (status === 1223) {
+    status = 204;
+  }
+
   var type = status / 100 | 0;
 
   // status / class
@@ -3892,7 +6109,7 @@ Response.prototype.setStatusProperties = function(status){
 
   // sugar
   this.accepted = 202 == status;
-  this.noContent = 204 == status || 1223 == status;
+  this.noContent = 204 == status;
   this.badRequest = 400 == status;
   this.unauthorized = 401 == status;
   this.notAcceptable = 406 == status;
@@ -3948,14 +6165,30 @@ function Request(method, url) {
     var res = null;
 
     try {
-      res = new Response(self); 
+      res = new Response(self);
     } catch(e) {
       err = new Error('Parser is unable to parse the response');
       err.parse = true;
       err.original = e;
+      return self.callback(err);
     }
 
-    self.callback(err, res);
+    self.emit('response', res);
+
+    if (err) {
+      return self.callback(err, res);
+    }
+
+    if (res.status >= 200 && res.status < 300) {
+      return self.callback(err, res);
+    }
+
+    var new_err = new Error(res.statusText || 'Unsuccessful HTTP response');
+    new_err.original = err;
+    new_err.response = res;
+    new_err.status = res.status;
+
+    self.callback(new_err, res);
   });
 }
 
@@ -4184,7 +6417,7 @@ Request.prototype.query = function(val){
  */
 
 Request.prototype.field = function(name, val){
-  if (!this._formData) this._formData = new FormData();
+  if (!this._formData) this._formData = new root.FormData();
   this._formData.append(name, val);
   return this;
 };
@@ -4207,7 +6440,7 @@ Request.prototype.field = function(name, val){
  */
 
 Request.prototype.attach = function(field, file, filename){
-  if (!this._formData) this._formData = new FormData();
+  if (!this._formData) this._formData = new root.FormData();
   this._formData.append(field, file, filename);
   return this;
 };
@@ -4286,7 +6519,7 @@ Request.prototype.send = function(data){
     this._data = data;
   }
 
-  if (!obj) return this;
+  if (!obj || isHost(data)) return this;
   if (!type) this.type('json');
   return this;
 };
@@ -4303,9 +6536,7 @@ Request.prototype.send = function(data){
 Request.prototype.callback = function(err, res){
   var fn = this._callback;
   this.clearTimeout();
-  if (2 == fn.length) return fn(err, res);
-  if (err) return this.emit('error', err);
-  fn(res);
+  fn(err, res);
 };
 
 /**
@@ -4360,7 +6591,7 @@ Request.prototype.withCredentials = function(){
 
 Request.prototype.end = function(fn){
   var self = this;
-  var xhr = this.xhr = getXHR();
+  var xhr = this.xhr = request.getXHR();
   var query = this._query.join('&');
   var timeout = this._timeout;
   var data = this._formData || this._data;
@@ -4371,24 +6602,44 @@ Request.prototype.end = function(fn){
   // state change
   xhr.onreadystatechange = function(){
     if (4 != xhr.readyState) return;
-    if (0 == xhr.status) {
-      if (self.aborted) return self.timeoutError();
+
+    // In IE9, reads to any property (e.g. status) off of an aborted XHR will
+    // result in the error "Could not complete the operation due to error c00c023f"
+    var status;
+    try { status = xhr.status } catch(e) { status = 0; }
+
+    if (0 == status) {
+      if (self.timedout) return self.timeoutError();
+      if (self.aborted) return;
       return self.crossDomainError();
     }
     self.emit('end');
   };
 
   // progress
-  if (xhr.upload) {
-    xhr.upload.onprogress = function(e){
+  var handleProgress = function(e){
+    if (e.total > 0) {
       e.percent = e.loaded / e.total * 100;
-      self.emit('progress', e);
-    };
+    }
+    self.emit('progress', e);
+  };
+  if (this.hasListeners('progress')) {
+    xhr.onprogress = handleProgress;
+  }
+  try {
+    if (xhr.upload && this.hasListeners('progress')) {
+      xhr.upload.onprogress = handleProgress;
+    }
+  } catch(e) {
+    // Accessing xhr.upload fails in IE from a web worker, so just pretend it doesn't exist.
+    // Reported here:
+    // https://connect.microsoft.com/IE/feedback/details/837245/xmlhttprequest-upload-throws-invalid-argument-when-used-from-web-worker-context
   }
 
   // timeout
   if (timeout && !this._timer) {
     this._timer = setTimeout(function(){
+      self.timedout = true;
       self.abort();
     }, timeout);
   }
@@ -4410,7 +6661,8 @@ Request.prototype.end = function(fn){
   // body
   if ('GET' != this.method && 'HEAD' != this.method && 'string' != typeof data && !isHost(data)) {
     // serialize stuff
-    var serialize = request.serialize[this.getHeader('Content-Type')];
+    var contentType = this.getHeader('Content-Type');
+    var serialize = request.serialize[contentType ? contentType.split(';')[0] : ''];
     if (serialize) data = serialize(data);
   }
 
@@ -4425,6 +6677,20 @@ Request.prototype.end = function(fn){
   xhr.send(data);
   return this;
 };
+
+/**
+ * Faux promise support
+ *
+ * @param {Function} fulfill
+ * @param {Function} reject
+ * @return {Request}
+ */
+
+Request.prototype.then = function (fulfill, reject) {
+  return this.end(function(err, res) {
+    err ? reject(err) : fulfill(res);
+  });
+}
 
 /**
  * Expose `Request`.
@@ -4572,195 +6838,10 @@ request.put = function(url, data, fn){
 
 module.exports = request;
 
-},{"emitter":35,"reduce":36}],35:[function(require,module,exports){
-
-/**
- * Expose `Emitter`.
- */
-
-module.exports = Emitter;
-
-/**
- * Initialize a new `Emitter`.
- *
- * @api public
- */
-
-function Emitter(obj) {
-  if (obj) return mixin(obj);
-};
-
-/**
- * Mixin the emitter properties.
- *
- * @param {Object} obj
- * @return {Object}
- * @api private
- */
-
-function mixin(obj) {
-  for (var key in Emitter.prototype) {
-    obj[key] = Emitter.prototype[key];
-  }
-  return obj;
-}
-
-/**
- * Listen on the given `event` with `fn`.
- *
- * @param {String} event
- * @param {Function} fn
- * @return {Emitter}
- * @api public
- */
-
-Emitter.prototype.on =
-Emitter.prototype.addEventListener = function(event, fn){
-  this._callbacks = this._callbacks || {};
-  (this._callbacks[event] = this._callbacks[event] || [])
-    .push(fn);
-  return this;
-};
-
-/**
- * Adds an `event` listener that will be invoked a single
- * time then automatically removed.
- *
- * @param {String} event
- * @param {Function} fn
- * @return {Emitter}
- * @api public
- */
-
-Emitter.prototype.once = function(event, fn){
-  var self = this;
-  this._callbacks = this._callbacks || {};
-
-  function on() {
-    self.off(event, on);
-    fn.apply(this, arguments);
-  }
-
-  on.fn = fn;
-  this.on(event, on);
-  return this;
-};
-
-/**
- * Remove the given callback for `event` or all
- * registered callbacks.
- *
- * @param {String} event
- * @param {Function} fn
- * @return {Emitter}
- * @api public
- */
-
-Emitter.prototype.off =
-Emitter.prototype.removeListener =
-Emitter.prototype.removeAllListeners =
-Emitter.prototype.removeEventListener = function(event, fn){
-  this._callbacks = this._callbacks || {};
-
-  // all
-  if (0 == arguments.length) {
-    this._callbacks = {};
-    return this;
-  }
-
-  // specific event
-  var callbacks = this._callbacks[event];
-  if (!callbacks) return this;
-
-  // remove all handlers
-  if (1 == arguments.length) {
-    delete this._callbacks[event];
-    return this;
-  }
-
-  // remove specific handler
-  var cb;
-  for (var i = 0; i < callbacks.length; i++) {
-    cb = callbacks[i];
-    if (cb === fn || cb.fn === fn) {
-      callbacks.splice(i, 1);
-      break;
-    }
-  }
-  return this;
-};
-
-/**
- * Emit `event` with the given args.
- *
- * @param {String} event
- * @param {Mixed} ...
- * @return {Emitter}
- */
-
-Emitter.prototype.emit = function(event){
-  this._callbacks = this._callbacks || {};
-  var args = [].slice.call(arguments, 1)
-    , callbacks = this._callbacks[event];
-
-  if (callbacks) {
-    callbacks = callbacks.slice(0);
-    for (var i = 0, len = callbacks.length; i < len; ++i) {
-      callbacks[i].apply(this, args);
-    }
-  }
-
-  return this;
-};
-
-/**
- * Return array of callbacks for `event`.
- *
- * @param {String} event
- * @return {Array}
- * @api public
- */
-
-Emitter.prototype.listeners = function(event){
-  this._callbacks = this._callbacks || {};
-  return this._callbacks[event] || [];
-};
-
-/**
- * Check if this emitter has `event` handlers.
- *
- * @param {String} event
- * @return {Boolean}
- * @api public
- */
-
-Emitter.prototype.hasListeners = function(event){
-  return !! this.listeners(event).length;
-};
-
-},{}],36:[function(require,module,exports){
-
-/**
- * Reduce `arr` with `fn`.
- *
- * @param {Array} arr
- * @param {Function} fn
- * @param {Mixed} initial
- *
- * TODO: combatible error handling?
- */
-
-module.exports = function(arr, fn, initial){  
-  var idx = 0;
-  var len = arr.length;
-  var curr = arguments.length == 3
-    ? initial
-    : arr[idx++];
-
-  while (idx < len) {
-    curr = fn.call(null, curr, arr[idx], ++idx, arr);
-  }
-  
-  return curr;
-};
-},{}]},{},[12]);
+},{"emitter":32,"reduce":33}],32:[function(require,module,exports){
+arguments[4][10][0].apply(exports,arguments)
+},{"dup":10}],33:[function(require,module,exports){
+arguments[4][11][0].apply(exports,arguments)
+},{"dup":11}],34:[function(require,module,exports){
+arguments[4][22][0].apply(exports,arguments)
+},{"dup":22}]},{},[23]);

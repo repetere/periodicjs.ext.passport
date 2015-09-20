@@ -3,7 +3,7 @@
 		<section class="ts-text-container">
 
 		<div class="ts-row">
-			<div class="ts-col-span8 ts-col-nofloat">
+			<div class="ts-col-span8 ts-col-nofloat ts-screenmd-col-span12 ts-screensm-col-span12 ts-no-heading-margin ts-screenxs-col-span12">
 				<h2 class="text-left"><%= pagedata.title %></h2>
 				<div class="ts-padding-lg">
 					<% if(locals.isLoggedIn()){
@@ -15,7 +15,7 @@
 					} 
 					else{
 						%>
-							<form action="/auth/user/new" method="post" autocomplete="on" id="user_form" name="user_form" class="ts-form ">
+							<form action="/auth/user/new" method="post" autocomplete="on" id="user_form" name="user_form" class="ts-form async-admin-ajax-forms">
 								<% include register_form %>
 							</form>
 						<%

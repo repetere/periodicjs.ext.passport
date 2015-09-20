@@ -50,7 +50,7 @@ var linkSocialAccount = function (options) {
 
 var limitLoginAttempts = function (user) {
 	user.extensionattributes = user.extensionattributes || {};
-	if(!user.extensionattributes.login){
+	if (!user.extensionattributes.login) {
 		user.extensionattributes.login = {
 			attempts: 0,
 			timestamp: moment(),
@@ -96,7 +96,7 @@ var loginAttemptsError = function (user, done) {
 					data: user
 				}
 			};
-			if(loginExtSettings.settings.adminbccemail || appSettings.adminbccemail){
+			if (loginExtSettings.settings.adminbccemail || appSettings.adminbccemail) {
 				coreMailerOptions.bcc = loginExtSettings.settings.adminbccemail || appSettings.adminbccemail;
 			}
 			CoreMailer.sendEmail(coreMailerOptions, function (err, status) {
@@ -164,7 +164,7 @@ var authenticateUser = function (options) {
 						loginAttemptsError(updated, donecallback);
 					}
 					else {
-						existinusercallback(updated);	
+						existinusercallback(updated);
 					}
 				});
 			}
