@@ -266,7 +266,13 @@ var updateuserregistration = function (req, res) {
 						}
 						else {
 							var forwardUrl = (req.session.return_url) ? req.session.return_url : loginExtSettings.settings.authLoginPath;
-							req.flash('info', 'updated user account');
+							if(req.body['activation-token']){
+								var updatetext = (loginExtSettings.settings.activation_update_text) ? loginExtSettings.settings.activation_update_text : 'Email verified successfully!';
+								req.flash('info', updatetext);
+							}
+							else if(loginExtSettings.settings.update_with_flash){
+								req.flash('info', 'updated user account');
+							}
 							if (loginExtSettings.settings.activationCompletePath) {
 								res.redirect(loginExtSettings.settings.activationCompletePath);
 							}

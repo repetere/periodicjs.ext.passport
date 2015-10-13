@@ -388,7 +388,7 @@ var async_admin_ajax_link_handler = function (e) {
 	}
 };
 
-window.addEventListener('load', function () {
+var init = function () {
 	asyncHTMLWrapper = document.querySelector('#ts-asyncadmin-content-wrapper');
 	asyncHTMLContentContainer = document.querySelector(asyncContentSelector);
 	navlinks = document.querySelector('#ts-pushmenu-mp-menu');
@@ -428,4 +428,11 @@ window.addEventListener('load', function () {
 	initFlashMessage();
 	initAjaxFormies();
 	// window.StyliePushMenu = StyliePushMenu;
-});
+};
+
+if (typeof window.domLoadEventFired !== 'undefined') {
+	init();
+}
+else {
+	window.addEventListener('load', init, false);
+}

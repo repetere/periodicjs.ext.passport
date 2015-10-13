@@ -204,20 +204,20 @@ var ensureAuthenticated = function (req, res, next) {
 				// next(new Error('cannot link '+req.session.linkaccountservice+' account'));
 				// res.redirect('/user/linkaccount?service='+req.session.linkaccountservice);
 			}
-			else if (loginExtSettings && loginExtSettings.settings.disablesocialsignin === true && req.user.accounttype === 'social-sign-in') {
+			else if (loginExtSettings && loginExtSettings.settings.disablesocialsignin === true && req.user.accounttype === 'social-sign-in'  && req.query.required !=='social-sign-in') {
 				res.redirect('/auth/user/finishregistration?reason=social-sign-in-pending');
 			}
-			else if (loginExtSettings && loginExtSettings.settings.requireusername !== false && !req.user.username) {
+			else if (loginExtSettings && loginExtSettings.settings.requireusername !== false && !req.user.username  && req.query.required !=='username') {
 				res.redirect('/auth/user/finishregistration?required=username');
 				// return next();
 			}
-			else if (loginExtSettings && loginExtSettings.settings.requireemail !== false && !req.user.email) {
+			else if (loginExtSettings && loginExtSettings.settings.requireemail !== false && !req.user.email  && req.query.required !=='email') {
 				res.redirect('/auth/user/finishregistration?required=email');
 			}
-			else if (loginExtSettings && loginExtSettings.settings.requireemail !== false && !req.user.email) {
+			else if (loginExtSettings && loginExtSettings.settings.requireemail !== false && !req.user.email  && req.query.required !=='email') {
 				res.redirect('/auth/user/finishregistration?required=email');
 			}
-			else if (loginExtSettings && loginExtSettings.settings.requireuseractivation && req.user.activated === false) {
+			else if (loginExtSettings && loginExtSettings.settings.requireuseractivation && req.user.activated === false && req.query.required !=='activation') {
 				res.redirect('/auth/user/finishregistration?required=activation');
 			}
 			else {
