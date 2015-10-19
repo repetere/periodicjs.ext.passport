@@ -123,11 +123,11 @@ var logout = function (req, res) {
 		req.flash = function () {
 			return {};
 		};
-		resOptions.redirecturl = loginExtSettings.settings.authLoggedInHomepage;
+		resOptions.redirecturl = loginExtSettings.settings.authLoggedOutHomepage || loginExtSettings.settings.authLoggedInHomepage;
 		resOptions.responseData = {
 			result: 'success',
 			data: {
-				redirecturl: loginExtSettings.settings.authLoggedInHomepage
+				redirecturl: loginExtSettings.settings.authLoggedOutHomepage || loginExtSettings.settings.authLoggedInHomepage
 			}
 		};
 		CoreController.respondInKind(resOptions);
