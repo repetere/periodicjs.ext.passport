@@ -123,11 +123,11 @@ var logout = function (req, res) {
 		req.flash = function () {
 			return {};
 		};
-		resOptions.redirecturl = loginExtSettings.settings.authLoggedInHomepage;
+		resOptions.redirecturl = loginExtSettings.settings.authLoggedOutHomepage || loginExtSettings.settings.authLoggedInHomepage;
 		resOptions.responseData = {
 			result: 'success',
 			data: {
-				redirecturl: loginExtSettings.settings.authLoggedInHomepage
+				redirecturl: loginExtSettings.settings.authLoggedOutHomepage || loginExtSettings.settings.authLoggedInHomepage
 			}
 		};
 		CoreController.respondInKind(resOptions);
@@ -296,7 +296,7 @@ var activate_user = function (req, res, next) {
 					var coreMailerOptions = {
 						appenvironment: appSettings.application.environment,
 						to: req.user.email,
-						// cc: appSettings.adminnotificationemail,
+						bcc: (loginExtSettings.settings.useBccOnActivation) ? appSettings.adminnotificationemail : '',
 						replyTo: appSettings.fromemail || appSettings.adminnotificationemail,
 						from: appSettings.fromemail || appSettings.adminnotificationemail,
 						subject: loginExtSettings.settings.activationEmailSubject || appSettings.name + ' User Account Activation',
