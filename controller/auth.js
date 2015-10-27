@@ -22,6 +22,7 @@ var passport = require('passport'),
  */
 
 var login = function (req, res, next) {
+	req.controllerData = req.controllerData || {};
 	if (configError) {
 		next(configError);
 	}
