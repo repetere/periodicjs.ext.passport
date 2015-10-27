@@ -44,15 +44,19 @@ var login = function (req, res, next) {
 				return next(err);
 			}
 			if (!user) {
-				req.flash('error', 'invalid credentials, did you forget your password?');
-
-				resOptions.redirecturl = loginExtSettings.settings.authLoginPath;
-				return next(new Error('invalid credentials, did you forget your password?'));
-				// return CoreController.respondInKind(resOptions);
-				// CoreController.logError({
-				// 	req: req,
-				// 	err: err
-				// });
+				if (!req.controllerData.ajaxLogin) {
+					req.flash('error', 'invalid credentials, did you forget your password?');
+					resOptions.redirecturl = loginExtSettings.settings.authLoginPath;
+					return next(new Error('invalid credentials, did you forget your password?'));
+				}
+				else {
+					resOptions.err = resOptions.err || new Error('invalid credentials, did you forget your password?');
+					CoreController.logError({
+						req: req,
+						err: new Error('invalid credentials, did you forget your password?')
+					});
+					return CoreController.respondInKind(resOptions);
+				}
 				// CoreController.handleDocumentQueryErrorResponse({
 				// 	err: err,
 				// 	res: res,
@@ -74,27 +78,38 @@ var login = function (req, res, next) {
 					// });
 					return next(err);
 				}
-				if (req.session.return_url) {
-					resOptions.responseData = {
-						result: 'success',
-						data: {
-							redirecturl: req.session.return_url
-						}
-					};
-					resOptions.redirecturl = req.session.return_url;
-					return CoreController.respondInKind(resOptions);
-					// return res.redirect(req.session.return_url);
+				if (!req.controllerData.ajaxLogin) {
+					if (req.session.return_url) {
+						resOptions.responseData = {
+							result: 'success',
+							data: {
+								redirecturl: req.session.return_url
+							}
+						};
+						resOptions.redirecturl = req.session.return_url;
+						return CoreController.respondInKind(resOptions);
+						// return res.redirect(req.session.return_url);
+					}
+					else {
+						resOptions.redirecturl = loginExtSettings.settings.authLoggedInHomepage;
+						resOptions.responseData = {
+							result: 'success',
+							data: {
+								redirecturl: loginExtSettings.settings.authLoggedInHomepage
+							}
+						};
+						return CoreController.respondInKind(resOptions);
+						// res.redirect(loginExtSettings.settings.authLoggedInHomepage);
+					}
 				}
 				else {
-					resOptions.redirecturl = loginExtSettings.settings.authLoggedInHomepage;
 					resOptions.responseData = {
 						result: 'success',
 						data: {
-							redirecturl: loginExtSettings.settings.authLoggedInHomepage
+							message: 'successfully logged in'
 						}
 					};
 					return CoreController.respondInKind(resOptions);
-					// res.redirect(loginExtSettings.settings.authLoggedInHomepage);
 				}
 			});
 		})(req, res, next);
