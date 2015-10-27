@@ -6,12 +6,12 @@
   "engines": {
     "node": ">=0.10.x"
   },
-  "author": {
-    "name": "Yaw Joseph Etse",
-    "email": "yaw.etse@gmail.com",
-    "url": "http://about.me/yawjosephetse"
-  },
-  "contributors": [
+  "authors": [
+    {
+      "name": "Yaw Joseph Etse",
+      "email": "yaw.etse@gmail.com",
+      "url": "http://about.me/yawjosephetse"
+    },
     {
       "name": "Jan Bialostok",
       "email": "janbialostok@gmail.com",
