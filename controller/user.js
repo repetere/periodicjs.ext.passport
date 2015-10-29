@@ -239,7 +239,8 @@ var updateuserregistration = function (req, res) {
 					}
 				}
 				else {
-					userError = new Error('invalid activation token');
+					var errorText = loginExtSettings.settings.invalid_activation_token_message;
+					userError = new Error(errorText);
 					additionalqueryparams = '?required=activation';
 				}
 

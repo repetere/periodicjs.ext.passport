@@ -337,7 +337,7 @@ var activate_user = function (req, res, next) {
 						}
 						else {
 							logger.silly('emailstatus', emailstatus);
-							req.flash('info', 'user activation token email sent to ' + req.user.email);
+							req.flash('info', 'A new verification email as been sent to ' + req.user.email);
 							if (req.controllerData && req.controllerData.sendemailstatus) {
 								req.controllerData.activate_user_emailstatus = emailstatus;
 								next();

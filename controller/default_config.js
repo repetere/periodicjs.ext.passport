@@ -8,7 +8,8 @@ module.exports = {
 		requireusername: true,
 		requireuseractivation: true,
 		requireemail: true,
-		disablesocialsignin: true
+		disablesocialsignin: true,
+		invalid_activation_token_message: 'invalid activation token'
 	},
 	new_user_validation: {
 		checkusername: true,
