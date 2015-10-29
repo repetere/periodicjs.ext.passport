@@ -294,7 +294,7 @@ var get_token = function (req, res, next) {
 			res.redirect(loginExtSettings.settings.authLoginPath);
 		}
 		else if (!user_with_token || !user_with_token.attributes.reset_token) {
-			req.flash('error', 'invalid reset token');
+			req.flash('error', 'Invalid reset token');
 			res.redirect(loginExtSettings.settings.authLoginPath);
 		}
 		else if (hasExpired(user_with_token.attributes.reset_token_expires_millis)) {
@@ -458,7 +458,7 @@ var get_user_activation_token = function (req, res, next) {
 			res.redirect(loginExtSettings.settings.authLoginPath);
 		}
 		else if (!user_with_activation_token || !user_with_activation_token.attributes.user_activation_token) {
-			req.flash('error', 'invalid validation token');
+			req.flash('error', 'Invalid validation token');
 			res.redirect(loginExtSettings.settings.authLoginPath);
 		}
 		else if (hasExpired(user_with_activation_token.attributes.reset_activation_expires_millis)) {
@@ -507,7 +507,7 @@ var update_activation_attributes = function (options, callback) {
 				callback(err);
 			}
 			else if (!user_to_update || !user_to_update) {
-				callback(Error('invalid user activation token'));
+				callback(Error('Invalid user activation token'));
 			}
 			else {
 				user_to_update.attributes = merge(user_to_update.attributes, updatedActivationData.attributes);
