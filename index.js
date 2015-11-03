@@ -7,7 +7,7 @@ var path = require('path'),
 	loginExtSettings,
 	appenvironment,
 	settingJSON,
-	loginExtSettingsFile = path.join(process.cwd(), 'content/config/extensions/periodicjs.ext.login/settings.json'),
+	loginExtSettingsFile = path.join(__dirname, '../../content/config/extensions/periodicjs.ext.login/settings.json'),
 	defaultExtSettings = require('./controller/default_config');
 
 /**
