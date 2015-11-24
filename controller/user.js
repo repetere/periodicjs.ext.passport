@@ -144,7 +144,7 @@ var finishregistration = function (req, res) {
 				renderView: templatepath,
 				responseData: {
 					pagedata: {
-						title: 'complete registration'
+						title: 'Complete registration'
 					},
 					user: req.user
 				}
@@ -176,7 +176,7 @@ var verify_user_activation = function (options, callback) {
 					});
 				}
 				else {
-					throw new Error('activation token is invalid');
+					throw new Error('Activation token is invalid');
 				}
 			});
 	}
@@ -209,7 +209,7 @@ var updateuserregistration = function (req, res) {
 				});
 			}
 			else if (!userToUpdate) {
-				userError = new Error('could not find user, couldn\'t complate registration');
+				userError = new Error('Could not find user, couldn\'t complate registration');
 				CoreController.handleDocumentQueryErrorResponse({
 					err: userError,
 					res: res,
@@ -230,7 +230,7 @@ var updateuserregistration = function (req, res) {
 							logger.info('update activation');
 						}
 						else {
-							userError = new Error('activation token is invalid');
+							userError = new Error('Activation token is invalid');
 							additionalqueryparams = '?required=activation';
 						}
 					}
@@ -272,7 +272,7 @@ var updateuserregistration = function (req, res) {
 								req.flash('info', updatetext);
 							}
 							else if(loginExtSettings.settings.update_with_flash){
-								req.flash('info', 'updated user account');
+								req.flash('info', 'Updated user account');
 							}
 							if (loginExtSettings.settings.activationCompletePath) {
 								res.redirect(loginExtSettings.settings.activationCompletePath);

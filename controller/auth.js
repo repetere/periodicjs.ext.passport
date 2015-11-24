@@ -46,15 +46,15 @@ var login = function (req, res, next) {
 			}
 			if (!user) {
 				if (!req.controllerData.ajaxLogin) {
-					req.flash('error', 'invalid credentials, did you forget your password?');
+					req.flash('error', 'Invalid credentials, did you forget your password?');
 					resOptions.redirecturl = loginExtSettings.settings.authLoginPath;
-					return next(new Error('invalid credentials, did you forget your password?'));
+					return next(new Error('Invalid credentials, did you forget your password?'));
 				}
 				else {
-					resOptions.err = resOptions.err || new Error('invalid credentials, did you forget your password?');
+					resOptions.err = resOptions.err || new Error('Invalid credentials, did you forget your password?');
 					CoreController.logError({
 						req: req,
-						err: new Error('invalid credentials, did you forget your password?')
+						err: new Error('Invalid credentials, did you forget your password?')
 					});
 					return CoreController.respondInKind(resOptions);
 				}
