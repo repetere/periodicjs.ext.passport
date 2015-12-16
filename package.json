@@ -79,9 +79,9 @@
     "url": "https://github.com/typesettin/periodicjs.ext.login/issues"
   },
   "homepage": "https://github.com/typesettin/periodicjs.ext.login",
-  "_id": "periodicjs.ext.login@5.9.1",
-  "_shasum": "513d2fe40ba87bb5f4c1985be045e63897c103b8",
-  "_from": "periodicjs.ext.login@5.9.1",
+  "_id": "periodicjs.ext.login@5.9.841",
+  "_shasum": "29c8083edf851053a9e9079c0db5323fbdebcda3",
+  "_from": "periodicjs.ext.login@5.9.841",
   "_resolved": "https://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-5.9.1.tgz",
   "gitHead": "4664b50397714fe9aad5c9b1e77d1707525c107c",
   "_npmVersion": "2.11.2",

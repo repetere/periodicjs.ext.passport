@@ -289,7 +289,7 @@ var initAjaxFormies = function () {
 // };
 
 var statecallback = function (data) {
-	console.log('data', data);
+	// console.log('data', data);
 	if (data && data.datahref) {
 		loadAjaxPage({
 			datahref: data.datahref,

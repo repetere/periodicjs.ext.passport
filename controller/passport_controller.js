@@ -414,6 +414,7 @@ var deserialize = function () {
 			});
 	});
 };
+
 var passportController = function (resources, passportResources) {
 	appSettings = resources.settings;
 	logger = resources.logger;
