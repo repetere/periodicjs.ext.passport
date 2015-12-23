@@ -402,6 +402,7 @@ var controller = function (resources) {
 		activate_user: activate_user,
 		get_activation: get_activation,
 		ensureAuthenticated: ensureAuthenticated,
+		forceAuthLogin: forceAuthLogin,
 		loginExtSettings: loginExtSettings,
 		passport: passport,
 		passportController: passportController
