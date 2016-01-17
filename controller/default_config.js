@@ -52,6 +52,7 @@ module.exports = {
 			default: 'forgot'
 		}
 	},
+	login_csrf:true,
 	complexitySettings: {
 		useComplexity: true,
 		settings: {

@@ -4,6 +4,7 @@ var path = require('path'),
 	fs = require('fs-extra'),
 	extend = require('utils-merge'),
 	stylietreeview = require('stylie.treeview'),
+	csrf = require('csurf'),
 	loginExtSettings,
 	appenvironment,
 	settingJSON,
@@ -53,7 +54,21 @@ module.exports = function (periodic) {
 		});
 	periodic.app.controller.extension.login.token = tokenController;
 	periodic.app.controller.extension.login.social = socialPassportController;
-
+	
+	if (periodic.app.controller.extension.login.loginExtSettings.login_csrf) {
+		authRouter.use(csrf());
+		userRouter.use(csrf());
+		authRouter.use(function (req, res, next) {
+			res.locals.token = req.csrfToken();
+			next();
+		});
+		userRouter.use(function (req, res, next) {
+			res.locals.token = req.csrfToken();
+			res.locals.token = 'setafter';
+			next();
+		});
+	}
+	
 	authRouter.get('*', global.CoreCache.disableCache);
 	authRouter.post('*', global.CoreCache.disableCache);
 	userRouter.get('*', global.CoreCache.disableCache);
