@@ -67,7 +67,6 @@ module.exports = function (periodic) {
 		});
 		userRouter.use(function (req, res, next) {
 			res.locals.token = req.csrfToken();
-			res.locals.token = 'setafter';
 			next();
 		});
 	}
