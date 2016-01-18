@@ -1,4 +1,342 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/*
+ * classie
+ * http://github.amexpub.com/modules/classie
+ *
+ * Copyright (c) 2013 AmexPub. All rights reserved.
+ */
+
+module.exports = require('./lib/classie');
+
+},{"./lib/classie":3}],2:[function(require,module,exports){
+/* 
+ * classList.js: Cross-browser full element.classList implementation.
+ * 2014-07-23
+ *
+ * By Eli Grey, http://eligrey.com
+ * Public Domain.
+ * NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
+ */
+
+/*global self, document, DOMException, DOMTokenList */
+
+/*! @source http://purl.eligrey.com/github/classList.js/blob/master/classList.js*/
+
+if ("document" in self) {
+
+    // Full polyfill for browsers with no classList support
+    if (!("classList" in document.createElement("_")) || document.createElementNS && !("classList" in document.createElementNS("http://www.w3.org/2000/svg", "g"))) {
+
+        (function(view) {
+
+            "use strict";
+
+            if (!('Element' in view)) {
+                return;
+            }
+
+            var classListProp = "classList",
+                protoProp = "prototype",
+                elemCtrProto = view.Element[protoProp],
+                objCtr = Object,
+                strTrim = String[protoProp].trim || function() {
+                    return this.replace(/^\s+|\s+$/g, "");
+                }, arrIndexOf = Array[protoProp].indexOf || function(item) {
+                    var
+                    i = 0,
+                        len = this.length;
+                    for (; i < len; i++) {
+                        if (i in this && this[i] === item) {
+                            return i;
+                        }
+                    }
+                    return -1;
+                },
+                // Vendors: please allow content code to instantiate DOMExceptions
+                DOMEx = function(type, message) {
+                    this.name = type;
+                    this.code = DOMException[type];
+                    this.message = message;
+                }, checkTokenAndGetIndex = function(classList, token) {
+                    if (token === "") {
+                        throw new DOMEx(
+                            "SYNTAX_ERR", "An invalid or illegal string was specified");
+                    }
+                    if (/\s/.test(token)) {
+                        throw new DOMEx(
+                            "INVALID_CHARACTER_ERR", "String contains an invalid character");
+                    }
+                    return arrIndexOf.call(classList, token);
+                }, ClassList = function(elem) {
+                    var
+                    trimmedClasses = strTrim.call(elem.getAttribute("class") || ""),
+                        classes = trimmedClasses ? trimmedClasses.split(/\s+/) : [],
+                        i = 0,
+                        len = classes.length;
+                    for (; i < len; i++) {
+                        this.push(classes[i]);
+                    }
+                    this._updateClassName = function() {
+                        elem.setAttribute("class", this.toString());
+                    };
+                }, classListProto = ClassList[protoProp] = [],
+                classListGetter = function() {
+                    return new ClassList(this);
+                };
+            // Most DOMException implementations don't allow calling DOMException's toString()
+            // on non-DOMExceptions. Error's toString() is sufficient here.
+            DOMEx[protoProp] = Error[protoProp];
+            classListProto.item = function(i) {
+                return this[i] || null;
+            };
+            classListProto.contains = function(token) {
+                token += "";
+                return checkTokenAndGetIndex(this, token) !== -1;
+            };
+            classListProto.add = function() {
+                var
+                tokens = arguments,
+                    i = 0,
+                    l = tokens.length,
+                    token, updated = false;
+                do {
+                    token = tokens[i] + "";
+                    if (checkTokenAndGetIndex(this, token) === -1) {
+                        this.push(token);
+                        updated = true;
+                    }
+                }
+                while (++i < l);
+
+                if (updated) {
+                    this._updateClassName();
+                }
+            };
+            classListProto.remove = function() {
+                var
+                tokens = arguments,
+                    i = 0,
+                    l = tokens.length,
+                    token, updated = false,
+                    index;
+                do {
+                    token = tokens[i] + "";
+                    index = checkTokenAndGetIndex(this, token);
+                    while (index !== -1) {
+                        this.splice(index, 1);
+                        updated = true;
+                        index = checkTokenAndGetIndex(this, token);
+                    }
+                }
+                while (++i < l);
+
+                if (updated) {
+                    this._updateClassName();
+                }
+            };
+            classListProto.toggle = function(token, force) {
+                token += "";
+
+                var
+                result = this.contains(token),
+                    method = result ?
+                        force !== true && "remove" :
+                        force !== false && "add";
+
+                if (method) {
+                    this[method](token);
+                }
+
+                if (force === true || force === false) {
+                    return force;
+                } else {
+                    return !result;
+                }
+            };
+            classListProto.toString = function() {
+                return this.join(" ");
+            };
+
+            if (objCtr.defineProperty) {
+                var classListPropDesc = {
+                    get: classListGetter,
+                    enumerable: true,
+                    configurable: true
+                };
+                try {
+                    objCtr.defineProperty(elemCtrProto, classListProp, classListPropDesc);
+                } catch (ex) { // IE 8 doesn't support enumerable:true
+                    if (ex.number === -0x7FF5EC54) {
+                        classListPropDesc.enumerable = false;
+                        objCtr.defineProperty(elemCtrProto, classListProp, classListPropDesc);
+                    }
+                }
+            } else if (objCtr[protoProp].__defineGetter__) {
+                elemCtrProto.__defineGetter__(classListProp, classListGetter);
+            }
+
+        }(self));
+
+    } else {
+        // There is full or partial native classList support, so just check if we need
+        // to normalize the add/remove and toggle APIs.
+
+        (function() {
+            "use strict";
+
+            var testElement = document.createElement("_");
+
+            testElement.classList.add("c1", "c2");
+
+            // Polyfill for IE 10/11 and Firefox <26, where classList.add and
+            // classList.remove exist but support only one argument at a time.
+            if (!testElement.classList.contains("c2")) {
+                var createMethod = function(method) {
+                    var original = DOMTokenList.prototype[method];
+
+                    DOMTokenList.prototype[method] = function(token) {
+                        var i, len = arguments.length;
+
+                        for (i = 0; i < len; i++) {
+                            token = arguments[i];
+                            original.call(this, token);
+                        }
+                    };
+                };
+                createMethod('add');
+                createMethod('remove');
+            }
+
+            testElement.classList.toggle("c3", false);
+
+            // Polyfill for IE 10 and Firefox <24, where classList.toggle does not
+            // support the second argument.
+            if (testElement.classList.contains("c3")) {
+                var _toggle = DOMTokenList.prototype.toggle;
+
+                DOMTokenList.prototype.toggle = function(token, force) {
+                    if (1 in arguments && !this.contains(token) === !force) {
+                        return force;
+                    } else {
+                        return _toggle.call(this, token);
+                    }
+                };
+
+            }
+
+            testElement = null;
+        }());
+    }
+
+}
+
+},{}],3:[function(require,module,exports){
+/*!
+ * classie - class helper functions
+ * from bonzo https://github.com/ded/bonzo
+ * 
+ * classie.has( elem, 'my-class' ) -> true/false
+ * classie.add( elem, 'my-new-class' )
+ * classie.remove( elem, 'my-unwanted-class' )
+ * classie.toggle( elem, 'my-class' )
+ */
+
+/*jshint browser: true, strict: true, undef: true */
+/*global define: false */
+'use strict';
+
+// class helper functions from bonzo https://github.com/ded/bonzo
+var classList = require('./class_list_ployfill'),
+    classie;
+
+function classReg(className) {
+    return new RegExp("(^|\\s+)" + className + "(\\s+|$)");
+}
+
+function noop() {}
+
+function isArr(classes) {
+    if (Array.isArray(classes)) {
+        return true;
+    } else if (Object.prototype.toString.call(classes) === '[object Array]') {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function removeMultiple() {
+    var c = arguments[1],
+        elem = arguments[0];
+    c.forEach(function(value) {
+        if (classie.has(elem, value)) {
+            noop();
+        }
+        classie.removeClass(elem, value);
+    });
+}
+
+
+function addMultiple() {
+    var c = arguments[1],
+        elem = arguments[0];
+    c.forEach(function(value) {
+        if (classie.has(elem, value)) {
+            noop();
+        }
+        classie.addClass(elem, value);
+    });
+}
+
+function hasClass(elem, c) {
+    return elem.classList.contains(c);
+}
+
+function addClass(elem, c) {
+    if (isArr(c)) {
+        addMultiple.apply(this, arguments);
+    } else {
+        elem.classList.add(c);
+    }
+}
+
+function removeClass(elem, c) {
+    if (isArr(c)) {
+        removeMultiple.apply(this, arguments);
+    } else {
+        elem.classList.remove(c);
+    }
+}
+
+function toggleClass(elem, c) {
+    var fn = hasClass(elem, c) ? removeClass : addClass;
+    fn(elem, c);
+}
+
+var classie = {
+    // full names
+    hasClass: hasClass,
+    addClass: addClass,
+    removeClass: removeClass,
+    toggleClass: toggleClass,
+    // short names
+    has: hasClass,
+    add: addClass,
+    remove: removeClass,
+    toggle: toggleClass
+};
+
+// transport
+
+if (typeof module === "object" && module && typeof module.exports === "object") {
+    // commonjs / browserify
+    module.exports = classie;
+} else {
+    // AMD
+    define(classie);
+}
+
+},{"./class_list_ployfill":2}],4:[function(require,module,exports){
 (function (process,global){
 /*!
  * async
@@ -512,7 +850,7 @@
     };
 
     async.auto = function (tasks, concurrency, callback) {
-        if (!callback) {
+        if (typeof arguments[1] === 'function') {
             // concurrency is optional, shift the args.
             callback = concurrency;
             concurrency = null;
@@ -529,6 +867,8 @@
 
         var results = {};
         var runningTasks = 0;
+
+        var hasError = false;
 
         var listeners = [];
         function addListener(fn) {
@@ -552,6 +892,7 @@
         });
 
         _arrayEach(keys, function (k) {
+            if (hasError) return;
             var task = _isArray(tasks[k]) ? tasks[k]: [tasks[k]];
             var taskCallback = _restParam(function(err, args) {
                 runningTasks--;
@@ -564,6 +905,8 @@
                         safeResults[rkey] = val;
                     });
                     safeResults[k] = args;
+                    hasError = true;
+
                     callback(err, safeResults);
                 }
                 else {
@@ -577,7 +920,7 @@
             var dep;
             while (len--) {
                 if (!(dep = tasks[requires[len]])) {
-                    throw new Error('Has inexistant dependency');
+                    throw new Error('Has nonexistent dependency in ' + requires.join(', '));
                 }
                 if (_isArray(dep) && _indexOf(dep, k) >= 0) {
                     throw new Error('Has cyclic dependencies');
@@ -783,7 +1126,7 @@
                 } else if (test.apply(this, args)) {
                     iterator(next);
                 } else {
-                    callback(null);
+                    callback.apply(null, [null].concat(args));
                 }
             });
             iterator(next);
@@ -931,24 +1274,23 @@
                 _insert(q, data, true, callback);
             },
             process: function () {
-                if (!q.paused && workers < q.concurrency && q.tasks.length) {
-                    while(workers < q.concurrency && q.tasks.length){
-                        var tasks = q.payload ?
-                            q.tasks.splice(0, q.payload) :
-                            q.tasks.splice(0, q.tasks.length);
+                while(!q.paused && workers < q.concurrency && q.tasks.length){
 
-                        var data = _map(tasks, function (task) {
-                            return task.data;
-                        });
+                    var tasks = q.payload ?
+                        q.tasks.splice(0, q.payload) :
+                        q.tasks.splice(0, q.tasks.length);
 
-                        if (q.tasks.length === 0) {
-                            q.empty();
-                        }
-                        workers += 1;
-                        workersList.push(tasks[0]);
-                        var cb = only_once(_next(q, tasks));
-                        worker(data, cb);
+                    var data = _map(tasks, function (task) {
+                        return task.data;
+                    });
+
+                    if (q.tasks.length === 0) {
+                        q.empty();
                     }
+                    workers += 1;
+                    workersList.push(tasks[0]);
+                    var cb = only_once(_next(q, tasks));
+                    worker(data, cb);
                 }
             },
             length: function () {
@@ -1083,16 +1425,17 @@
     async.memoize = function (fn, hasher) {
         var memo = {};
         var queues = {};
+        var has = Object.prototype.hasOwnProperty;
         hasher = hasher || identity;
         var memoized = _restParam(function memoized(args) {
             var callback = args.pop();
             var key = hasher.apply(null, args);
-            if (key in memo) {
+            if (has.call(memo, key)) {   
                 async.setImmediate(function () {
                     callback.apply(null, memo[key]);
                 });
             }
-            else if (key in queues) {
+            else if (has.call(queues, key)) {
                 queues[key].push(callback);
             }
             else {
@@ -1262,345 +1605,13 @@
 }());
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":14}],2:[function(require,module,exports){
-/*
- * classie
- * http://github.amexpub.com/modules/classie
- *
- * Copyright (c) 2013 AmexPub. All rights reserved.
- */
-
-module.exports = require('./lib/classie');
-
-},{"./lib/classie":4}],3:[function(require,module,exports){
-/* 
- * classList.js: Cross-browser full element.classList implementation.
- * 2014-07-23
- *
- * By Eli Grey, http://eligrey.com
- * Public Domain.
- * NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
- */
-
-/*global self, document, DOMException, DOMTokenList */
-
-/*! @source http://purl.eligrey.com/github/classList.js/blob/master/classList.js*/
-
-if ("document" in self) {
-
-    // Full polyfill for browsers with no classList support
-    if (!("classList" in document.createElement("_")) || document.createElementNS && !("classList" in document.createElementNS("http://www.w3.org/2000/svg", "g"))) {
-
-        (function(view) {
-
-            "use strict";
-
-            if (!('Element' in view)) {
-                return;
-            }
-
-            var classListProp = "classList",
-                protoProp = "prototype",
-                elemCtrProto = view.Element[protoProp],
-                objCtr = Object,
-                strTrim = String[protoProp].trim || function() {
-                    return this.replace(/^\s+|\s+$/g, "");
-                }, arrIndexOf = Array[protoProp].indexOf || function(item) {
-                    var
-                    i = 0,
-                        len = this.length;
-                    for (; i < len; i++) {
-                        if (i in this && this[i] === item) {
-                            return i;
-                        }
-                    }
-                    return -1;
-                },
-                // Vendors: please allow content code to instantiate DOMExceptions
-                DOMEx = function(type, message) {
-                    this.name = type;
-                    this.code = DOMException[type];
-                    this.message = message;
-                }, checkTokenAndGetIndex = function(classList, token) {
-                    if (token === "") {
-                        throw new DOMEx(
-                            "SYNTAX_ERR", "An invalid or illegal string was specified");
-                    }
-                    if (/\s/.test(token)) {
-                        throw new DOMEx(
-                            "INVALID_CHARACTER_ERR", "String contains an invalid character");
-                    }
-                    return arrIndexOf.call(classList, token);
-                }, ClassList = function(elem) {
-                    var
-                    trimmedClasses = strTrim.call(elem.getAttribute("class") || ""),
-                        classes = trimmedClasses ? trimmedClasses.split(/\s+/) : [],
-                        i = 0,
-                        len = classes.length;
-                    for (; i < len; i++) {
-                        this.push(classes[i]);
-                    }
-                    this._updateClassName = function() {
-                        elem.setAttribute("class", this.toString());
-                    };
-                }, classListProto = ClassList[protoProp] = [],
-                classListGetter = function() {
-                    return new ClassList(this);
-                };
-            // Most DOMException implementations don't allow calling DOMException's toString()
-            // on non-DOMExceptions. Error's toString() is sufficient here.
-            DOMEx[protoProp] = Error[protoProp];
-            classListProto.item = function(i) {
-                return this[i] || null;
-            };
-            classListProto.contains = function(token) {
-                token += "";
-                return checkTokenAndGetIndex(this, token) !== -1;
-            };
-            classListProto.add = function() {
-                var
-                tokens = arguments,
-                    i = 0,
-                    l = tokens.length,
-                    token, updated = false;
-                do {
-                    token = tokens[i] + "";
-                    if (checkTokenAndGetIndex(this, token) === -1) {
-                        this.push(token);
-                        updated = true;
-                    }
-                }
-                while (++i < l);
-
-                if (updated) {
-                    this._updateClassName();
-                }
-            };
-            classListProto.remove = function() {
-                var
-                tokens = arguments,
-                    i = 0,
-                    l = tokens.length,
-                    token, updated = false,
-                    index;
-                do {
-                    token = tokens[i] + "";
-                    index = checkTokenAndGetIndex(this, token);
-                    while (index !== -1) {
-                        this.splice(index, 1);
-                        updated = true;
-                        index = checkTokenAndGetIndex(this, token);
-                    }
-                }
-                while (++i < l);
-
-                if (updated) {
-                    this._updateClassName();
-                }
-            };
-            classListProto.toggle = function(token, force) {
-                token += "";
-
-                var
-                result = this.contains(token),
-                    method = result ?
-                        force !== true && "remove" :
-                        force !== false && "add";
-
-                if (method) {
-                    this[method](token);
-                }
-
-                if (force === true || force === false) {
-                    return force;
-                } else {
-                    return !result;
-                }
-            };
-            classListProto.toString = function() {
-                return this.join(" ");
-            };
-
-            if (objCtr.defineProperty) {
-                var classListPropDesc = {
-                    get: classListGetter,
-                    enumerable: true,
-                    configurable: true
-                };
-                try {
-                    objCtr.defineProperty(elemCtrProto, classListProp, classListPropDesc);
-                } catch (ex) { // IE 8 doesn't support enumerable:true
-                    if (ex.number === -0x7FF5EC54) {
-                        classListPropDesc.enumerable = false;
-                        objCtr.defineProperty(elemCtrProto, classListProp, classListPropDesc);
-                    }
-                }
-            } else if (objCtr[protoProp].__defineGetter__) {
-                elemCtrProto.__defineGetter__(classListProp, classListGetter);
-            }
-
-        }(self));
-
-    } else {
-        // There is full or partial native classList support, so just check if we need
-        // to normalize the add/remove and toggle APIs.
-
-        (function() {
-            "use strict";
-
-            var testElement = document.createElement("_");
-
-            testElement.classList.add("c1", "c2");
-
-            // Polyfill for IE 10/11 and Firefox <26, where classList.add and
-            // classList.remove exist but support only one argument at a time.
-            if (!testElement.classList.contains("c2")) {
-                var createMethod = function(method) {
-                    var original = DOMTokenList.prototype[method];
-
-                    DOMTokenList.prototype[method] = function(token) {
-                        var i, len = arguments.length;
-
-                        for (i = 0; i < len; i++) {
-                            token = arguments[i];
-                            original.call(this, token);
-                        }
-                    };
-                };
-                createMethod('add');
-                createMethod('remove');
-            }
-
-            testElement.classList.toggle("c3", false);
-
-            // Polyfill for IE 10 and Firefox <24, where classList.toggle does not
-            // support the second argument.
-            if (testElement.classList.contains("c3")) {
-                var _toggle = DOMTokenList.prototype.toggle;
-
-                DOMTokenList.prototype.toggle = function(token, force) {
-                    if (1 in arguments && !this.contains(token) === !force) {
-                        return force;
-                    } else {
-                        return _toggle.call(this, token);
-                    }
-                };
-
-            }
-
-            testElement = null;
-        }());
-    }
-
-}
-
-},{}],4:[function(require,module,exports){
-/*!
- * classie - class helper functions
- * from bonzo https://github.com/ded/bonzo
- * 
- * classie.has( elem, 'my-class' ) -> true/false
- * classie.add( elem, 'my-new-class' )
- * classie.remove( elem, 'my-unwanted-class' )
- * classie.toggle( elem, 'my-class' )
- */
-
-/*jshint browser: true, strict: true, undef: true */
-/*global define: false */
-'use strict';
-
-// class helper functions from bonzo https://github.com/ded/bonzo
-var classList = require('./class_list_ployfill'),
-    classie;
-
-function classReg(className) {
-    return new RegExp("(^|\\s+)" + className + "(\\s+|$)");
-}
-
-function noop() {}
-
-function isArr(classes) {
-    if (Array.isArray(classes)) {
-        return true;
-    } else if (Object.prototype.toString.call(classes) === '[object Array]') {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-function removeMultiple() {
-    var c = arguments[1],
-        elem = arguments[0];
-    c.forEach(function(value) {
-        if (classie.has(elem, value)) {
-            noop();
-        }
-        classie.removeClass(elem, value);
-    });
-}
-
-
-function addMultiple() {
-    var c = arguments[1],
-        elem = arguments[0];
-    c.forEach(function(value) {
-        if (classie.has(elem, value)) {
-            noop();
-        }
-        classie.addClass(elem, value);
-    });
-}
-
-function hasClass(elem, c) {
-    return elem.classList.contains(c);
-}
-
-function addClass(elem, c) {
-    if (isArr(c)) {
-        addMultiple.apply(this, arguments);
-    } else {
-        elem.classList.add(c);
-    }
-}
-
-function removeClass(elem, c) {
-    if (isArr(c)) {
-        removeMultiple.apply(this, arguments);
-    } else {
-        elem.classList.remove(c);
-    }
-}
-
-function toggleClass(elem, c) {
-    var fn = hasClass(elem, c) ? removeClass : addClass;
-    fn(elem, c);
-}
-
-var classie = {
-    // full names
-    hasClass: hasClass,
-    addClass: addClass,
-    removeClass: removeClass,
-    toggleClass: toggleClass,
-    // short names
-    has: hasClass,
-    add: addClass,
-    remove: removeClass,
-    toggle: toggleClass
-};
-
-// transport
-
-if (typeof module === "object" && module && typeof module.exports === "object") {
-    // commonjs / browserify
-    module.exports = classie;
-} else {
-    // AMD
-    define(classie);
-}
-
-},{"./class_list_ployfill":3}],5:[function(require,module,exports){
+},{"_process":17}],5:[function(require,module,exports){
+arguments[4][1][0].apply(exports,arguments)
+},{"./lib/classie":7,"dup":1}],6:[function(require,module,exports){
+arguments[4][2][0].apply(exports,arguments)
+},{"dup":2}],7:[function(require,module,exports){
+arguments[4][3][0].apply(exports,arguments)
+},{"./class_list_ployfill":6,"dup":3}],8:[function(require,module,exports){
 /*
  * formie
  * http://github.amexpub.com/modules/formie
@@ -1612,7 +1623,7 @@ if (typeof module === "object" && module && typeof module.exports === "object") 
 
 module.exports = require('./lib/formie');
 
-},{"./lib/formie":6}],6:[function(require,module,exports){
+},{"./lib/formie":9}],9:[function(require,module,exports){
 /*
  * formie
  * http://github.com/yawetse/formie
@@ -2009,7 +2020,7 @@ formie.prototype._init = function () {
 };
 module.exports = formie;
 
-},{"async":1,"events":12,"forbject":7,"querystring":17,"superagent":9,"util":19,"util-extend":22}],7:[function(require,module,exports){
+},{"async":4,"events":15,"forbject":10,"querystring":20,"superagent":12,"util":22,"util-extend":25}],10:[function(require,module,exports){
 /*
  * forbject
  * http://github.amexpub.com/modules/forbject
@@ -2021,7 +2032,7 @@ module.exports = formie;
 
 module.exports = require('./lib/forbject');
 
-},{"./lib/forbject":8}],8:[function(require,module,exports){
+},{"./lib/forbject":11}],11:[function(require,module,exports){
 /*
  * forbject
  * http://github.com/yawetse/forbject
@@ -2274,7 +2285,7 @@ forbject.prototype.setFormObj = function () {
 };
 module.exports = forbject;
 
-},{"events":12,"util":19,"util-extend":22}],9:[function(require,module,exports){
+},{"events":15,"util":22,"util-extend":25}],12:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -3477,7 +3488,7 @@ request.put = function(url, data, fn){
 
 module.exports = request;
 
-},{"emitter":10,"reduce":11}],10:[function(require,module,exports){
+},{"emitter":13,"reduce":14}],13:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -3643,7 +3654,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],11:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 
 /**
  * Reduce `arr` with `fn`.
@@ -3668,7 +3679,7 @@ module.exports = function(arr, fn, initial){
   
   return curr;
 };
-},{}],12:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3971,7 +3982,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],13:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -3996,7 +4007,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],14:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -4089,7 +4100,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],15:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4175,7 +4186,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],16:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4262,20 +4273,20 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],17:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":15,"./encode":16}],18:[function(require,module,exports){
+},{"./decode":18,"./encode":19}],21:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],19:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -4865,7 +4876,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":18,"_process":14,"inherits":13}],20:[function(require,module,exports){
+},{"./support/isBuffer":21,"_process":17,"inherits":16}],23:[function(require,module,exports){
 /*
  * pushie
  * http://github.amexpub.com/modules/pushie
@@ -4877,7 +4888,7 @@ function hasOwnProperty(obj, prop) {
 
 module.exports = require('./lib/pushie');
 
-},{"./lib/pushie":21}],21:[function(require,module,exports){
+},{"./lib/pushie":24}],24:[function(require,module,exports){
 /*
  * pushie
  * http://github.com/yawetse/pushie
@@ -5048,7 +5059,7 @@ pushie.prototype.__init = function () {
 };
 module.exports = pushie;
 
-},{"events":12,"util":19,"util-extend":22}],22:[function(require,module,exports){
+},{"events":15,"util":22,"util-extend":25}],25:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -5083,12 +5094,14 @@ function extend(origin, add) {
   return origin;
 }
 
-},{}],23:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 'use strict';
 var Pushie = require('pushie'),
 	async = require('async'),
 	classie = require('classie'),
 	Formie = require('formie'),
+	Session_timeout = require('./session_timeout'),
+	StylieModals = require('stylie.modals'),
 	StylieNotification = require('stylie.notifications'),
 	// StylieTable = require('stylie.tables'),
 	// StyliePushMenu,
@@ -5105,7 +5118,10 @@ var Pushie = require('pushie'),
 	mobile_nav_menu_overlay,
 	mobile_nav_menu,
 	menuTriggerElement,
+	loginmodalElement,
+	session_timeout,
 	AdminFormies = {},
+	LoginModal,
 	nav_header,
 	preloaderElement;
 
@@ -5473,7 +5489,11 @@ var async_admin_ajax_link_handler = function (e) {
 		return false;
 	}
 };
-
+window.showLoginModal = function (data, title) {
+	loginmodalElement.querySelector('#loginmodal-title').innerHTML = title;
+	loginmodalElement.querySelector('#loginmodal-content').innerHTML = data;
+	LoginModal.show('loginmodal-modal');
+};
 var init = function () {
 	asyncHTMLWrapper = document.querySelector('#ts-asyncadmin-content-wrapper');
 	asyncHTMLContentContainer = document.querySelector(asyncContentSelector);
@@ -5481,6 +5501,7 @@ var init = function () {
 	menuElement = document.getElementById('ts-pushmenu-mp-menu');
 	menuTriggerElement = document.getElementById('trigger');
 	nav_header = document.querySelector('#nav-header');
+	loginmodalElement = document.querySelector('#loginmodal-modal');
 	mtpms = document.querySelector('main.ts-pushmenu-scroller');
 	ajaxlinks = document.querySelectorAll('.async-admin-ajax-link');
 	preloaderElement = document.querySelector('#ts-preloading');
@@ -5510,6 +5531,8 @@ var init = function () {
 		pushcallback: pushstatecallback,
 		popcallback: statecallback
 	});
+	LoginModal = new StylieModals({});
+	session_timeout = new Session_timeout();
 	window.asyncHTMLWrapper = asyncHTMLWrapper;
 	initFlashMessage();
 	initAjaxFormies();
@@ -5523,7 +5546,319 @@ else {
 	window.addEventListener('load', init, false);
 }
 
-},{"async":1,"classie":2,"formie":5,"pushie":20,"stylie.notifications":24,"superagent":31}],24:[function(require,module,exports){
+},{"./session_timeout":27,"async":4,"classie":5,"formie":8,"pushie":23,"stylie.modals":28,"stylie.notifications":30,"superagent":34}],27:[function(require,module,exports){
+'use strict';
+
+var request = require('superagent'),
+	merge = require('utils-merge'),
+	classie = require('classie'),
+	loginmodalElement,
+	session_timeout_interval,
+	timeoutWarning;
+
+var session_timeout = function (configoptions) {
+	var options = {
+		modal_selector: '#loginmodal-modal',
+		button_container_selector: '#ts-main-div',
+		timeout_warning_text: '<p class="ts-text-md">Your session is about to expire, do you wish to continue?</p>',
+		session_timeout_title: 'Are you still working?',
+		login_timouet_title: 'Logout Warning',
+		continue_session_url: '/healthcheck'
+	};
+
+	this.options = merge(options, configoptions);
+	this.init();
+};
+
+session_timeout.prototype.refresh_session_check = function () {
+	var _this = this;
+	try {
+		request
+			.get(_this.options.continue_session_url)
+			.set('Accept', 'application/json')
+			.end(function (error, res) {
+				if (error) {
+					window.showStylieNotification({
+						message: error.message,
+						type: 'error'
+					});
+				}
+				else if (res.error) {
+					window.showStylieNotification({
+						message: 'Status [' + res.error.status + ']: ' + res.error.message,
+						type: 'error'
+					});
+				}
+				else {
+					clearInterval(session_timeout_interval);
+					_this.startSessionTimeoutCountner();
+				}
+			});
+	}
+	catch (ajaxPageError) {
+		window.showStylieNotification({
+			message: 'Sorry, there was an error logging in.  If this error persists please <a href="/contact" style="color:black;">contact us</a>.',
+			type: 'error',
+			ttl: 60000
+		});
+	}
+};
+
+session_timeout.prototype.startSessionTimeoutCountner = function () {
+	clearTimeout(timeoutWarning);
+	clearInterval(session_timeout_interval);
+	var _this = this;
+	var session_ttl = window.session_ttl;
+	var sessionTimeout = (session_ttl && session_ttl > 120) ? session_ttl : 120;
+	var timeoutdelay = (sessionTimeout - 119) * 1000;
+	var secondsLeft = 120;
+	var modalTitle = (window.session_form_submit) ? _this.options.session_timeout_title : _this.options.login_timouet_title;
+	// var modalText = (window.session_form_submit)?'':'';
+	timeoutWarning = setTimeout(function () {
+		_this.startSessionCountdown();
+		window.showLoginModal('<div id="loginmodal-content">' +
+			_this.options.timeout_warning_text +
+			'<div class="ts-text-center">' +
+			' <span class="ts-button ts-continue-session-button primary-btn ts-modal-close">Continue</span> ' +
+			' <a href="/auth/logout" class="ts-button primary-btn ts-button-divider-text-color">Log out (<span id="ts-login-timeout-counter">' + secondsLeft + '</span>)</i></a>' +
+			'</div>' +
+			'</div>', modalTitle);
+		// session_timeout_interval
+		clearTimeout(timeoutWarning);
+	}, timeoutdelay);
+	// console.log('timeoutdelay', timeoutdelay);
+};
+
+
+session_timeout.prototype.startSessionCountdown = function () {
+	var secondsLeft = 119;
+	var countdownelement = document.querySelector('#ts-login-timeout-counter');
+	session_timeout_interval = setInterval(function () {
+		if (secondsLeft === 0) {
+			clearInterval(session_timeout_interval);
+			window.showStylieNotification({
+				message: 'Your session has expired due to inactivity.',
+				type: 'error',
+				ttl: false
+			});
+		}
+		else {
+			if (!countdownelement) {
+				countdownelement = document.querySelector('#ts-login-timeout-counter');
+			}
+			secondsLeft--;
+			if (countdownelement) {
+				countdownelement.innerHTML = secondsLeft;
+			}
+		}
+	}, 1000);
+};
+
+session_timeout.prototype.loginSessionClickContainer = function (e) {
+	var etarget = e.target;
+	var _this = this;
+
+	if (classie.has(etarget, 'ts-continue-session-button')) {
+		_this.refresh_session_check();
+	}
+};
+
+
+session_timeout.prototype.init = function () {
+	var _this = this;
+	var session_click_continue_container = document.querySelector(_this.options.button_container_selector);
+	loginmodalElement = document.querySelector(_this.options.modal_selector);
+	session_click_continue_container.addEventListener('click', function (e) {
+		_this.loginSessionClickContainer(e);
+	}, false);
+	if (window.use_session_timeout) {
+		_this.startSessionTimeoutCountner();
+	}
+};
+
+module.exports = session_timeout;
+
+},{"classie":5,"superagent":34,"utils-merge":38}],28:[function(require,module,exports){
+/*
+ * stylie.modals
+ * https://github.com/typesettin/stylie.modals
+ *
+ * Copyright (c) 2013 AmexPub. All rights reserved.
+ */
+
+'use strict';
+
+module.exports = require('./lib/stylie.modals');
+
+},{"./lib/stylie.modals":29}],29:[function(require,module,exports){
+/*
+ * stylie.modals
+ * https://github.com/typesettin/stylie.modals
+ *
+ * Copyright (c) 2014 Yaw Joseph Etse. All rights reserved.
+ */
+'use strict';
+
+var extend = require('util-extend'),
+	classie = require('classie'),
+	events = require('events'),
+	htmlEl,
+	util = require('util');
+
+/**
+ * A module that represents a StylieModals object, a componentTab is a page composition tool.
+ * @{@link https://github.com/typesettin/stylie.modals}
+ * @author Yaw Joseph Etse
+ * @copyright Copyright (c) 2014 Typesettin. All rights reserved.
+ * @license MIT
+ * @constructor StylieModals
+ * @requires module:util-extent
+ * @requires module:util
+ * @requires module:events
+ * @param {object} el element of tab container
+ * @param {object} options configuration options
+ */
+var StylieModals = function (options) {
+	events.EventEmitter.call(this);
+
+	// this.el = el;
+	this.options = extend(this.options, options);
+	// console.log(this.options);
+	this._init();
+	this.show = this._show;
+	this.hide = this._hide;
+};
+
+var closeModalOnKeydown = function (e) {
+	if (this.options.close_modal_on_escape_key === true && e.keyCode === 27) {
+		this.hide(this.options.current_modal);
+		document.querySelector('html').removeEventListener('keydown', closeModalOnKeydown, false);
+	}
+};
+
+var closeOverlayOnClick = function () {
+	this.hide(this.options.current_modal);
+};
+
+var closeModalClickHandler = function (e) {
+	if (classie.has(e.target, this.options.modal_close_class)) {
+		this.hide(this.options.current_modal);
+	}
+};
+
+util.inherits(StylieModals, events.EventEmitter);
+
+/** module default configuration */
+StylieModals.prototype.options = {
+	start: 0,
+	modal_overlay_selector: '.ts-modal-overlay',
+	modal_elements: '.ts-modal',
+	modal_body_container_class: 'ts-modal-container',
+	modal_close_class: 'ts-modal-close',
+	modal_default_class: 'ts-modal-effect-1',
+	modals: {},
+	overlay: null,
+	close_modal_on_overlay_click: true,
+	close_modal_on_escape_key: true,
+	current_modal: ''
+};
+/**
+ * initializes modals and shows current tab.
+ * @emits modalsInitialized
+ */
+StylieModals.prototype._init = function () {
+	var body = document.querySelector('body');
+	htmlEl = document.querySelector('html');
+
+	this.options.overlay = document.querySelector(this.options.modal_overlay_selector);
+	this.options.modalEls = document.querySelectorAll(this.options.modal_elements);
+
+	if (!classie.has(body, this.options.modal_body_container_class)) {
+		classie.add(body, this.options.modal_body_container_class);
+	}
+
+	for (var x in this.options.modalEls) {
+		if (typeof this.options.modalEls[x] === 'object') {
+			this.options.modals[this.options.modalEls[x].getAttribute('data-name')] = this.options.modalEls[x];
+		}
+	}
+	this._initEvents();
+	this.emit('modalsInitialized');
+};
+
+/**
+ * handle tab click events.
+ */
+StylieModals.prototype._initEvents = function () {
+	if (this.options.close_modal_on_overlay_click === true) {
+		this.options.overlay.addEventListener('click', closeOverlayOnClick.bind(this), false);
+	}
+	this.emit('modalsEventsInitialized');
+};
+
+/**
+ * Hides a modal component.
+ * @param {string} modal name
+ * @emits showModal
+ */
+StylieModals.prototype._hide = function (modal_name) {
+	var modal = this.options.modals[modal_name];
+	classie.remove(modal, 'ts-modal-show');
+	// this.options.current_modal = '';
+
+	modal.removeEventListener('click', closeModalClickHandler, false);
+
+	if (this.options.close_modal_on_escape_key === true) {
+		htmlEl.removeEventListener('keydown', closeModalOnKeydown.bind(this), false);
+	}
+
+
+	this.emit('hideModal', {
+		modal: modal,
+		modal_name: modal_name
+	});
+};
+
+/**
+ * Shows a modal component.
+ * @param {string} modal name
+ * @emits showModal
+ */
+StylieModals.prototype._show = function (modal_name) {
+	var modal = this.options.modals[modal_name],
+		hasModalEffect = false;
+
+	if(modal){
+		if(modal.classList){
+			for (var y = 0; y < modal.classList.length; y++) {
+				if (modal.classList[y].search('ts-modal-effect-') >= 0) {
+					hasModalEffect = true;
+				}
+			}
+		}
+		
+		if (hasModalEffect === false) {
+			classie.add(modal, this.options.modal_default_class);
+		}
+
+		classie.add(modal, 'ts-modal-show');
+		this.options.current_modal = modal_name;
+
+		modal.addEventListener('click', closeModalClickHandler.bind(this), false);
+
+		if (this.options.close_modal_on_escape_key === true) {
+			htmlEl.addEventListener('keydown', closeModalOnKeydown.bind(this), false);
+		}
+
+		this.emit('showModal', {
+			modal: modal,
+			modal_name: modal_name
+		});
+	}
+};
+module.exports = StylieModals;
+
+},{"classie":1,"events":15,"util":22,"util-extend":37}],30:[function(require,module,exports){
 /*
  * stylie.notifications
  * https://github.com/typesettin/stylie.notifications
@@ -5535,7 +5870,7 @@ else {
 
 module.exports = require('./lib/stylie.notifications');
 
-},{"./lib/stylie.notifications":25}],25:[function(require,module,exports){
+},{"./lib/stylie.notifications":31}],31:[function(require,module,exports){
 /*
  * stylie.notifications
  * https://github.com/typesettin/stylie.notifications
@@ -5732,13 +6067,7 @@ StylieNotifications.prototype._show = function () {
 };
 module.exports = StylieNotifications;
 
-},{"classie":26,"detectcss":29,"events":12,"util":19,"util-extend":34}],26:[function(require,module,exports){
-arguments[4][2][0].apply(exports,arguments)
-},{"./lib/classie":28,"dup":2}],27:[function(require,module,exports){
-arguments[4][3][0].apply(exports,arguments)
-},{"dup":3}],28:[function(require,module,exports){
-arguments[4][4][0].apply(exports,arguments)
-},{"./class_list_ployfill":27,"dup":4}],29:[function(require,module,exports){
+},{"classie":1,"detectcss":32,"events":15,"util":22,"util-extend":37}],32:[function(require,module,exports){
 /*
  * detectCSS
  * http://github.amexpub.com/modules/detectCSS
@@ -5748,7 +6077,7 @@ arguments[4][4][0].apply(exports,arguments)
 
 module.exports = require('./lib/detectCSS');
 
-},{"./lib/detectCSS":30}],30:[function(require,module,exports){
+},{"./lib/detectCSS":33}],33:[function(require,module,exports){
 /*
  * detectCSS
  * http://github.amexpub.com/modules
@@ -5787,1193 +6116,37 @@ exports.prefixed = function(style){
     }
     return false;
 };
-},{}],31:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
+arguments[4][12][0].apply(exports,arguments)
+},{"dup":12,"emitter":35,"reduce":36}],35:[function(require,module,exports){
+arguments[4][13][0].apply(exports,arguments)
+},{"dup":13}],36:[function(require,module,exports){
+arguments[4][14][0].apply(exports,arguments)
+},{"dup":14}],37:[function(require,module,exports){
+arguments[4][25][0].apply(exports,arguments)
+},{"dup":25}],38:[function(require,module,exports){
 /**
- * Module dependencies.
- */
-
-var Emitter = require('emitter');
-var reduce = require('reduce');
-
-/**
- * Root reference for iframes.
- */
-
-var root;
-if (typeof window !== 'undefined') { // Browser window
-  root = window;
-} else if (typeof self !== 'undefined') { // Web Worker
-  root = self;
-} else { // Other environments
-  root = this;
-}
-
-/**
- * Noop.
- */
-
-function noop(){};
-
-/**
- * Check if `obj` is a host object,
- * we don't want to serialize these :)
+ * Merge object b with object a.
  *
- * TODO: future proof, move to compoent land
+ *     var a = { foo: 'bar' }
+ *       , b = { bar: 'baz' };
  *
- * @param {Object} obj
- * @return {Boolean}
- * @api private
- */
-
-function isHost(obj) {
-  var str = {}.toString.call(obj);
-
-  switch (str) {
-    case '[object File]':
-    case '[object Blob]':
-    case '[object FormData]':
-      return true;
-    default:
-      return false;
-  }
-}
-
-/**
- * Determine XHR.
- */
-
-request.getXHR = function () {
-  if (root.XMLHttpRequest
-      && (!root.location || 'file:' != root.location.protocol
-          || !root.ActiveXObject)) {
-    return new XMLHttpRequest;
-  } else {
-    try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
-    try { return new ActiveXObject('Msxml2.XMLHTTP.6.0'); } catch(e) {}
-    try { return new ActiveXObject('Msxml2.XMLHTTP.3.0'); } catch(e) {}
-    try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch(e) {}
-  }
-  return false;
-};
-
-/**
- * Removes leading and trailing whitespace, added to support IE.
+ *     merge(a, b);
+ *     // => { foo: 'bar', bar: 'baz' }
  *
- * @param {String} s
- * @return {String}
- * @api private
- */
-
-var trim = ''.trim
-  ? function(s) { return s.trim(); }
-  : function(s) { return s.replace(/(^\s*|\s*$)/g, ''); };
-
-/**
- * Check if `obj` is an object.
- *
- * @param {Object} obj
- * @return {Boolean}
- * @api private
- */
-
-function isObject(obj) {
-  return obj === Object(obj);
-}
-
-/**
- * Serialize the given `obj`.
- *
- * @param {Object} obj
- * @return {String}
- * @api private
- */
-
-function serialize(obj) {
-  if (!isObject(obj)) return obj;
-  var pairs = [];
-  for (var key in obj) {
-    if (null != obj[key]) {
-      pushEncodedKeyValuePair(pairs, key, obj[key]);
-        }
-      }
-  return pairs.join('&');
-}
-
-/**
- * Helps 'serialize' with serializing arrays.
- * Mutates the pairs array.
- *
- * @param {Array} pairs
- * @param {String} key
- * @param {Mixed} val
- */
-
-function pushEncodedKeyValuePair(pairs, key, val) {
-  if (Array.isArray(val)) {
-    return val.forEach(function(v) {
-      pushEncodedKeyValuePair(pairs, key, v);
-    });
-  }
-  pairs.push(encodeURIComponent(key)
-    + '=' + encodeURIComponent(val));
-}
-
-/**
- * Expose serialization method.
- */
-
- request.serializeObject = serialize;
-
- /**
-  * Parse the given x-www-form-urlencoded `str`.
-  *
-  * @param {String} str
-  * @return {Object}
-  * @api private
-  */
-
-function parseString(str) {
-  var obj = {};
-  var pairs = str.split('&');
-  var parts;
-  var pair;
-
-  for (var i = 0, len = pairs.length; i < len; ++i) {
-    pair = pairs[i];
-    parts = pair.split('=');
-    obj[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
-  }
-
-  return obj;
-}
-
-/**
- * Expose parser.
- */
-
-request.parseString = parseString;
-
-/**
- * Default MIME type map.
- *
- *     superagent.types.xml = 'application/xml';
- *
- */
-
-request.types = {
-  html: 'text/html',
-  json: 'application/json',
-  xml: 'application/xml',
-  urlencoded: 'application/x-www-form-urlencoded',
-  'form': 'application/x-www-form-urlencoded',
-  'form-data': 'application/x-www-form-urlencoded'
-};
-
-/**
- * Default serialization map.
- *
- *     superagent.serialize['application/xml'] = function(obj){
- *       return 'generated xml here';
- *     };
- *
- */
-
- request.serialize = {
-   'application/x-www-form-urlencoded': serialize,
-   'application/json': JSON.stringify
- };
-
- /**
-  * Default parsers.
-  *
-  *     superagent.parse['application/xml'] = function(str){
-  *       return { object parsed from str };
-  *     };
-  *
-  */
-
-request.parse = {
-  'application/x-www-form-urlencoded': parseString,
-  'application/json': JSON.parse
-};
-
-/**
- * Parse the given header `str` into
- * an object containing the mapped fields.
- *
- * @param {String} str
+ * @param {Object} a
+ * @param {Object} b
  * @return {Object}
- * @api private
- */
-
-function parseHeader(str) {
-  var lines = str.split(/\r?\n/);
-  var fields = {};
-  var index;
-  var line;
-  var field;
-  var val;
-
-  lines.pop(); // trailing CRLF
-
-  for (var i = 0, len = lines.length; i < len; ++i) {
-    line = lines[i];
-    index = line.indexOf(':');
-    field = line.slice(0, index).toLowerCase();
-    val = trim(line.slice(index + 1));
-    fields[field] = val;
-  }
-
-  return fields;
-}
-
-/**
- * Return the mime type for the given `str`.
- *
- * @param {String} str
- * @return {String}
- * @api private
- */
-
-function type(str){
-  return str.split(/ *; */).shift();
-};
-
-/**
- * Return header field parameters.
- *
- * @param {String} str
- * @return {Object}
- * @api private
- */
-
-function params(str){
-  return reduce(str.split(/ *; */), function(obj, str){
-    var parts = str.split(/ *= */)
-      , key = parts.shift()
-      , val = parts.shift();
-
-    if (key && val) obj[key] = val;
-    return obj;
-  }, {});
-};
-
-/**
- * Initialize a new `Response` with the given `xhr`.
- *
- *  - set flags (.ok, .error, etc)
- *  - parse header
- *
- * Examples:
- *
- *  Aliasing `superagent` as `request` is nice:
- *
- *      request = superagent;
- *
- *  We can use the promise-like API, or pass callbacks:
- *
- *      request.get('/').end(function(res){});
- *      request.get('/', function(res){});
- *
- *  Sending data can be chained:
- *
- *      request
- *        .post('/user')
- *        .send({ name: 'tj' })
- *        .end(function(res){});
- *
- *  Or passed to `.send()`:
- *
- *      request
- *        .post('/user')
- *        .send({ name: 'tj' }, function(res){});
- *
- *  Or passed to `.post()`:
- *
- *      request
- *        .post('/user', { name: 'tj' })
- *        .end(function(res){});
- *
- * Or further reduced to a single call for simple cases:
- *
- *      request
- *        .post('/user', { name: 'tj' }, function(res){});
- *
- * @param {XMLHTTPRequest} xhr
- * @param {Object} options
- * @api private
- */
-
-function Response(req, options) {
-  options = options || {};
-  this.req = req;
-  this.xhr = this.req.xhr;
-  // responseText is accessible only if responseType is '' or 'text' and on older browsers
-  this.text = ((this.req.method !='HEAD' && (this.xhr.responseType === '' || this.xhr.responseType === 'text')) || typeof this.xhr.responseType === 'undefined')
-     ? this.xhr.responseText
-     : null;
-  this.statusText = this.req.xhr.statusText;
-  this.setStatusProperties(this.xhr.status);
-  this.header = this.headers = parseHeader(this.xhr.getAllResponseHeaders());
-  // getAllResponseHeaders sometimes falsely returns "" for CORS requests, but
-  // getResponseHeader still works. so we get content-type even if getting
-  // other headers fails.
-  this.header['content-type'] = this.xhr.getResponseHeader('content-type');
-  this.setHeaderProperties(this.header);
-  this.body = this.req.method != 'HEAD'
-    ? this.parseBody(this.text ? this.text : this.xhr.response)
-    : null;
-}
-
-/**
- * Get case-insensitive `field` value.
- *
- * @param {String} field
- * @return {String}
  * @api public
  */
 
-Response.prototype.get = function(field){
-  return this.header[field.toLowerCase()];
-};
-
-/**
- * Set header related properties:
- *
- *   - `.type` the content type without params
- *
- * A response of "Content-Type: text/plain; charset=utf-8"
- * will provide you with a `.type` of "text/plain".
- *
- * @param {Object} header
- * @api private
- */
-
-Response.prototype.setHeaderProperties = function(header){
-  // content-type
-  var ct = this.header['content-type'] || '';
-  this.type = type(ct);
-
-  // params
-  var obj = params(ct);
-  for (var key in obj) this[key] = obj[key];
-};
-
-/**
- * Parse the given body `str`.
- *
- * Used for auto-parsing of bodies. Parsers
- * are defined on the `superagent.parse` object.
- *
- * @param {String} str
- * @return {Mixed}
- * @api private
- */
-
-Response.prototype.parseBody = function(str){
-  var parse = request.parse[this.type];
-  return parse && str && (str.length || str instanceof Object)
-    ? parse(str)
-    : null;
-};
-
-/**
- * Set flags such as `.ok` based on `status`.
- *
- * For example a 2xx response will give you a `.ok` of __true__
- * whereas 5xx will be __false__ and `.error` will be __true__. The
- * `.clientError` and `.serverError` are also available to be more
- * specific, and `.statusType` is the class of error ranging from 1..5
- * sometimes useful for mapping respond colors etc.
- *
- * "sugar" properties are also defined for common cases. Currently providing:
- *
- *   - .noContent
- *   - .badRequest
- *   - .unauthorized
- *   - .notAcceptable
- *   - .notFound
- *
- * @param {Number} status
- * @api private
- */
-
-Response.prototype.setStatusProperties = function(status){
-  // handle IE9 bug: http://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
-  if (status === 1223) {
-    status = 204;
-  }
-
-  var type = status / 100 | 0;
-
-  // status / class
-  this.status = this.statusCode = status;
-  this.statusType = type;
-
-  // basics
-  this.info = 1 == type;
-  this.ok = 2 == type;
-  this.clientError = 4 == type;
-  this.serverError = 5 == type;
-  this.error = (4 == type || 5 == type)
-    ? this.toError()
-    : false;
-
-  // sugar
-  this.accepted = 202 == status;
-  this.noContent = 204 == status;
-  this.badRequest = 400 == status;
-  this.unauthorized = 401 == status;
-  this.notAcceptable = 406 == status;
-  this.notFound = 404 == status;
-  this.forbidden = 403 == status;
-};
-
-/**
- * Return an `Error` representative of this response.
- *
- * @return {Error}
- * @api public
- */
-
-Response.prototype.toError = function(){
-  var req = this.req;
-  var method = req.method;
-  var url = req.url;
-
-  var msg = 'cannot ' + method + ' ' + url + ' (' + this.status + ')';
-  var err = new Error(msg);
-  err.status = this.status;
-  err.method = method;
-  err.url = url;
-
-  return err;
-};
-
-/**
- * Expose `Response`.
- */
-
-request.Response = Response;
-
-/**
- * Initialize a new `Request` with the given `method` and `url`.
- *
- * @param {String} method
- * @param {String} url
- * @api public
- */
-
-function Request(method, url) {
-  var self = this;
-  Emitter.call(this);
-  this._query = this._query || [];
-  this.method = method;
-  this.url = url;
-  this.header = {};
-  this._header = {};
-  this.on('end', function(){
-    var err = null;
-    var res = null;
-
-    try {
-      res = new Response(self);
-    } catch(e) {
-      err = new Error('Parser is unable to parse the response');
-      err.parse = true;
-      err.original = e;
-      return self.callback(err);
+exports = module.exports = function(a, b){
+  if (a && b) {
+    for (var key in b) {
+      a[key] = b[key];
     }
-
-    self.emit('response', res);
-
-    if (err) {
-      return self.callback(err, res);
-    }
-
-    if (res.status >= 200 && res.status < 300) {
-      return self.callback(err, res);
-    }
-
-    var new_err = new Error(res.statusText || 'Unsuccessful HTTP response');
-    new_err.original = err;
-    new_err.response = res;
-    new_err.status = res.status;
-
-    self.callback(new_err, res);
-  });
-}
-
-/**
- * Mixin `Emitter`.
- */
-
-Emitter(Request.prototype);
-
-/**
- * Allow for extension
- */
-
-Request.prototype.use = function(fn) {
-  fn(this);
-  return this;
-}
-
-/**
- * Set timeout to `ms`.
- *
- * @param {Number} ms
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.timeout = function(ms){
-  this._timeout = ms;
-  return this;
-};
-
-/**
- * Clear previous timeout.
- *
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.clearTimeout = function(){
-  this._timeout = 0;
-  clearTimeout(this._timer);
-  return this;
-};
-
-/**
- * Abort the request, and clear potential timeout.
- *
- * @return {Request}
- * @api public
- */
-
-Request.prototype.abort = function(){
-  if (this.aborted) return;
-  this.aborted = true;
-  this.xhr.abort();
-  this.clearTimeout();
-  this.emit('abort');
-  return this;
-};
-
-/**
- * Set header `field` to `val`, or multiple fields with one object.
- *
- * Examples:
- *
- *      req.get('/')
- *        .set('Accept', 'application/json')
- *        .set('X-API-Key', 'foobar')
- *        .end(callback);
- *
- *      req.get('/')
- *        .set({ Accept: 'application/json', 'X-API-Key': 'foobar' })
- *        .end(callback);
- *
- * @param {String|Object} field
- * @param {String} val
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.set = function(field, val){
-  if (isObject(field)) {
-    for (var key in field) {
-      this.set(key, field[key]);
-    }
-    return this;
   }
-  this._header[field.toLowerCase()] = val;
-  this.header[field] = val;
-  return this;
+  return a;
 };
 
-/**
- * Remove header `field`.
- *
- * Example:
- *
- *      req.get('/')
- *        .unset('User-Agent')
- *        .end(callback);
- *
- * @param {String} field
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.unset = function(field){
-  delete this._header[field.toLowerCase()];
-  delete this.header[field];
-  return this;
-};
-
-/**
- * Get case-insensitive header `field` value.
- *
- * @param {String} field
- * @return {String}
- * @api private
- */
-
-Request.prototype.getHeader = function(field){
-  return this._header[field.toLowerCase()];
-};
-
-/**
- * Set Content-Type to `type`, mapping values from `request.types`.
- *
- * Examples:
- *
- *      superagent.types.xml = 'application/xml';
- *
- *      request.post('/')
- *        .type('xml')
- *        .send(xmlstring)
- *        .end(callback);
- *
- *      request.post('/')
- *        .type('application/xml')
- *        .send(xmlstring)
- *        .end(callback);
- *
- * @param {String} type
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.type = function(type){
-  this.set('Content-Type', request.types[type] || type);
-  return this;
-};
-
-/**
- * Force given parser
- *
- * Sets the body parser no matter type.
- *
- * @param {Function}
- * @api public
- */
-
-Request.prototype.parse = function(fn){
-  this._parser = fn;
-  return this;
-};
-
-/**
- * Set Accept to `type`, mapping values from `request.types`.
- *
- * Examples:
- *
- *      superagent.types.json = 'application/json';
- *
- *      request.get('/agent')
- *        .accept('json')
- *        .end(callback);
- *
- *      request.get('/agent')
- *        .accept('application/json')
- *        .end(callback);
- *
- * @param {String} accept
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.accept = function(type){
-  this.set('Accept', request.types[type] || type);
-  return this;
-};
-
-/**
- * Set Authorization field value with `user` and `pass`.
- *
- * @param {String} user
- * @param {String} pass
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.auth = function(user, pass){
-  var str = btoa(user + ':' + pass);
-  this.set('Authorization', 'Basic ' + str);
-  return this;
-};
-
-/**
-* Add query-string `val`.
-*
-* Examples:
-*
-*   request.get('/shoes')
-*     .query('size=10')
-*     .query({ color: 'blue' })
-*
-* @param {Object|String} val
-* @return {Request} for chaining
-* @api public
-*/
-
-Request.prototype.query = function(val){
-  if ('string' != typeof val) val = serialize(val);
-  if (val) this._query.push(val);
-  return this;
-};
-
-/**
- * Write the field `name` and `val` for "multipart/form-data"
- * request bodies.
- *
- * ``` js
- * request.post('/upload')
- *   .field('foo', 'bar')
- *   .end(callback);
- * ```
- *
- * @param {String} name
- * @param {String|Blob|File} val
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.field = function(name, val){
-  if (!this._formData) this._formData = new root.FormData();
-  this._formData.append(name, val);
-  return this;
-};
-
-/**
- * Queue the given `file` as an attachment to the specified `field`,
- * with optional `filename`.
- *
- * ``` js
- * request.post('/upload')
- *   .attach(new Blob(['<a id="a"><b id="b">hey!</b></a>'], { type: "text/html"}))
- *   .end(callback);
- * ```
- *
- * @param {String} field
- * @param {Blob|File} file
- * @param {String} filename
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.attach = function(field, file, filename){
-  if (!this._formData) this._formData = new root.FormData();
-  this._formData.append(field, file, filename);
-  return this;
-};
-
-/**
- * Send `data`, defaulting the `.type()` to "json" when
- * an object is given.
- *
- * Examples:
- *
- *       // querystring
- *       request.get('/search')
- *         .end(callback)
- *
- *       // multiple data "writes"
- *       request.get('/search')
- *         .send({ search: 'query' })
- *         .send({ range: '1..5' })
- *         .send({ order: 'desc' })
- *         .end(callback)
- *
- *       // manual json
- *       request.post('/user')
- *         .type('json')
- *         .send('{"name":"tj"}')
- *         .end(callback)
- *
- *       // auto json
- *       request.post('/user')
- *         .send({ name: 'tj' })
- *         .end(callback)
- *
- *       // manual x-www-form-urlencoded
- *       request.post('/user')
- *         .type('form')
- *         .send('name=tj')
- *         .end(callback)
- *
- *       // auto x-www-form-urlencoded
- *       request.post('/user')
- *         .type('form')
- *         .send({ name: 'tj' })
- *         .end(callback)
- *
- *       // defaults to x-www-form-urlencoded
-  *      request.post('/user')
-  *        .send('name=tobi')
-  *        .send('species=ferret')
-  *        .end(callback)
- *
- * @param {String|Object} data
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.send = function(data){
-  var obj = isObject(data);
-  var type = this.getHeader('Content-Type');
-
-  // merge
-  if (obj && isObject(this._data)) {
-    for (var key in data) {
-      this._data[key] = data[key];
-    }
-  } else if ('string' == typeof data) {
-    if (!type) this.type('form');
-    type = this.getHeader('Content-Type');
-    if ('application/x-www-form-urlencoded' == type) {
-      this._data = this._data
-        ? this._data + '&' + data
-        : data;
-    } else {
-      this._data = (this._data || '') + data;
-    }
-  } else {
-    this._data = data;
-  }
-
-  if (!obj || isHost(data)) return this;
-  if (!type) this.type('json');
-  return this;
-};
-
-/**
- * Invoke the callback with `err` and `res`
- * and handle arity check.
- *
- * @param {Error} err
- * @param {Response} res
- * @api private
- */
-
-Request.prototype.callback = function(err, res){
-  var fn = this._callback;
-  this.clearTimeout();
-  fn(err, res);
-};
-
-/**
- * Invoke callback with x-domain error.
- *
- * @api private
- */
-
-Request.prototype.crossDomainError = function(){
-  var err = new Error('Origin is not allowed by Access-Control-Allow-Origin');
-  err.crossDomain = true;
-  this.callback(err);
-};
-
-/**
- * Invoke callback with timeout error.
- *
- * @api private
- */
-
-Request.prototype.timeoutError = function(){
-  var timeout = this._timeout;
-  var err = new Error('timeout of ' + timeout + 'ms exceeded');
-  err.timeout = timeout;
-  this.callback(err);
-};
-
-/**
- * Enable transmission of cookies with x-domain requests.
- *
- * Note that for this to work the origin must not be
- * using "Access-Control-Allow-Origin" with a wildcard,
- * and also must set "Access-Control-Allow-Credentials"
- * to "true".
- *
- * @api public
- */
-
-Request.prototype.withCredentials = function(){
-  this._withCredentials = true;
-  return this;
-};
-
-/**
- * Initiate request, invoking callback `fn(res)`
- * with an instanceof `Response`.
- *
- * @param {Function} fn
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.end = function(fn){
-  var self = this;
-  var xhr = this.xhr = request.getXHR();
-  var query = this._query.join('&');
-  var timeout = this._timeout;
-  var data = this._formData || this._data;
-
-  // store callback
-  this._callback = fn || noop;
-
-  // state change
-  xhr.onreadystatechange = function(){
-    if (4 != xhr.readyState) return;
-
-    // In IE9, reads to any property (e.g. status) off of an aborted XHR will
-    // result in the error "Could not complete the operation due to error c00c023f"
-    var status;
-    try { status = xhr.status } catch(e) { status = 0; }
-
-    if (0 == status) {
-      if (self.timedout) return self.timeoutError();
-      if (self.aborted) return;
-      return self.crossDomainError();
-    }
-    self.emit('end');
-  };
-
-  // progress
-  var handleProgress = function(e){
-    if (e.total > 0) {
-      e.percent = e.loaded / e.total * 100;
-    }
-    self.emit('progress', e);
-  };
-  if (this.hasListeners('progress')) {
-    xhr.onprogress = handleProgress;
-  }
-  try {
-    if (xhr.upload && this.hasListeners('progress')) {
-      xhr.upload.onprogress = handleProgress;
-    }
-  } catch(e) {
-    // Accessing xhr.upload fails in IE from a web worker, so just pretend it doesn't exist.
-    // Reported here:
-    // https://connect.microsoft.com/IE/feedback/details/837245/xmlhttprequest-upload-throws-invalid-argument-when-used-from-web-worker-context
-  }
-
-  // timeout
-  if (timeout && !this._timer) {
-    this._timer = setTimeout(function(){
-      self.timedout = true;
-      self.abort();
-    }, timeout);
-  }
-
-  // querystring
-  if (query) {
-    query = request.serializeObject(query);
-    this.url += ~this.url.indexOf('?')
-      ? '&' + query
-      : '?' + query;
-  }
-
-  // initiate request
-  xhr.open(this.method, this.url, true);
-
-  // CORS
-  if (this._withCredentials) xhr.withCredentials = true;
-
-  // body
-  if ('GET' != this.method && 'HEAD' != this.method && 'string' != typeof data && !isHost(data)) {
-    // serialize stuff
-    var contentType = this.getHeader('Content-Type');
-    var serialize = this._parser || request.serialize[contentType ? contentType.split(';')[0] : ''];
-    if (serialize) data = serialize(data);
-  }
-
-  // set header fields
-  for (var field in this.header) {
-    if (null == this.header[field]) continue;
-    xhr.setRequestHeader(field, this.header[field]);
-  }
-
-  // send stuff
-  this.emit('request', this);
-
-  // IE11 xhr.send(undefined) sends 'undefined' string as POST payload (instead of nothing)
-  // We need null here if data is undefined
-  xhr.send(typeof data !== 'undefined' ? data : null);
-  return this;
-};
-
-/**
- * Faux promise support
- *
- * @param {Function} fulfill
- * @param {Function} reject
- * @return {Request}
- */
-
-Request.prototype.then = function (fulfill, reject) {
-  return this.end(function(err, res) {
-    err ? reject(err) : fulfill(res);
-  });
-}
-
-/**
- * Expose `Request`.
- */
-
-request.Request = Request;
-
-/**
- * Issue a request:
- *
- * Examples:
- *
- *    request('GET', '/users').end(callback)
- *    request('/users').end(callback)
- *    request('/users', callback)
- *
- * @param {String} method
- * @param {String|Function} url or callback
- * @return {Request}
- * @api public
- */
-
-function request(method, url) {
-  // callback
-  if ('function' == typeof url) {
-    return new Request('GET', method).end(url);
-  }
-
-  // url first
-  if (1 == arguments.length) {
-    return new Request('GET', method);
-  }
-
-  return new Request(method, url);
-}
-
-/**
- * GET `url` with optional callback `fn(res)`.
- *
- * @param {String} url
- * @param {Mixed|Function} data or fn
- * @param {Function} fn
- * @return {Request}
- * @api public
- */
-
-request.get = function(url, data, fn){
-  var req = request('GET', url);
-  if ('function' == typeof data) fn = data, data = null;
-  if (data) req.query(data);
-  if (fn) req.end(fn);
-  return req;
-};
-
-/**
- * HEAD `url` with optional callback `fn(res)`.
- *
- * @param {String} url
- * @param {Mixed|Function} data or fn
- * @param {Function} fn
- * @return {Request}
- * @api public
- */
-
-request.head = function(url, data, fn){
-  var req = request('HEAD', url);
-  if ('function' == typeof data) fn = data, data = null;
-  if (data) req.send(data);
-  if (fn) req.end(fn);
-  return req;
-};
-
-/**
- * DELETE `url` with optional callback `fn(res)`.
- *
- * @param {String} url
- * @param {Function} fn
- * @return {Request}
- * @api public
- */
-
-function del(url, fn){
-  var req = request('DELETE', url);
-  if (fn) req.end(fn);
-  return req;
-};
-
-request.del = del;
-request.delete = del;
-
-/**
- * PATCH `url` with optional `data` and callback `fn(res)`.
- *
- * @param {String} url
- * @param {Mixed} data
- * @param {Function} fn
- * @return {Request}
- * @api public
- */
-
-request.patch = function(url, data, fn){
-  var req = request('PATCH', url);
-  if ('function' == typeof data) fn = data, data = null;
-  if (data) req.send(data);
-  if (fn) req.end(fn);
-  return req;
-};
-
-/**
- * POST `url` with optional `data` and callback `fn(res)`.
- *
- * @param {String} url
- * @param {Mixed} data
- * @param {Function} fn
- * @return {Request}
- * @api public
- */
-
-request.post = function(url, data, fn){
-  var req = request('POST', url);
-  if ('function' == typeof data) fn = data, data = null;
-  if (data) req.send(data);
-  if (fn) req.end(fn);
-  return req;
-};
-
-/**
- * PUT `url` with optional `data` and callback `fn(res)`.
- *
- * @param {String} url
- * @param {Mixed|Function} data or fn
- * @param {Function} fn
- * @return {Request}
- * @api public
- */
-
-request.put = function(url, data, fn){
-  var req = request('PUT', url);
-  if ('function' == typeof data) fn = data, data = null;
-  if (data) req.send(data);
-  if (fn) req.end(fn);
-  return req;
-};
-
-/**
- * Expose `request`.
- */
-
-module.exports = request;
-
-},{"emitter":32,"reduce":33}],32:[function(require,module,exports){
-arguments[4][10][0].apply(exports,arguments)
-},{"dup":10}],33:[function(require,module,exports){
-arguments[4][11][0].apply(exports,arguments)
-},{"dup":11}],34:[function(require,module,exports){
-arguments[4][22][0].apply(exports,arguments)
-},{"dup":22}]},{},[23]);
+},{}]},{},[26]);

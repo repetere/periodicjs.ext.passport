@@ -1,7 +1,7 @@
 {
   "name": "periodicjs.ext.login",
   "description": "An authentication extension for periodicjs that uses passport to authenticate user sessions.",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "main": "index.js",
   "engines": {
     "node": ">=0.10.x"
@@ -79,9 +79,9 @@
     "url": "https://github.com/typesettin/periodicjs.ext.login/issues"
   },
   "homepage": "https://github.com/typesettin/periodicjs.ext.login",
-  "_id": "periodicjs.ext.login@5.9.841",
-  "_shasum": "29c8083edf851053a9e9079c0db5323fbdebcda3",
-  "_from": "periodicjs.ext.login@5.9.841",
+  "_id": "periodicjs.ext.login@6.0.0",
+  "_shasum": "95578b7153303b15cc59447fc9bfbf25b5b2b038",
+  "_from": "periodicjs.ext.login@latest",
   "_resolved": "https://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-5.9.1.tgz",
   "gitHead": "4664b50397714fe9aad5c9b1e77d1707525c107c",
   "_npmVersion": "2.11.2",

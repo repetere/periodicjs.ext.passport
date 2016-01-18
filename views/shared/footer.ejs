@@ -29,8 +29,13 @@
 			</footer>
 		<!-- </div> -->
 	</main>
+	<% include _login_modal %>
 	<%- locals.viewhelper.getHTML(locals.additionalFooterHTML) %>
 	<script type="text/javascript">
+		window.use_session_timeout = true;
+		window.session_form_submit = true;
+    window.session_ttl = <% if(locals.session_ttl){%><%-locals.session_ttl%><%}else{%>false<%} %>;
+
 	  <%- locals.viewhelper.passObjToClient(periodic,"periodic") %>
 	</script>
 </body>

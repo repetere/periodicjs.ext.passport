@@ -25,6 +25,7 @@ module.exports = function (periodic) {
 	// periodic = express,app,logger,config,db,mongoose
 	//console.log('before defaultExtSettings', defaultExtSettings);
 	periodic.app.locals.stylietreeview = stylietreeview;
+	periodic.app.locals.session_ttl = periodic.settings.sessions.ttl_in_seconds;
 
 	appenvironment = periodic.settings.application.environment;
 	settingJSON = fs.readJsonSync(loginExtSettingsFile);
@@ -36,6 +37,8 @@ module.exports = function (periodic) {
 	periodic.app.controller.extension.login = {
 		loginExtSettings: loginExtSettings
 	};
+
+	periodic.app.locals.login_social_buttons = periodic.app.controller.extension.login.loginExtSettings.login_social_buttons;
 	periodic.app.controller.extension.login.auth = require('./controller/auth')(periodic);
 	periodic.app.controller.extension.login.user = require('./controller/user')(periodic);
 
@@ -54,7 +57,7 @@ module.exports = function (periodic) {
 		});
 	periodic.app.controller.extension.login.token = tokenController;
 	periodic.app.controller.extension.login.social = socialPassportController;
-	
+
 	if (periodic.app.controller.extension.login.loginExtSettings.login_csrf) {
 		authRouter.use(csrf());
 		userRouter.use(csrf());
@@ -68,7 +71,7 @@ module.exports = function (periodic) {
 			next();
 		});
 	}
-	
+
 	authRouter.get('*', global.CoreCache.disableCache);
 	authRouter.post('*', global.CoreCache.disableCache);
 	userRouter.get('*', global.CoreCache.disableCache);

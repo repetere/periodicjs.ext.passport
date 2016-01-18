@@ -3,6 +3,8 @@ var Pushie = require('pushie'),
 	async = require('async'),
 	classie = require('classie'),
 	Formie = require('formie'),
+	Session_timeout = require('./session_timeout'),
+	StylieModals = require('stylie.modals'),
 	StylieNotification = require('stylie.notifications'),
 	// StylieTable = require('stylie.tables'),
 	// StyliePushMenu,
@@ -19,7 +21,10 @@ var Pushie = require('pushie'),
 	mobile_nav_menu_overlay,
 	mobile_nav_menu,
 	menuTriggerElement,
+	loginmodalElement,
+	session_timeout,
 	AdminFormies = {},
+	LoginModal,
 	nav_header,
 	preloaderElement;
 
@@ -387,7 +392,11 @@ var async_admin_ajax_link_handler = function (e) {
 		return false;
 	}
 };
-
+window.showLoginModal = function (data, title) {
+	loginmodalElement.querySelector('#loginmodal-title').innerHTML = title;
+	loginmodalElement.querySelector('#loginmodal-content').innerHTML = data;
+	LoginModal.show('loginmodal-modal');
+};
 var init = function () {
 	asyncHTMLWrapper = document.querySelector('#ts-asyncadmin-content-wrapper');
 	asyncHTMLContentContainer = document.querySelector(asyncContentSelector);
@@ -395,6 +404,7 @@ var init = function () {
 	menuElement = document.getElementById('ts-pushmenu-mp-menu');
 	menuTriggerElement = document.getElementById('trigger');
 	nav_header = document.querySelector('#nav-header');
+	loginmodalElement = document.querySelector('#loginmodal-modal');
 	mtpms = document.querySelector('main.ts-pushmenu-scroller');
 	ajaxlinks = document.querySelectorAll('.async-admin-ajax-link');
 	preloaderElement = document.querySelector('#ts-preloading');
@@ -424,6 +434,8 @@ var init = function () {
 		pushcallback: pushstatecallback,
 		popcallback: statecallback
 	});
+	LoginModal = new StylieModals({});
+	session_timeout = new Session_timeout();
 	window.asyncHTMLWrapper = asyncHTMLWrapper;
 	initFlashMessage();
 	initAjaxFormies();
