@@ -40,31 +40,37 @@ var login = function (req, res, next) {
 				});
 				if (err.message === 'Your Account is Currently Blocked') {
 					req.flash('error', 'Your account is currently blocked');
-					return res.redirect(loginExtSettings.settings.authLoginPath);
+					resOptions.responseData = {
+						result: 'error',
+						data: {
+							message: err.message,
+								redirecturl: req.session.return_url || loginExtSettings.settings.authLoggedInHomepage
+						}
+					};
+					resOptions.err = err;
+					resOptions.redirecturl = req.session.return_url || loginExtSettings.settings.authLoggedInHomepage;
+					return CoreController.respondInKind(resOptions);
 				}
 				return next(err);
 			}
 			if (!user) {
+				var wrongLoginMessage = 'Invalid credentials, did you forget your password?';
 				CoreController.logWarning({
 					req: req,
-					err: new Error('Invalid credentials, did you forget your password?')
+					err: new Error(wrongLoginMessage)
 				});
-				if (!req.controllerData.ajaxLogin) {
-					req.flash('error', 'Invalid credentials, did you forget your password?');
-					return res.redirect(loginExtSettings.settings.authLoginPath);
-					// return CoreController.respondInKind(resOptions);
-				}
-				else {
-					resOptions.err = resOptions.err || new Error('Invalid credentials, did you forget your password?');
 
-					return CoreController.respondInKind(resOptions);
-				}
-				// CoreController.handleDocumentQueryErrorResponse({
-				// 	err: err,
-				// 	res: res,
-				// 	req: req,
-				// });
-				// return res.redirect(loginExtSettings.settings.authLoginPath);
+				req.flash('error', wrongLoginMessage);
+				resOptions.responseData = {
+					result: 'error',
+					data: {
+						message: wrongLoginMessage,
+							redirecturl: req.session.return_url || loginExtSettings.settings.authLoggedInHomepage
+					}
+				};
+				resOptions.err = resOptions.err || new Error(wrongLoginMessage);
+				resOptions.redirecturl = req.session.return_url || loginExtSettings.settings.authLoggedInHomepage;
+				return CoreController.respondInKind(resOptions);
 			}
 			req.logIn(user, function (err) {
 				if (err) {
@@ -72,43 +78,15 @@ var login = function (req, res, next) {
 						req: req,
 						err: err
 					});
-					// resOptions.err = err;
-					// CoreController.handleDocumentQueryErrorResponse({
-					// 	err: err,
-					// 	res: res,
-					// 	req: req,
-					// });
 					return next(err);
 				}
-				if (!req.controllerData.ajaxLogin) {
-					if (req.session.return_url) {
-						resOptions.responseData = {
-							result: 'success',
-							data: {
-								redirecturl: req.session.return_url
-							}
-						};
-						resOptions.redirecturl = req.session.return_url;
-						return CoreController.respondInKind(resOptions);
-						// return res.redirect(req.session.return_url);
-					}
-					else {
-						resOptions.redirecturl = loginExtSettings.settings.authLoggedInHomepage;
-						resOptions.responseData = {
-							result: 'success',
-							data: {
-								redirecturl: loginExtSettings.settings.authLoggedInHomepage
-							}
-						};
-						return CoreController.respondInKind(resOptions);
-						// res.redirect(loginExtSettings.settings.authLoggedInHomepage);
-					}
-				}
 				else {
+					resOptions.redirecturl = req.session.return_url || loginExtSettings.settings.authLoggedInHomepage;
 					resOptions.responseData = {
 						result: 'success',
 						data: {
-							message: 'successfully logged in'
+							message: 'successfully logged in',
+								redirecturl: req.session.return_url || loginExtSettings.settings.authLoggedInHomepage
 						}
 					};
 					return CoreController.respondInKind(resOptions);

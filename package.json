@@ -1,11 +1,38 @@
 {
-  "name": "periodicjs.ext.login",
-  "description": "An authentication extension for periodicjs that uses passport to authenticate user sessions.",
-  "version": "6.0.2",
-  "main": "index.js",
-  "engines": {
-    "node": ">=0.10.x"
+  "_args": [
+    [
+      "periodicjs.ext.login@6.0.2",
+      "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs"
+    ]
+  ],
+  "_from": "periodicjs.ext.login@6.0.2",
+  "_id": "periodicjs.ext.login@6.0.2",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/periodicjs.ext.login",
+  "_nodeVersion": "4.2.4",
+  "_npmUser": {
+    "email": "yaw.etse@gmail.com",
+    "name": "yawetse"
   },
+  "_npmVersion": "2.14.12",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "periodicjs.ext.login",
+    "raw": "periodicjs.ext.login@6.0.2",
+    "rawSpec": "6.0.2",
+    "scope": null,
+    "spec": "6.0.2",
+    "type": "version"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "https://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-6.0.2.tgz",
+  "_shasum": "e83a752f4a69131a72d2c92da8d4bfbb5282eaa1",
+  "_shrinkwrap": null,
+  "_spec": "periodicjs.ext.login@6.0.2",
+  "_where": "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs",
   "authors": [
     {
       "name": "Yaw Joseph Etse",
@@ -18,14 +45,8 @@
       "url": "https://github.com/janbialostok"
     }
   ],
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/typesettin/periodicjs.ext.login.git"
-  },
-  "scripts": {
-    "postinstall": "node install.js",
-    "postuninstall": "node uninstall.js",
-    "test": "mocha"
+  "bugs": {
+    "url": "https://github.com/typesettin/periodicjs.ext.login/issues"
   },
   "dependencies": {
     "async": "^1.2.1",
@@ -41,6 +62,7 @@
     "stylie.treeview": "^1.0.1",
     "util-extend": ">=1.0.1"
   },
+  "description": "An authentication extension for periodicjs that uses passport to authenticate user sessions.",
   "devDependencies": {
     "browserify": "^10.2.4",
     "chai": "^3.0.0",
@@ -66,40 +88,47 @@
     "uglify-js": "^2.4.15",
     "uglifyify": "^3.0.1"
   },
-  "keywords": [
-    "periodicjs",
-    "passport",
-    "authentication",
-    "express",
-    "cms",
-    "wordpress",
-    "drupal"
-  ],
-  "bugs": {
-    "url": "https://github.com/typesettin/periodicjs.ext.login/issues"
+  "directories": {},
+  "dist": {
+    "shasum": "e83a752f4a69131a72d2c92da8d4bfbb5282eaa1",
+    "tarball": "http://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-6.0.2.tgz"
   },
-  "homepage": "https://github.com/typesettin/periodicjs.ext.login",
-  "_id": "periodicjs.ext.login@6.0.0",
-  "_shasum": "95578b7153303b15cc59447fc9bfbf25b5b2b038",
-  "_from": "periodicjs.ext.login@latest",
-  "_resolved": "https://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-5.9.1.tgz",
+  "engines": {
+    "node": ">=0.10.x"
+  },
   "gitHead": "4664b50397714fe9aad5c9b1e77d1707525c107c",
-  "_npmVersion": "2.11.2",
-  "_npmUser": {
-    "name": "yawetse",
-    "email": "yaw.etse@gmail.com"
-  },
+  "homepage": "https://github.com/typesettin/periodicjs.ext.login",
+  "keywords": [
+    "authentication",
+    "cms",
+    "drupal",
+    "express",
+    "passport",
+    "periodicjs",
+    "wordpress"
+  ],
+  "main": "index.js",
   "maintainers": [
+    {
+      "name": "janbialostok",
+      "email": "janbialostok@gmail.com"
+    },
     {
       "name": "yawetse",
       "email": "yaw.etse@gmail.com"
     }
   ],
-  "dist": {
-    "shasum": "513d2fe40ba87bb5f4c1985be045e63897c103b8",
-    "tarball": "http://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-5.9.1.tgz"
+  "name": "periodicjs.ext.login",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/typesettin/periodicjs.ext.login.git"
   },
-  "directories": {},
-  "_nodeVersion": "0.12.6",
-  "readme": "ERROR: No README data found!"
+  "scripts": {
+    "postinstall": "node install.js",
+    "postuninstall": "node uninstall.js",
+    "test": "mocha"
+  },
+  "version": "6.0.3"
 }
