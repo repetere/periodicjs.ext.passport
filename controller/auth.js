@@ -44,7 +44,7 @@ var login = function (req, res, next) {
 						result: 'error',
 						data: {
 							message: err.message,
-								redirecturl: req.session.return_url || loginExtSettings.settings.authLoggedInHomepage
+							redirecturl: req.session.return_url || loginExtSettings.settings.authLoggedInHomepage
 						}
 					};
 					resOptions.err = err;
@@ -65,7 +65,7 @@ var login = function (req, res, next) {
 					result: 'error',
 					data: {
 						message: wrongLoginMessage,
-							redirecturl: req.session.return_url || loginExtSettings.settings.authLoggedInHomepage
+						redirecturl: req.session.return_url || loginExtSettings.settings.authLoggedInHomepage
 					}
 				};
 				resOptions.err = resOptions.err || new Error(wrongLoginMessage);
@@ -86,7 +86,7 @@ var login = function (req, res, next) {
 						result: 'success',
 						data: {
 							message: 'successfully logged in',
-								redirecturl: req.session.return_url || loginExtSettings.settings.authLoggedInHomepage
+							redirecturl: req.session.return_url || loginExtSettings.settings.authLoggedInHomepage
 						}
 					};
 					return CoreController.respondInKind(resOptions);

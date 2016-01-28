@@ -208,6 +208,9 @@ var defaultAjaxFormie = function (formElement) {
 						pushState: true
 					});
 				}
+				else if (formElement.getAttribute('data-hardredirect-href')) {
+					window.location = formElement.getAttribute('data-hardredirect-href');
+				}
 			}
 			window.endPreloader();
 		},

@@ -3,10 +3,14 @@
     [
       "periodicjs.ext.login@6.0.2",
       "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs"
+    ],
+    [
+      "periodicjs.ext.login@6.0.3",
+      "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs"
     ]
   ],
-  "_from": "periodicjs.ext.login@6.0.2",
-  "_id": "periodicjs.ext.login@6.0.2",
+  "_from": "periodicjs.ext.login@6.0.3",
+  "_id": "periodicjs.ext.login@6.0.3",
   "_inCache": true,
   "_installable": true,
   "_location": "/periodicjs.ext.login",
@@ -19,19 +23,17 @@
   "_phantomChildren": {},
   "_requested": {
     "name": "periodicjs.ext.login",
-    "raw": "periodicjs.ext.login@6.0.2",
-    "rawSpec": "6.0.2",
+    "raw": "periodicjs.ext.login@6.0.3",
+    "rawSpec": "6.0.3",
     "scope": null,
-    "spec": "6.0.2",
+    "spec": "6.0.3",
     "type": "version"
   },
   "_requiredBy": [
     "#USER"
   ],
-  "_resolved": "https://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-6.0.2.tgz",
-  "_shasum": "e83a752f4a69131a72d2c92da8d4bfbb5282eaa1",
   "_shrinkwrap": null,
-  "_spec": "periodicjs.ext.login@6.0.2",
+  "_spec": "periodicjs.ext.login@6.0.3",
   "_where": "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs",
   "authors": [
     {
@@ -90,8 +92,8 @@
   },
   "directories": {},
   "dist": {
-    "shasum": "e83a752f4a69131a72d2c92da8d4bfbb5282eaa1",
-    "tarball": "http://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-6.0.2.tgz"
+    "shasum": "ef7ad3656a9139efb81179c7cbab8d9aaa9d48a1",
+    "tarball": "http://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-6.0.3.tgz"
   },
   "engines": {
     "node": ">=0.10.x"
@@ -130,5 +132,5 @@
     "postuninstall": "node uninstall.js",
     "test": "mocha"
   },
-  "version": "6.0.3"
+  "version": "6.0.4"
 }
