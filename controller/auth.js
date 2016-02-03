@@ -354,11 +354,11 @@ var activate_user = function (req, res, next) {
  * @param  {object} resources variable injection from current periodic instance with references to the active logger and mongo session
  * @return {object}           sendmail
  */
-var controller = function (resources) {
+var controller = function (resources,UserModel) {
 	logger = resources.logger;
 	mongoose = resources.mongoose;
 	appSettings = resources.settings;
-	User = mongoose.model('User');
+	User = UserModel || mongoose.model('User');
 	CoreController = resources.core.controller;
 	CoreUtilities = resources.core.utilities;
 	CoreMailer = resources.core.extension.mailer;
@@ -376,6 +376,7 @@ var controller = function (resources) {
 	passportController.usePassport();
 	return {
 		rememberme: rememberme,
+		User: User,
 		login: login,
 		logout: logout,
 		activate_user: activate_user,

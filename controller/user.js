@@ -21,6 +21,8 @@ var CoreUtilities,
  * @return {object} reponds with an error page or requested view
  */
 var login = function (req, res) {
+	let adminPostRoute = res.locals.adminPostRoute || 'auth';
+	console.log('adminPostRoute',adminPostRoute);
 	CoreController.getPluginViewDefaultTemplate({
 			viewname: 'user/login',
 			themefileext: appSettings.templatefileextension,
@@ -35,7 +37,8 @@ var login = function (req, res) {
 					pagedata: {
 						title: 'Login'
 					},
-					user: req.user
+					user: req.user,
+					adminPostRoute: adminPostRoute
 				}
 			});
 		}
@@ -49,6 +52,7 @@ var login = function (req, res) {
  * @return {object} reponds with an error page or requested view
  */
 var newuser = function (req, res) {
+	let adminPostRoute = res.locals.adminPostRoute || 'auth';
 	CoreController.getPluginViewDefaultTemplate({
 			viewname: 'user/new',
 			themefileext: appSettings.templatefileextension,
@@ -63,7 +67,8 @@ var newuser = function (req, res) {
 					pagedata: {
 						title: 'Register'
 					},
-					user: req.user
+					user: req.user,
+					adminPostRoute: adminPostRoute
 				}
 			});
 		}
@@ -132,6 +137,7 @@ var create = function (req, res) {
  * @return {object} reponds with an error page or requested view
  */
 var finishregistration = function (req, res) {
+	let adminPostRoute = res.locals.adminPostRoute || 'auth';
 	CoreController.getPluginViewDefaultTemplate({
 			viewname: 'user/finishregistration',
 			themefileext: appSettings.templatefileextension,
@@ -146,7 +152,8 @@ var finishregistration = function (req, res) {
 					pagedata: {
 						title: 'Complete registration'
 					},
-					user: req.user
+					user: req.user,
+					adminPostRoute: adminPostRoute
 				}
 			});
 		}
@@ -316,6 +323,7 @@ var updateuserregistration = function (req, res) {
  */
 
 var forgot = function (req, res) {
+	let adminPostRoute = res.locals.adminPostRoute || 'auth';
 	CoreController.getPluginViewDefaultTemplate({
 			viewname: 'user/forgot',
 			themefileext: appSettings.templatefileextension,
@@ -330,7 +338,8 @@ var forgot = function (req, res) {
 					pagedata: {
 						title: 'Forgot Password'
 					},
-					user: req.user
+					user: req.user,
+					adminPostRoute: adminPostRoute
 				}
 			});
 		});
@@ -350,11 +359,11 @@ var forgot = function (req, res) {
  * @param  {object} resources variable injection from current periodic instance with references to the active logger and mongo session
  * @return {object}           userlogin
  */
-var controller = function (resources) {
+var controller = function (resources,UserModel) {
 	logger = resources.logger;
 	mongoose = resources.mongoose;
 	appSettings = resources.settings;
-	User = mongoose.model('User');
+	User = UserModel || mongoose.model('User');
 	CoreController = resources.core.controller;
 	CoreUtilities = resources.core.utilities;
 	CoreMailer = resources.core.extension.mailer;

@@ -104,9 +104,9 @@ var twittercallback = function (req, res, next) {
 	})(req, res, next);
 };
 
-var passportSocialController = function (resources, passportResources) {
+var passportSocialController = function (resources, passportResources, UserModel) {
 	logger = resources.logger;
-	User = passportResources.User;
+	User = UserModel || passportResources.User;
 	passport = passportResources.passport;
 	loginExtSettings = passportResources.loginExtSettings;
 	return {

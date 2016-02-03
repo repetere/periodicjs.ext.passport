@@ -553,7 +553,7 @@ var create_user_activation_token = function (req, res, next) {
 	}
 };
 
-var tokenController = function (resources, passportResources) {
+var tokenController = function (resources, passportResources, UserModel) {
 	appSettings = resources.settings;
 	CoreController = resources.core.controller;
 	CoreUtilities = resources.core.utilities;
@@ -562,7 +562,7 @@ var tokenController = function (resources, passportResources) {
 	logger = resources.logger;
 	mongoose = resources.mongoose;
 	passport = passportResources.passport;
-	User = mongoose.model('User');
+	User = UserModel || mongoose.model('User');
 	appenvironment = appSettings.application.environment;
 	return {
 		forgot: forgot,

@@ -51,10 +51,12 @@ module.exports = function (periodic) {
 			passport: passport,
 			loginExtSettings: periodic.app.controller.extension.login.auth.loginExtSettings
 		}),
-		tokenController = require('./controller/token_controller')(periodic, {
-			passport: passport,
-			loginExtSettings: periodic.app.controller.extension.login.auth.loginExtSettings
-		});
+		tokenController = require('./controller/token_controller')(periodic, 
+			{
+				passport: passport,
+				loginExtSettings: periodic.app.controller.extension.login.auth.loginExtSettings
+			},
+			periodic.app.controller.extension.login.auth.User);
 	periodic.app.controller.extension.login.token = tokenController;
 	periodic.app.controller.extension.login.social = socialPassportController;
 

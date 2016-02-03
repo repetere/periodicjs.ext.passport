@@ -4,7 +4,7 @@
     <div class="ts-col-span8 ts-col-nofloat ts-screenmd-col-span12 ts-screensm-col-span12 ts-no-heading-margin ts-screenxs-col-span12">
       <h2 class="text-left"><%= pagedata.title %></h2>
 
-      <form action="/auth/forgot" method="post" autocomplete="on" id="forgot_form" name="forgot_form" class="ts-form">
+      <form action="/<%- adminPostRoute %>/forgot" method="post" autocomplete="on" id="forgot_form" name="forgot_form" class="ts-form">
         <input type="hidden" name="_csrf" value=<%= locals.token %> >
         <div class="ts-row ts-form-row">
           <label class="ts-label"> Email </label>

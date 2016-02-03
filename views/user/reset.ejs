@@ -4,7 +4,7 @@
     <div class="ts-col-span8 ts-col-nofloat ts-screenmd-col-span12 ts-screensm-col-span12 ts-no-heading-margin ts-screenxs-col-span12">
       <h2 class="text-left"><%= pagedata.title %> <%=pagedata.current_user.email %></h2>
 
-      <form action="/auth/reset/<%- request.params.token %>" 
+      <form action="/<%- adminPostRoute %>/reset/<%- request.params.token %>" 
       method="post" autocomplete="on" id="reset_form" 
         name="reset_form" class="ts-form">
         <input type="hidden" name="_csrf" value=<%= locals.token %> >

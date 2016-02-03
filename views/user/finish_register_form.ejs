@@ -17,7 +17,7 @@
 	if(request.query.required==='activation'){%>
 		<div class="ts-row ts-form-row">
 			<label for="activation-token" class="ts-label">activation token 
-			<a href="/auth/user/activate">resend activation email</a></label>
+			<a href="/<%- adminPostRoute %>/user/activate">resend activation email</a></label>
 			<div class="controls">
 					<input type="text" name="activation-token" id="activation-token" value="<%- request.query.activation_token %>" placeholder="activation token" />
 			</div>

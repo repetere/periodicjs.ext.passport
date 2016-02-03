@@ -11,10 +11,10 @@
 				var display_account_name = user.username || user.email;
 				var display_account_link = user.username || user._id;	%>
 	  	<a href="/<%-locals.adminPath%>/user/<%-display_account_link%>/edit" class="async-admin-ajax-link ts-button ts-button-primary-text-color  flaticon-user153"> <%- display_account_name %></a> 
-	  	<a href="/auth/logout" class="ts-button ts-button-primary-text-color  flaticon-logout20" title="logout"></a>
+	  	<a href="/<%- adminPostRoute %>/logout" class="ts-button ts-button-primary-text-color  flaticon-logout20" title="logout"></a>
 	  	<%} 
 	  	else{%>
-	  	<a href="/auth/login" class="async-admin-ajax-link ts-button ts-button-primary-text-color  flaticon-login18 "> login</a>
+	  	<a href="/<%- adminPostRoute %>/login" class="async-admin-ajax-link ts-button ts-button-primary-text-color  flaticon-login18 "> login</a>
 			<%}%>
 	  </div>
 	  <div id="menu-header-stylie" class="ts-text-md ts-text-left">
