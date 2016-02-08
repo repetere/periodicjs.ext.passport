@@ -174,7 +174,7 @@ var emailForgotPasswordLink = function (user, req, cb) {
 				cb(err);
 			}
 			else {
-				console.log('emailForgotPasswordLink templatepath', templatepath);
+				// console.log('emailForgotPasswordLink templatepath', templatepath);
 				if (templatepath === 'email/user/forgot_password_link') {
 					templatepath = path.resolve(process.cwd(), 'node_modules/periodicjs.ext.login/views', templatepath + '.' + appSettings.templatefileextension);
 				}
@@ -190,7 +190,8 @@ var emailForgotPasswordLink = function (user, req, cb) {
 						user: user,
 						appname: appSettings.name,
 						hostname: req.headers.host,
-						filename: templatepath
+						filename: templatepath,
+						adminPostRoute: req.adminPostRoute
 					}
 				};
 				if (loginExtSettings.settings.adminbccemail || appSettings.adminbccemail) {
@@ -244,6 +245,10 @@ var emailResetPasswordNotification = function (user, req, cb) {
 
 //Post to auth/forgot with the users email
 var forgot = function (req, res, next) {
+	let adminPostRoute = res.locals.adminPostRoute || 'auth';
+	req.adminPostRoute = res.locals.adminPostRoute || 'auth';
+	// console.log('res.locals.adminPostRoute',res.locals.adminPostRoute);
+	// console.log('req.adminPostRoute',req.adminPostRoute);
 	var arr = [
 		function (cb) {
 			cb(null, req, res, next);
@@ -310,6 +315,7 @@ var get_token = function (req, res, next) {
 
 //GET if the user token is vaild show the change password page
 var reset = function (req, res) {
+	let adminPostRoute = res.locals.adminPostRoute || 'auth';
 	var token = req.controllerData.token,
 		// current_user,
 		decode_token;
@@ -357,7 +363,8 @@ var reset = function (req, res) {
 										title: 'Reset Password',
 										current_user: found_user
 									},
-									user: req.user
+									user: req.user,
+									adminPostRoute: adminPostRoute
 								}
 							});
 						});

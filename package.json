@@ -13,8 +13,8 @@
       "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs"
     ]
   ],
-  "_from": "periodicjs.ext.login@6.0.4",
-  "_id": "periodicjs.ext.login@6.0.4",
+  "_from": "periodicjs.ext.login@latest",
+  "_id": "periodicjs.ext.login@7.0.0",
   "_inCache": true,
   "_installable": true,
   "_location": "/periodicjs.ext.login",
@@ -136,5 +136,6 @@
     "postuninstall": "node uninstall.js",
     "test": "mocha"
   },
-  "version": "7.0.0"
+  "version": "7.0.1",
+  "_shasum": "81e3669c5c28e398de7c7388f88ef1f43b4a4cb4"
 }

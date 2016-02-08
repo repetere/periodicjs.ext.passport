@@ -22,7 +22,7 @@ var CoreUtilities,
  */
 var login = function (req, res) {
 	let adminPostRoute = res.locals.adminPostRoute || 'auth';
-	console.log('adminPostRoute',adminPostRoute);
+	// console.log('adminPostRoute',adminPostRoute);
 	CoreController.getPluginViewDefaultTemplate({
 			viewname: 'user/login',
 			themefileext: appSettings.templatefileextension,
