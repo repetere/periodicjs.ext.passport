@@ -87,7 +87,6 @@
   ],
   "name": "periodicjs.ext.login",
   "optionalDependencies": {},
-  "readme": "ERROR: No README data found!",
   "repository": {
     "type": "git",
     "url": "git://github.com/typesettin/periodicjs.ext.login.git"
@@ -97,5 +96,5 @@
     "postuninstall": "node uninstall.js",
     "test": "mocha"
   },
-  "version": "7.1.0"
+  "version": "7.2.0"
 }

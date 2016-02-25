@@ -205,11 +205,11 @@ var usePassport = function () {
 			exitinguserquery: {
 				$or: [{
 					username: {
-						$regex: new RegExp(username, 'i')
+						$regex: new RegExp('^'+username+'$', 'i')
 					}
 				}, {
 					email: {
-						$regex: new RegExp(username, 'i')
+						$regex: new RegExp('^'+username+'$', 'i')
 					}
 				}]
 			},
