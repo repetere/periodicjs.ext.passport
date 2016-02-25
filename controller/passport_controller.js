@@ -55,8 +55,10 @@ var limitLoginAttempts = function (user) {
 		user.extensionattributes.login = {
 			attempts: 0,
 			timestamp: moment(),
+			timestamp_date: new Date(),
 			flagged: false,
-			freezeTime: moment()
+			freezeTime: moment(),
+			freezeTime_date: new Date()
 		};
 	}
 	user.extensionattributes.login.attempts++;
@@ -64,18 +66,22 @@ var limitLoginAttempts = function (user) {
 		if (moment(user.extensionattributes.login.timestamp).isBefore(moment().subtract(loginExtSettings.timeout.attempt_interval.time, loginExtSettings.timeout.attempt_interval.unit))) {
 			user.extensionattributes.login.attempts = 1;
 			user.extensionattributes.login.timestamp = moment();
+			user.extensionattributes.login.timestamp_date = new Date();
 		}
 		else if (user.extensionattributes.login.attempts >= loginExtSettings.timeout.attempts && moment(user.extensionattributes.login.timestamp).isAfter(moment().subtract(loginExtSettings.timeout.attempt_interval.time, loginExtSettings.timeout.attempt_interval.unit))) {
 			user.extensionattributes.login.flagged = true;
 			user.extensionattributes.login.freezeTime = moment();
+			user.extensionattributes.login.freezeTime_date = new Date();
 		}
 	}
 	else {
 		if (moment(user.extensionattributes.login.freezeTime).isBefore(moment().subtract(loginExtSettings.timeout.freeze_interval.time, loginExtSettings.timeout.freeze_interval.unit))) {
 			user.extensionattributes.login.attempts = 1;
 			user.extensionattributes.login.timestamp = moment();
+			user.extensionattributes.login.timestamp_date = new Date();
 			user.extensionattributes.login.flagged = false;
 			user.extensionattributes.login.freezeTime = moment();
+			user.extensionattributes.login.freezeTime_date = new Date();
 		}
 	}
 	user.markModified('extensionattributes');
@@ -84,17 +90,28 @@ var limitLoginAttempts = function (user) {
 
 var loginAttemptsError = function (user, done) {
 	var templatepath = path.resolve(process.cwd(), loginExtSettings.timeout.view_path_relative_to_periodic);
+
+	var lockout_start_time = moment(user.extensionattributes.login.freezeTime).calendar();
+	var lockout_end_time = moment(user.extensionattributes.login.freezeTime).add(loginExtSettings.timeout.freeze_interval.time, loginExtSettings.timeout.freeze_interval.unit).calendar();
+
 	async.waterfall([
 		function (cb) {
 			var coreMailerOptions = {
-				appenvironment: 'development',
+				appenvironment: appSettings.application.environment,
+				
 				to: user.email,
-				replyTo: 'Promise Financial [Do Not Reply] <no-reply@promisefin.com>',
-				from: 'Promise Financial [Do Not Reply] <no-reply@promisefin.com>',
-				subject: loginExtSettings.timeout.lockout_email_subject,
+				replyTo: appSettings.serverfromemail,
+				from: appSettings.serverfromemail,
+				subject: (appSettings.application.environment !=='production')?loginExtSettings.timeout.lockout_email_subject+' ['+appSettings.application.environment+']':loginExtSettings.timeout.lockout_email_subject,
 				emailtemplatefilepath: templatepath,
 				emailtemplatedata: {
-					data: user
+					data: user,
+					appname: appSettings.name,
+					hostname: appSettings.homepage,
+					frozen:{
+						starttime: lockout_start_time,
+						endtime: lockout_end_time,
+					}
 				}
 			};
 			if (loginExtSettings.settings.adminbccemail || appSettings.adminbccemail) {
@@ -130,8 +147,8 @@ var loginAttemptsError = function (user, done) {
 		}
 		else {
 			logger.verbose('Sending account lockout email', result);
-			return done(new Error('Your Account is Currently Blocked'), false, {
-				message: 'Your Account is Currently Blocked'
+			return done(new Error(`Your Account is Currently Blocked (until ${lockout_end_time})`), false, {
+				message: `Your Account is Currently Blocked (until ${lockout_end_time})`
 			});
 		}
 	});
@@ -220,9 +237,10 @@ var usePassport = function () {
 							return done(null, user);
 						}
 						else {
-							logger.verbose(' in passport callback when no password');
+							logger.verbose(' in passport callback with wrong password');
 							return done(null, false, {
-								message: 'Invalid password'
+								message: 'Invalid password',
+								login_attempts: (user.extensionattributes && user.extensionattributes.login && user.extensionattributes.login.attempts) ? user.extensionattributes.login.attempts : 0
 							});
 						}
 					});

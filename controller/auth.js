@@ -27,7 +27,7 @@ var login = function (req, res, next) {
 		next(configError);
 	}
 	else {
-		passport.authenticate('local', function (err, user /*, info*/ ) {
+		passport.authenticate('local', function (err, user , info ) {
 			var resOptions = {
 				req: req,
 				res: res,
@@ -38,7 +38,7 @@ var login = function (req, res, next) {
 					req: req,
 					err: err
 				});
-				if (err.message === 'Your Account is Currently Blocked') {
+				if ( /Your Account is Currently Blocked/gi.test(err.message)) {
 					req.flash('error', 'Your account is currently blocked');
 					resOptions.responseData = {
 						result: 'error',
@@ -54,7 +54,17 @@ var login = function (req, res, next) {
 				return next(err);
 			}
 			if (!user) {
-				var wrongLoginMessage = 'Invalid credentials, did you forget your password?';
+				// logger.verbose('info var',info);
+				var loginAttemptWarningText = (loginExtSettings.timeout.use_limiter && ((loginExtSettings.timeout.attempts - info.login_attempts) <4 )  ) ? ` ( You have ${(loginExtSettings.timeout.attempts - info.login_attempts)} more login attempt${(function(attempts_left){
+						if(attempts_left>1){
+							return 's';
+						}
+						else{
+							return '';
+						}
+					})(loginExtSettings.timeout.attempts - info.login_attempts)} before your account will be locked out )` : '';
+
+				var wrongLoginMessage = 'Invalid credentials, did you forget your password?'+loginAttemptWarningText;
 				CoreController.logWarning({
 					req: req,
 					err: new Error(wrongLoginMessage)

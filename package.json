@@ -1,52 +1,4 @@
 {
-  "_args": [
-    [
-      "periodicjs.ext.login@6.0.2",
-      "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs"
-    ],
-    [
-      "periodicjs.ext.login@6.0.3",
-      "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs"
-    ],
-    [
-      "periodicjs.ext.login@6.0.4",
-      "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs"
-    ],
-    [
-      "periodicjs.ext.login@7.0.1",
-      "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs"
-    ]
-  ],
-  "_from": "periodicjs.ext.login@7.0.1",
-  "_id": "periodicjs.ext.login@7.0.1",
-  "_inCache": true,
-  "_installable": true,
-  "_location": "/periodicjs.ext.login",
-  "_nodeVersion": "4.2.4",
-  "_npmOperationalInternal": {
-    "host": "packages-5-east.internal.npmjs.com",
-    "tmp": "tmp/periodicjs.ext.login-7.0.1.tgz_1454974947254_0.6254642175044864"
-  },
-  "_npmUser": {
-    "email": "yaw.etse@gmail.com",
-    "name": "yawetse"
-  },
-  "_npmVersion": "2.14.12",
-  "_phantomChildren": {},
-  "_requested": {
-    "name": "periodicjs.ext.login",
-    "raw": "periodicjs.ext.login@7.0.1",
-    "rawSpec": "7.0.1",
-    "scope": null,
-    "spec": "7.0.1",
-    "type": "version"
-  },
-  "_requiredBy": [
-    "#USER"
-  ],
-  "_shrinkwrap": null,
-  "_spec": "periodicjs.ext.login@7.0.1",
-  "_where": "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs",
   "authors": [
     {
       "email": "yaw.etse@gmail.com",
@@ -125,12 +77,12 @@
   "license": "MIT",
   "maintainers": [
     {
-      "email": "janbialostok@gmail.com",
-      "name": "janbialostok"
+      "name": "janbialostok",
+      "email": "janbialostok@gmail.com"
     },
     {
-      "email": "yaw.etse@gmail.com",
-      "name": "yawetse"
+      "name": "yawetse",
+      "email": "yaw.etse@gmail.com"
     }
   ],
   "name": "periodicjs.ext.login",
@@ -145,5 +97,5 @@
     "postuninstall": "node uninstall.js",
     "test": "mocha"
   },
-  "version": "7.0.3"
+  "version": "7.1.0"
 }
