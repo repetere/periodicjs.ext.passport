@@ -122,7 +122,7 @@ function saveUser(user, req, cb) {
 
 var getUser = function (req, res, next, cb) {
 	User.findOne({
-		email: req.body.email
+		email: RegExp(req.body.email,'i')
 	}, function (err, user) {
 		if (err) {
 			cb(err, null);

@@ -11,14 +11,22 @@
     [
       "periodicjs.ext.login@6.0.4",
       "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs"
+    ],
+    [
+      "periodicjs.ext.login@7.0.1",
+      "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs"
     ]
   ],
-  "_from": "periodicjs.ext.login@latest",
-  "_id": "periodicjs.ext.login@7.0.0",
+  "_from": "periodicjs.ext.login@7.0.1",
+  "_id": "periodicjs.ext.login@7.0.1",
   "_inCache": true,
   "_installable": true,
   "_location": "/periodicjs.ext.login",
   "_nodeVersion": "4.2.4",
+  "_npmOperationalInternal": {
+    "host": "packages-5-east.internal.npmjs.com",
+    "tmp": "tmp/periodicjs.ext.login-7.0.1.tgz_1454974947254_0.6254642175044864"
+  },
   "_npmUser": {
     "email": "yaw.etse@gmail.com",
     "name": "yawetse"
@@ -27,27 +35,27 @@
   "_phantomChildren": {},
   "_requested": {
     "name": "periodicjs.ext.login",
-    "raw": "periodicjs.ext.login@6.0.4",
-    "rawSpec": "6.0.4",
+    "raw": "periodicjs.ext.login@7.0.1",
+    "rawSpec": "7.0.1",
     "scope": null,
-    "spec": "6.0.4",
+    "spec": "7.0.1",
     "type": "version"
   },
   "_requiredBy": [
     "#USER"
   ],
   "_shrinkwrap": null,
-  "_spec": "periodicjs.ext.login@6.0.4",
+  "_spec": "periodicjs.ext.login@7.0.1",
   "_where": "/Users/yawetse/Developer/github/promise/promise-internal-server/node_modules/periodicjs",
   "authors": [
     {
-      "name": "Yaw Joseph Etse",
       "email": "yaw.etse@gmail.com",
+      "name": "Yaw Joseph Etse",
       "url": "http://about.me/yawjosephetse"
     },
     {
-      "name": "Jan Bialostok",
       "email": "jan@promisefin.com",
+      "name": "Jan Bialostok",
       "url": "https://github.com/janbialostok"
     }
   ],
@@ -96,8 +104,8 @@
   },
   "directories": {},
   "dist": {
-    "shasum": "db3808773e4e8e5f71624aed1b873e287e78f37e",
-    "tarball": "http://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-6.0.4.tgz"
+    "shasum": "c286c7fb997d9c57887b2c5330489d0de0510bf1",
+    "tarball": "http://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-7.0.1.tgz"
   },
   "engines": {
     "node": ">=0.10.x"
@@ -114,14 +122,15 @@
     "wordpress"
   ],
   "main": "index.js",
+  "license": "MIT",
   "maintainers": [
     {
-      "name": "janbialostok",
-      "email": "janbialostok@gmail.com"
+      "email": "janbialostok@gmail.com",
+      "name": "janbialostok"
     },
     {
-      "name": "yawetse",
-      "email": "yaw.etse@gmail.com"
+      "email": "yaw.etse@gmail.com",
+      "name": "yawetse"
     }
   ],
   "name": "periodicjs.ext.login",
@@ -136,6 +145,5 @@
     "postuninstall": "node uninstall.js",
     "test": "mocha"
   },
-  "version": "7.0.1",
-  "_shasum": "81e3669c5c28e398de7c7388f88ef1f43b4a4cb4"
+  "version": "7.0.3"
 }

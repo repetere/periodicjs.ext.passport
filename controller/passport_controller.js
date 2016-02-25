@@ -35,8 +35,9 @@ var linkSocialAccount = function (options) {
 				existingUser.save(done);
 			}
 			else if (requestobj.user) {
-				requestobj.session.linkaccount = true;
-				requestobj.session.linkaccountservice = 'instagram';
+					logger.debug('ext - controller/auth.js - already has is logged in, link account requestobj.user',requestobj.user);
+			requestobj.session.linkaccount = true;
+				requestobj.session.linkaccountservice = linkaccountservice;
 				requestobj.session.linkaccountdata = socialaccountattributes;
 				done(null, requestobj.user);
 			}
@@ -425,6 +426,8 @@ var passportController = function (resources, passportResources) {
 	CoreMailer = resources.core.extension.mailer;
 
 	return {
+		limitLoginAttempts: limitLoginAttempts,
+		loginAttemptsError: loginAttemptsError,
 		usePassport: usePassport,
 		deserialize: deserialize,
 		serialize: serialize,
