@@ -22,6 +22,7 @@ var passport = require('passport'),
  */
 
 var login = function (req, res, next) {
+	console.log('in start of auth login');
 	req.controllerData = req.controllerData || {};
 	if (configError) {
 		next(configError);
@@ -82,26 +83,41 @@ var login = function (req, res, next) {
 				resOptions.redirecturl = req.session.return_url || loginExtSettings.settings.authLoggedInHomepage;
 				return CoreController.respondInKind(resOptions);
 			}
-			req.logIn(user, function (err) {
-				if (err) {
-					CoreController.logWarning({
-						req: req,
-						err: err
-					});
-					return next(err);
-				}
-				else {
-					resOptions.redirecturl = req.session.return_url || loginExtSettings.settings.authLoggedInHomepage;
-					resOptions.responseData = {
-						result: 'success',
-						data: {
-							message: 'successfully logged in',
-							redirecturl: req.session.return_url || loginExtSettings.settings.authLoggedInHomepage
-						}
-					};
-					return CoreController.respondInKind(resOptions);
-				}
-			});
+			else if(req.controllerData.customlogin){
+				console.log('in login ext custom login');
+				resOptions.redirecturl = req.session.return_url || loginExtSettings.settings.authLoggedInHomepage;
+				resOptions.responseData = {
+					result: 'success',
+					data: {
+						message: 'successfully logged in',
+						redirecturl: req.session.return_url || loginExtSettings.settings.authLoggedInHomepage
+					}
+				};
+				return CoreController.respondInKind(resOptions);
+			}
+			else{
+				req.logIn(user, function (err) {
+					if (err) {
+						CoreController.logWarning({
+							req: req,
+							err: err
+						});
+						return next(err);
+					}
+					else {
+						resOptions.redirecturl = req.session.return_url || loginExtSettings.settings.authLoggedInHomepage;
+						resOptions.responseData = {
+							result: 'success',
+							data: {
+								message: 'successfully logged in',
+								redirecturl: req.session.return_url || loginExtSettings.settings.authLoggedInHomepage
+							}
+						};
+						return CoreController.respondInKind(resOptions);
+					}
+				});
+
+			}
 		})(req, res, next);
 	}
 };
