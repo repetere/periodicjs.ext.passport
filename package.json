@@ -60,7 +60,7 @@
     "tarball": "http://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-7.0.1.tgz"
   },
   "engines": {
-    "node": ">=0.10.x"
+    "node": ">=4.2.x"
   },
   "gitHead": "4664b50397714fe9aad5c9b1e77d1707525c107c",
   "homepage": "https://github.com/typesettin/periodicjs.ext.login",
@@ -96,5 +96,5 @@
     "postuninstall": "node uninstall.js",
     "test": "mocha"
   },
-  "version": "7.3.0"
+  "version": "7.3.1"
 }

@@ -450,7 +450,12 @@ var update_user_activation_token = function (req, res, next) {
 		});
 	}
 	catch (e) {
-		next(e);
+		CoreController.handleDocumentQueryErrorResponse({
+			err: e,
+			res: res,
+			req: req,
+			errorflash: e.message
+		});
 	}
 };
 
@@ -556,7 +561,12 @@ var create_user_activation_token = function (req, res, next) {
 		next();
 	}
 	catch (e) {
-		next(e);
+		CoreController.handleDocumentQueryErrorResponse({
+			err: e,
+			res: res,
+			req: req,
+			errorflash: e.message
+		});
 	}
 };
 
