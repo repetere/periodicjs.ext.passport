@@ -201,6 +201,7 @@ var authenticateUser = function (options) {
  */
 var usePassport = function () {
 	passport.use(new LocalStrategy(function (username, password, done) {
+		username = (typeof username === 'string') ? username.replace(/([^\w\d\s])/g, '\\$1') : username;
 		authenticateUser({
 			exitinguserquery: {
 				$or: [{
