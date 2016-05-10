@@ -200,6 +200,10 @@ var verify_user_activation = function (options, callback) {
  */
 var updateuserregistration = function (req, res) {
 	var userError, additionalqueryparams;
+	//sanitize request.body
+	//removes <> tags, especially <script>
+	var regex = /(<([^>]+)>)/ig;
+	req.body = JSON.parse(JSON.stringify(req.body).replace(regex, ''));
 
 	User.findOne({
 			email: req.user.email
