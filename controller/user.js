@@ -203,7 +203,18 @@ var updateuserregistration = function (req, res) {
 	//sanitize request.body
 	//removes <> tags, especially <script>
 	var regex = /(<([^>]+)>)/ig;
-	req.body = JSON.parse(JSON.stringify(req.body).replace(regex, ''));
+	try {
+		
+		let modified_body = JSON.parse(JSON.stringify(req.body).replace(regex, ''));	
+
+		if(!Object.is(req.body, modified_body)) {
+			logger.info('updateuserregistration: "<>" tags detected in req.body and removed');
+			req.body = modified_body;
+		}
+	} catch (e) {
+		logger.error('updateuserregistration: error during JSON parse of req.body', e);
+	}
+	
 
 	User.findOne({
 			email: req.user.email
