@@ -51,8 +51,7 @@ module.exports = function (periodic) {
 			passport: passport,
 			loginExtSettings: periodic.app.controller.extension.login.auth.loginExtSettings
 		}),
-		tokenController = require('./controller/token_controller')(periodic, 
-			{
+		tokenController = require('./controller/token_controller')(periodic, {
 				passport: passport,
 				loginExtSettings: periodic.app.controller.extension.login.auth.loginExtSettings
 			},

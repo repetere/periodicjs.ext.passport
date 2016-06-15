@@ -363,7 +363,7 @@ var forgot = function (req, res) {
  * @param  {object} resources variable injection from current periodic instance with references to the active logger and mongo session
  * @return {object}           userlogin
  */
-var controller = function (resources,UserModel) {
+var controller = function (resources, UserModel) {
 	logger = resources.logger;
 	mongoose = resources.mongoose;
 	appSettings = resources.settings;

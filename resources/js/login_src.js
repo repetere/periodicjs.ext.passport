@@ -102,6 +102,7 @@ var loadAjaxPage = function (options) {
 	request
 		.get(options.datahref)
 		.set('Accept', 'text/html')
+		.withCredentials()
 		.end(function (error, res) {
 			// console.log('error', error);
 			// console.log('res', res);

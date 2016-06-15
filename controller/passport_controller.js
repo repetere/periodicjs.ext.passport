@@ -35,8 +35,8 @@ var linkSocialAccount = function (options) {
 				existingUser.save(done);
 			}
 			else if (requestobj.user) {
-					logger.debug('ext - controller/auth.js - already has is logged in, link account requestobj.user',requestobj.user);
-			requestobj.session.linkaccount = true;
+				logger.debug('ext - controller/auth.js - already has is logged in, link account requestobj.user', requestobj.user);
+				requestobj.session.linkaccount = true;
 				requestobj.session.linkaccountservice = linkaccountservice;
 				requestobj.session.linkaccountdata = socialaccountattributes;
 				done(null, requestobj.user);
@@ -98,17 +98,17 @@ var loginAttemptsError = function (user, done) {
 		function (cb) {
 			var coreMailerOptions = {
 				appenvironment: appSettings.application.environment,
-				
+
 				to: user.email,
 				replyTo: appSettings.serverfromemail,
 				from: appSettings.serverfromemail,
-				subject: (appSettings.application.environment !=='production')?loginExtSettings.timeout.lockout_email_subject+' ['+appSettings.application.environment+']':loginExtSettings.timeout.lockout_email_subject,
+				subject: (appSettings.application.environment !== 'production') ? loginExtSettings.timeout.lockout_email_subject + ' [' + appSettings.application.environment + ']' : loginExtSettings.timeout.lockout_email_subject,
 				emailtemplatefilepath: templatepath,
 				emailtemplatedata: {
 					data: user,
 					appname: appSettings.name,
 					hostname: appSettings.homepage,
-					frozen:{
+					frozen: {
 						starttime: lockout_start_time,
 						endtime: lockout_end_time,
 					}
@@ -206,11 +206,11 @@ var usePassport = function () {
 			exitinguserquery: {
 				$or: [{
 					username: {
-						$regex: new RegExp('^'+username+'$', 'i')
+						$regex: new RegExp('^' + username + '$', 'i')
 					}
 				}, {
 					email: {
-						$regex: new RegExp('^'+username+'$', 'i')
+						$regex: new RegExp('^' + username + '$', 'i')
 					}
 				}]
 			},

@@ -28,7 +28,7 @@ var login = function (req, res, next) {
 		next(configError);
 	}
 	else {
-		passport.authenticate('local', function (err, user , info ) {
+		passport.authenticate('local', function (err, user, info) {
 			var resOptions = {
 				req: req,
 				res: res,
@@ -39,7 +39,7 @@ var login = function (req, res, next) {
 					req: req,
 					err: err
 				});
-				if ( /Your Account is Currently Blocked/gi.test(err.message)) {
+				if (/Your Account is Currently Blocked/gi.test(err.message)) {
 					req.flash('error', 'Your account is currently blocked');
 					resOptions.responseData = {
 						result: 'error',
@@ -56,7 +56,7 @@ var login = function (req, res, next) {
 			}
 			if (!user) {
 				// logger.verbose('info var',info);
-				var loginAttemptWarningText = (loginExtSettings.timeout.use_limiter && ((loginExtSettings.timeout.attempts - info.login_attempts) <4 )  ) ? ` ( You have ${(loginExtSettings.timeout.attempts - info.login_attempts)} more login attempt${(function(attempts_left){
+				var loginAttemptWarningText = (loginExtSettings.timeout.use_limiter && ((loginExtSettings.timeout.attempts - info.login_attempts) < 4)) ? ` ( You have ${(loginExtSettings.timeout.attempts - info.login_attempts)} more login attempt${(function(attempts_left){
 						if(attempts_left>1){
 							return 's';
 						}
@@ -65,7 +65,7 @@ var login = function (req, res, next) {
 						}
 					})(loginExtSettings.timeout.attempts - info.login_attempts)} before your account will be locked out )` : '';
 
-				var wrongLoginMessage = 'Invalid credentials, did you forget your password?'+loginAttemptWarningText;
+				var wrongLoginMessage = 'Invalid credentials, did you forget your password?' + loginAttemptWarningText;
 				CoreController.logWarning({
 					req: req,
 					err: new Error(wrongLoginMessage)
@@ -83,7 +83,7 @@ var login = function (req, res, next) {
 				resOptions.redirecturl = req.session.return_url || loginExtSettings.settings.authLoggedInHomepage;
 				return CoreController.respondInKind(resOptions);
 			}
-			else if(req.controllerData.customlogin){
+			else if (req.controllerData.customlogin) {
 				console.log('in login ext custom login');
 				resOptions.redirecturl = req.session.return_url || loginExtSettings.settings.authLoggedInHomepage;
 				resOptions.responseData = {
@@ -95,7 +95,7 @@ var login = function (req, res, next) {
 				};
 				return CoreController.respondInKind(resOptions);
 			}
-			else{
+			else {
 				req.logIn(user, function (err) {
 					if (err) {
 						CoreController.logWarning({
@@ -380,7 +380,7 @@ var activate_user = function (req, res, next) {
  * @param  {object} resources variable injection from current periodic instance with references to the active logger and mongo session
  * @return {object}           sendmail
  */
-var controller = function (resources,UserModel) {
+var controller = function (resources, UserModel) {
 	logger = resources.logger;
 	mongoose = resources.mongoose;
 	appSettings = resources.settings;

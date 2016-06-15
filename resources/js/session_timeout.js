@@ -27,6 +27,7 @@ session_timeout.prototype.refresh_session_check = function () {
 		request
 			.get(_this.options.continue_session_url)
 			.set('Accept', 'application/json')
+			.withCredentials()
 			.end(function (error, res) {
 				if (error) {
 					window.showStylieNotification({
