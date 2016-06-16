@@ -104,6 +104,8 @@ var loadAjaxPage = function (options) {
 		.set('Accept', 'text/html')
 		.withCredentials()
 		.end(function (error, res) {
+			// console.log('error', error);
+			// console.log('res', res);
 			if (error) {
 				window.showErrorNotificaton({
 					message: error.message
@@ -122,6 +124,7 @@ var loadAjaxPage = function (options) {
 				document.querySelector('#menu-header-stylie').innerHTML = newPageTitle;
 				asyncHTMLWrapper.innerHTML = newPageContent.innerHTML;
 
+				// console.log('htmlDivElement', htmlDivElement);
 				newJavascripts = htmlDivElement.querySelectorAll('script');
 				for (var j = 0; j < newJavascripts.length; j++) {
 					if (!newJavascripts[j].src.match('/extensions/periodicjs.ext.asyncadmin/js/asyncadmin.min.js')) {

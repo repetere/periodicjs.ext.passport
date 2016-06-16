@@ -14,8 +14,7 @@ var session_timeout = function (configoptions) {
 		timeout_warning_text: '<p class="ts-text-md">Your session is about to expire, do you wish to continue?</p>',
 		session_timeout_title: 'Are you still working?',
 		login_timouet_title: 'Logout Warning',
-		continue_session_url: '/healthcheck',
-		timeout_source: 'login'
+		continue_session_url: '/healthcheck'
 	};
 
 	this.options = merge(options, configoptions);

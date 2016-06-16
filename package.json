@@ -61,8 +61,8 @@
   },
   "directories": {},
   "dist": {
-    "shasum": "c286c7fb997d9c57887b2c5330489d0de0510bf1",
-    "tarball": "http://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-7.0.1.tgz"
+    "shasum": "3a19657bbf1604a8f82aea9a631efb74ecf0115f",
+    "tarball": "https://registry.npmjs.org/periodicjs.ext.login/-/periodicjs.ext.login-7.4.1.tgz"
   },
   "engines": {
     "node": ">=6.x"
@@ -78,16 +78,16 @@
     "periodicjs",
     "wordpress"
   ],
-  "main": "index.js",
   "license": "MIT",
+  "main": "index.js",
   "maintainers": [
     {
-      "name": "janbialostok",
-      "email": "janbialostok@gmail.com"
+      "email": "janbialostok@gmail.com",
+      "name": "janbialostok"
     },
     {
-      "name": "yawetse",
-      "email": "yaw.etse@gmail.com"
+      "email": "yaw.etse@gmail.com",
+      "name": "yawetse"
     }
   ],
   "name": "periodicjs.ext.login",

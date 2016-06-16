@@ -2743,9 +2743,9 @@ formie.prototype.__ajaxSubmitFormie = function (e, element) {
 		request
 			.post(this.options.action)
 			.set(this.options.headers)
-			.withCredentials()
 			.query(this.options.queryparameters)
 			.send(formieData)
+			.withCredentials()
 			.end(ajaxResponseHandler);
 	}
 	return false;
@@ -12705,6 +12705,8 @@ var loadAjaxPage = function (options) {
 		.set('Accept', 'text/html')
 		.withCredentials()
 		.end(function (error, res) {
+			// console.log('error', error);
+			// console.log('res', res);
 			if (error) {
 				window.showErrorNotificaton({
 					message: error.message
@@ -12723,6 +12725,7 @@ var loadAjaxPage = function (options) {
 				document.querySelector('#menu-header-stylie').innerHTML = newPageTitle;
 				asyncHTMLWrapper.innerHTML = newPageContent.innerHTML;
 
+				// console.log('htmlDivElement', htmlDivElement);
 				newJavascripts = htmlDivElement.querySelectorAll('script');
 				for (var j = 0; j < newJavascripts.length; j++) {
 					if (!newJavascripts[j].src.match('/extensions/periodicjs.ext.asyncadmin/js/asyncadmin.min.js')) {
@@ -13068,8 +13071,7 @@ var session_timeout = function (configoptions) {
 		timeout_warning_text: '<p class="ts-text-md">Your session is about to expire, do you wish to continue?</p>',
 		session_timeout_title: 'Are you still working?',
 		login_timouet_title: 'Logout Warning',
-		continue_session_url: '/healthcheck',
-		timeout_source: 'login'
+		continue_session_url: '/healthcheck'
 	};
 
 	this.options = merge(options, configoptions);
