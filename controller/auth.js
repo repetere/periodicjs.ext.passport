@@ -14,6 +14,7 @@ var passport = require('passport'),
 	loginExtSettings,
 	passportController;
 
+var periodic;
 /**
  * logins a user using passport's local strategy, if a user is passed to this function, then the user will be logged in and req.user will be populated
  * @param  {object} req
@@ -263,32 +264,40 @@ var ensureAuthenticated = function (req, res, next) {
 };
 
 //GET auth/user/activate
-var get_activation = function (req, res) {
-	if (req.isAuthenticated()) {
-		CoreController.getPluginViewDefaultTemplate({
+var get_activation = function (req, res, next) {
+	if (periodic.app.controller.extension.reactadmin) {
+		let reactadmin = periodic.app.controller.extension.reactadmin;
+		// console.log({ reactadmin });
+		// console.log('ensureAuthenticated req.session', req.session);
+		// console.log('ensureAuthenticated req.user', req.user);
+		next();
+	} else {
+		if (req.isAuthenticated()) {
+			CoreController.getPluginViewDefaultTemplate({
 				viewname: 'user/activate',
 				themefileext: appSettings.templatefileextension,
 				extname: 'periodicjs.ext.login'
 			},
-			function (err, templatepath) {
-				CoreController.handleDocumentQueryRender({
-					res: res,
-					req: req,
-					renderView: templatepath,
-					responseData: {
-						pagedata: {
-							title: 'Activation Email'
-						},
-						user: req.user
-					}
-				});
-			}
-		);
+				function (err, templatepath) {
+					CoreController.handleDocumentQueryRender({
+						res: res,
+						req: req,
+						renderView: templatepath,
+						responseData: {
+							pagedata: {
+								title: 'Activation Email'
+							},
+							user: req.user
+						}
+					});
+				}
+			);
+		}
+		else {
+			forceAuthLogin(req, res);
+		}
 	}
-	else {
-		forceAuthLogin(req, res);
-	}
-};
+};	
 
 //POST to auth/user/activate 
 var activate_user = function (req, res, next) {
@@ -388,7 +397,7 @@ var controller = function (resources, UserModel) {
 	CoreController = resources.core.controller;
 	CoreUtilities = resources.core.utilities;
 	CoreMailer = resources.core.extension.mailer;
-
+	periodic = resources;
 	// var appenvironment = appSettings.application.environment;
 	loginExtSettings = resources.app.controller.extension.login.loginExtSettings;
 	passportController = require('./passport_controller')(resources, {

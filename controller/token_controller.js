@@ -17,7 +17,7 @@ var async = require('async'),
 	path = require('path'),
 	passport;
 
-
+var periodic;
 // Utility Functions
 var waterfall = function (array, cb) {
 	async.waterfall(array, cb);
@@ -314,65 +314,73 @@ var get_token = function (req, res, next) {
 };
 
 //GET if the user token is vaild show the change password page
-var reset = function (req, res) {
-	let adminPostRoute = res.locals.adminPostRoute || 'auth';
-	var token = req.controllerData.token,
-		// current_user,
-		decode_token;
+var reset = function (req, res, next) {
+	if (periodic.app.controller.extension.reactadmin) {
+		let reactadmin = periodic.app.controller.extension.reactadmin;
+		// console.log({ reactadmin });
+		// console.log('ensureAuthenticated req.session', req.session);
+		// console.log('ensureAuthenticated req.user', req.user);
+		next();
+	} else {
+		let adminPostRoute = res.locals.adminPostRoute || 'auth';
+		var token = req.controllerData.token,
+			// current_user,
+			decode_token;
 
-	decode(token, function (err, decode) {
-		if (err) {
-			CoreController.handleDocumentQueryErrorResponse({
-				err: err,
-				res: res,
-				req: req,
-				errorflash: err.message
-			});
-		}
-		else {
-			decode_token = decode;
-			//Find the User by their token
-			User.findOne({
-				'attributes.reset_token': token
-			}, function (err, found_user) {
-				if (err || !found_user) {
-					req.flash('error', 'Password reset token is invalid.');
-					res.redirect(loginExtSettings.settings.authLoginPath);
-				}
-				// current_user = found_user;
-				//Check to make sure token hasn't expired
+		decode(token, function (err, decode) {
+			if (err) {
+				CoreController.handleDocumentQueryErrorResponse({
+					err: err,
+					res: res,
+					req: req,
+					errorflash: err.message
+				});
+			}
+			else {
+				decode_token = decode;
+				//Find the User by their token
+				User.findOne({
+					'attributes.reset_token': token
+				}, function (err, found_user) {
+					if (err || !found_user) {
+						req.flash('error', 'Password reset token is invalid.');
+						res.redirect(loginExtSettings.settings.authLoginPath);
+					}
+					// current_user = found_user;
+					//Check to make sure token hasn't expired
 
-				//Check to make sure token is valid and sign by us
-				else if (found_user.email !== decode_token.email && found_user.api_key !== decode_token.api_key) {
-					req.flash('error', 'This token is not valid please try again');
-					res.redirect(loginExtSettings.settings.authLoginPath);
-				}
-				else {
-					CoreController.getPluginViewDefaultTemplate({
+					//Check to make sure token is valid and sign by us
+					else if (found_user.email !== decode_token.email && found_user.api_key !== decode_token.api_key) {
+						req.flash('error', 'This token is not valid please try again');
+						res.redirect(loginExtSettings.settings.authLoginPath);
+					}
+					else {
+						CoreController.getPluginViewDefaultTemplate({
 							viewname: 'user/reset',
 							themefileext: appSettings.templatefileextension,
 							extname: 'periodicjs.ext.login'
 						},
-						function (err, templatepath) {
-							CoreController.handleDocumentQueryRender({
-								res: res,
-								req: req,
-								renderView: templatepath,
-								responseData: {
-									pagedata: {
-										title: 'Reset Password',
-										current_user: found_user
-									},
-									user: req.user,
-									adminPostRoute: adminPostRoute
-								}
+							function (err, templatepath) {
+								CoreController.handleDocumentQueryRender({
+									res: res,
+									req: req,
+									renderView: templatepath,
+									responseData: {
+										pagedata: {
+											title: 'Reset Password',
+											current_user: found_user
+										},
+										user: req.user,
+										adminPostRoute: adminPostRoute
+									}
+								});
 							});
-						});
-				}
-			});
-		}
-	});
-};
+					}
+				});
+			}
+		});
+	}
+};	
 
 //POST change the users old password to the new password in the form
 var token = function (req, res, next) {
@@ -571,6 +579,7 @@ var create_user_activation_token = function (req, res, next) {
 };
 
 var tokenController = function (resources, passportResources, UserModel) {
+	periodic = resources;
 	appSettings = resources.settings;
 	CoreController = resources.core.controller;
 	CoreUtilities = resources.core.utilities;

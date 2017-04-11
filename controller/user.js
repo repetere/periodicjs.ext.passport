@@ -13,6 +13,7 @@ var CoreUtilities,
 	appenvironment,
 	welcomeemailtemplate,
 	emailtransport;
+var periodic;
 
 /**
  * user login page
@@ -20,30 +21,38 @@ var CoreUtilities,
  * @param  {object} res
  * @return {object} reponds with an error page or requested view
  */
-var login = function (req, res) {
-	let adminPostRoute = res.locals.adminPostRoute || 'auth';
-	// console.log('adminPostRoute',adminPostRoute);
-	CoreController.getPluginViewDefaultTemplate({
+var login = function (req, res, next) {
+	if (periodic.app.controller.extension.reactadmin) {
+		let reactadmin = periodic.app.controller.extension.reactadmin;
+		// console.log({ reactadmin });
+		// console.log('ensureAuthenticated req.session', req.session);
+		// console.log('ensureAuthenticated req.user', req.user);
+		next();
+	} else {
+		let adminPostRoute = res.locals.adminPostRoute || 'auth';
+		// console.log('adminPostRoute',adminPostRoute);
+		CoreController.getPluginViewDefaultTemplate({
 			viewname: 'user/login',
 			themefileext: appSettings.templatefileextension,
 			extname: 'periodicjs.ext.login'
 		},
-		function (err, templatepath) {
-			CoreController.handleDocumentQueryRender({
-				res: res,
-				req: req,
-				renderView: templatepath,
-				responseData: {
-					pagedata: {
-						title: 'Login'
-					},
-					user: req.user,
-					adminPostRoute: adminPostRoute
-				}
-			});
-		}
-	);
-};
+			function (err, templatepath) {
+				CoreController.handleDocumentQueryRender({
+					res: res,
+					req: req,
+					renderView: templatepath,
+					responseData: {
+						pagedata: {
+							title: 'Login'
+						},
+						user: req.user,
+						adminPostRoute: adminPostRoute
+					}
+				});
+			}
+		);
+	}
+};	
 
 /**
  * user registration form
@@ -51,28 +60,36 @@ var login = function (req, res) {
  * @param  {object} res
  * @return {object} reponds with an error page or requested view
  */
-var newuser = function (req, res) {
-	let adminPostRoute = res.locals.adminPostRoute || 'auth';
-	CoreController.getPluginViewDefaultTemplate({
+var newuser = function (req, res, next) {
+	if (periodic.app.controller.extension.reactadmin) {
+		let reactadmin = periodic.app.controller.extension.reactadmin;
+		// console.log({ reactadmin });
+		// console.log('ensureAuthenticated req.session', req.session);
+		// console.log('ensureAuthenticated req.user', req.user);
+		next();
+	} else {
+		let adminPostRoute = res.locals.adminPostRoute || 'auth';
+		CoreController.getPluginViewDefaultTemplate({
 			viewname: 'user/new',
 			themefileext: appSettings.templatefileextension,
 			extname: 'periodicjs.ext.login'
 		},
-		function (err, templatepath) {
-			CoreController.handleDocumentQueryRender({
-				res: res,
-				req: req,
-				renderView: templatepath,
-				responseData: {
-					pagedata: {
-						title: 'Register'
-					},
-					user: req.user,
-					adminPostRoute: adminPostRoute
-				}
-			});
-		}
-	);
+			function (err, templatepath) {
+				CoreController.handleDocumentQueryRender({
+					res: res,
+					req: req,
+					renderView: templatepath,
+					responseData: {
+						pagedata: {
+							title: 'Register'
+						},
+						user: req.user,
+						adminPostRoute: adminPostRoute
+					}
+				});
+			}
+		);
+	}	
 };
 
 /**
@@ -136,28 +153,36 @@ var create = function (req, res) {
  * @param  {object} res
  * @return {object} reponds with an error page or requested view
  */
-var finishregistration = function (req, res) {
-	let adminPostRoute = res.locals.adminPostRoute || 'auth';
-	CoreController.getPluginViewDefaultTemplate({
+var finishregistration = function(req, res, next) {
+	if (periodic.app.controller.extension.reactadmin) {
+		let reactadmin = periodic.app.controller.extension.reactadmin;
+		// console.log({ reactadmin });
+		// console.log('ensureAuthenticated req.session', req.session);
+		// console.log('ensureAuthenticated req.user', req.user);
+		next();
+	} else {
+		let adminPostRoute = res.locals.adminPostRoute || 'auth';
+		CoreController.getPluginViewDefaultTemplate({
 			viewname: 'user/finishregistration',
 			themefileext: appSettings.templatefileextension,
 			extname: 'periodicjs.ext.login'
 		},
-		function (err, templatepath) {
-			CoreController.handleDocumentQueryRender({
-				res: res,
-				req: req,
-				renderView: templatepath,
-				responseData: {
-					pagedata: {
-						title: 'Complete registration'
-					},
-					user: req.user,
-					adminPostRoute: adminPostRoute
-				}
-			});
-		}
-	);
+			function (err, templatepath) {
+				CoreController.handleDocumentQueryRender({
+					res: res,
+					req: req,
+					renderView: templatepath,
+					responseData: {
+						pagedata: {
+							title: 'Complete registration'
+						},
+						user: req.user,
+						adminPostRoute: adminPostRoute
+					}
+				});
+			}
+		);
+	}	
 };
 
 var verify_user_activation = function (options, callback) {
@@ -326,28 +351,36 @@ var updateuserregistration = function (req, res) {
  * @return {object} reponds with an error page or requested view
  */
 
-var forgot = function (req, res) {
-	let adminPostRoute = res.locals.adminPostRoute || 'auth';
-	CoreController.getPluginViewDefaultTemplate({
+var forgot = function (req, res, next) {
+	if (periodic.app.controller.extension.reactadmin) {
+		let reactadmin = periodic.app.controller.extension.reactadmin;
+		// console.log({ reactadmin });
+		// console.log('ensureAuthenticated req.session', req.session);
+		// console.log('ensureAuthenticated req.user', req.user);
+		next();
+	} else {
+		let adminPostRoute = res.locals.adminPostRoute || 'auth';
+		CoreController.getPluginViewDefaultTemplate({
 			viewname: 'user/forgot',
 			themefileext: appSettings.templatefileextension,
 			extname: 'periodicjs.ext.login'
 		},
-		function (err, templatepath) {
-			CoreController.handleDocumentQueryRender({
-				res: res,
-				req: req,
-				renderView: templatepath,
-				responseData: {
-					pagedata: {
-						title: 'Forgot Password'
-					},
-					user: req.user,
-					adminPostRoute: adminPostRoute
-				}
+			function (err, templatepath) {
+				CoreController.handleDocumentQueryRender({
+					res: res,
+					req: req,
+					renderView: templatepath,
+					responseData: {
+						pagedata: {
+							title: 'Forgot Password'
+						},
+						user: req.user,
+						adminPostRoute: adminPostRoute
+					}
+				});
 			});
-		});
-};
+	}
+};	
 
 /**
  * login controller
@@ -373,6 +406,7 @@ var controller = function (resources, UserModel) {
 	CoreMailer = resources.core.extension.mailer;
 	loginExtSettings = resources.app.controller.extension.login.loginExtSettings;
 	appenvironment = appSettings.application.environment;
+  periodic = resources;
 
 	return {
 		login: login,
