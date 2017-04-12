@@ -52,7 +52,7 @@ module.exports = {
 			default: 'forgot'
 		}
 	},
-	login_csrf: true,
+	login_csrf: false,
 	login_social_buttons: {
 		facebook: true,
 		instagram: true,

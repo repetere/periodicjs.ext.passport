@@ -13,6 +13,7 @@ var CoreUtilities,
 	appenvironment,
 	welcomeemailtemplate,
 	emailtransport;
+const capitalize = require('capitalize');
 var periodic;
 
 /**
@@ -99,6 +100,7 @@ var newuser = function (req, res, next) {
  * @return {object} reponds with an error page or requested view
  */
 var create = function (req, res) {
+	let originalReqBody = Object.assign({}, req.body);
 	var userdata = CoreUtilities.removeEmptyObjectValues(req.body),
 		newuseroptions = {
 			newuser: userdata,
@@ -124,6 +126,9 @@ var create = function (req, res) {
 		newuseroptions.welcomeemaildata.bcc = loginExtSettings.settings.adminbccemail || appSettings.adminbccemail;
 	}
 	finalnewusersettings = extend(newuseroptions, loginExtSettings.new_user_validation);
+	if (userdata.entitytype) {
+		User = mongoose.model(capitalize(userdata.entitytype));
+	}
 	// console.log('finalnewusersettings',finalnewusersettings);
 	User.createNewUserAccount(
 		finalnewusersettings,
@@ -137,11 +142,27 @@ var create = function (req, res) {
 			}
 			else {
 				logger.silly('controller - periodic.ext.login/user.js - ' + req.session.return_url);
-				if (req.session.return_url) {
-					return res.redirect(req.session.return_url);
-				}
-				else {
-					return res.redirect('/');
+				if (periodic.app.controller.extension.reactadmin) {
+					let reactadmin = periodic.app.controller.extension.reactadmin;
+					// console.log({ reactadmin });
+					// console.log('ensureAuthenticated req.session', req.session);
+					// console.log('ensureAuthenticated req.user', req.user);
+					res.send({
+						result: 'success',
+						status: 200,
+						data: 'account created',
+						username: originalReqBody.username,
+						password:originalReqBody.password,
+						__returnURL:originalReqBody.__returnURL,
+					});
+					// next();
+				} else { 
+					if (req.session.return_url) {
+						return res.redirect(req.session.return_url);
+					}
+					else {
+						return res.redirect('/');
+					}
 				}
 			}
 		});

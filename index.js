@@ -84,6 +84,7 @@ module.exports = function (periodic) {
 	authRouter.get('/' + loginExtSettings.routes.forgot_password.default, userController.forgot);
 	authRouter.post('/' + loginExtSettings.routes.forgot_password.default, tokenController.forgot);
 	authRouter.get('/reset/:token', tokenController.get_token, tokenController.reset);
+	authRouter.get('/asyncreset/:token', tokenController.get_token, tokenController.asyncreset);
 	authRouter.post('/reset/:token', tokenController.get_token, tokenController.token);
 
 	// activate_middleware = [tokenController.get_user_activation_token,authController.ensureAuthenticated];

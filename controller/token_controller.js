@@ -18,6 +18,7 @@ var async = require('async'),
 	passport;
 
 var periodic;
+const capitalize = require('capitalize');
 // Utility Functions
 var waterfall = function (array, cb) {
 	async.waterfall(array, cb);
@@ -121,6 +122,9 @@ function saveUser(user, req, cb) {
 
 
 var getUser = function (req, res, next, cb) {
+	if (req.body.entitytype) {
+		User = mongoose.model(capitalize(req.body.entitytype));
+	}
 	User.findOne({
 		email: new RegExp('^' + req.body.email + '$', 'i')
 	}, function (err, user) {
@@ -260,57 +264,103 @@ var forgot = function (req, res, next) {
 
 	waterfall(arr,
 		function (err, results) {
-			CoreController.respondInKind({
-				req: req,
-				res: res,
-				err: err,
-				responseData: results,
-				callback: function (req, res /*,responseData*/ ) {
-					if (err) {
-						req.flash('error', err.message);
-						res.redirect('/auth/forgot');
-					}
-					else {
-						req.flash('info', 'Password reset instructions were sent to your email address');
-						if (req.controllerData && req.controllerData.sendemailstatus) {
-							req.controllerData.password_reset_emailstatus = results;
-							next();
+			if (periodic.app.controller.extension.reactadmin) {
+				if (err) {
+					logger.debug('could not send reset email',err);
+				} else {
+					res.status(200).send({
+						result:'success',
+						data: 'Password reset instructions were sent to your email address',
+					})
+				}
+			} else { 
+				CoreController.respondInKind({
+					req: req,
+					res: res,
+					err: err,
+					responseData: results,
+					callback: function (req, res /*,responseData*/) {
+						if (err) {
+						
+
+							req.flash('error', err.message);
+							res.redirect('/auth/forgot');
+						
+						} else {
+							req.flash('info', 'Password reset instructions were sent to your email address');
+							if (req.controllerData && req.controllerData.sendemailstatus) {
+								req.controllerData.password_reset_emailstatus = results;
+								next();
+							}
+							else {
+								res.redirect(loginExtSettings.settings.authLoginPath);
+							}
 						}
-						else {
-							res.redirect(loginExtSettings.settings.authLoginPath);
-						}
 					}
+				});
+			}
+		});
+};
+
+var asyncreset = function (req, res) {
+	if (req.query.entitytype) {
+		User = mongoose.model(capitalize(req.query.entitytype));
+	}
+	User.findOne({
+		'attributes.reset_token_link': req.params.token
+	}, function (err, user_with_token) {
+		if (err || !user_with_token) {
+			res.status(400).send({
+				result: 'error',
+				data: {
+					error: (err) ? err.toString() : 'Invalid token',
 				}
 			});
-
-
-
-		});
+		}
+		else {
+			res.status(200).send({
+				result: 'success',
+				data: {
+					user: {
+						email: user_with_token.email,
+						username: user_with_token.username,
+						firstname: user_with_token.firstname,
+						lastname: user_with_token.lastname,
+						token: req.params.token,
+					},
+				}
+			})
+		}
+	});
 };
 
 var get_token = function (req, res, next) {
 	req.controllerData = (req.controllerData) ? req.controllerData : {};
-
-	User.findOne({
-		'attributes.reset_token_link': req.params.token
-	}, function (err, user_with_token) {
-		if (err) {
-			req.flash('error', err.message);
-			res.redirect(loginExtSettings.settings.authLoginPath);
-		}
-		else if (!user_with_token || !user_with_token.attributes.reset_token) {
-			req.flash('error', 'Invalid reset token');
-			res.redirect(loginExtSettings.settings.authLoginPath);
-		}
-		else if (hasExpired(user_with_token.attributes.reset_token_expires_millis)) {
-			req.flash('error', 'Password reset token is has expired.');
-			res.redirect(loginExtSettings.settings.authLoginPath);
-		}
-		else {
-			req.controllerData.token = user_with_token.attributes.reset_token;
-			next();
-		}
-	});
+	if (periodic.app.controller.extension.reactadmin) {
+		let reactadmin = periodic.app.controller.extension.reactadmin;
+		next();
+	} else {
+		User.findOne({
+			'attributes.reset_token_link': req.params.token
+		}, function (err, user_with_token) {
+			if (err) {
+				req.flash('error', err.message);
+				res.redirect(loginExtSettings.settings.authLoginPath);
+			}
+			else if (!user_with_token || !user_with_token.attributes.reset_token) {
+				req.flash('error', 'Invalid reset token');
+				res.redirect(loginExtSettings.settings.authLoginPath);
+			}
+			else if (hasExpired(user_with_token.attributes.reset_token_expires_millis)) {
+				req.flash('error', 'Password reset token is has expired.');
+				res.redirect(loginExtSettings.settings.authLoginPath);
+			}
+			else {
+				req.controllerData.token = user_with_token.attributes.reset_token;
+				next();
+			}
+		});
+	}
 };
 
 //GET if the user token is vaild show the change password page
@@ -384,7 +434,9 @@ var reset = function (req, res, next) {
 
 //POST change the users old password to the new password in the form
 var token = function (req, res, next) {
-	var user_token = req.params.token; //req.controllerData.token;
+	// console.log('req.body', req.body);
+	// console.log('req.params', req.params);
+	var user_token = req.params.token || req.body.token; //req.controllerData.token;
 	waterfall([
 			function (cb) {
 				cb(null, req, res, next);
@@ -395,27 +447,44 @@ var token = function (req, res, next) {
 			emailResetPasswordNotification
 		],
 		function (err, results) {
-			// console.log('These are the err', err);
-			// console.log('These are the results', results);
-			CoreController.respondInKind({
-				req: req,
-				res: res,
-				err: err,
-				responseData: results || {},
-				callback: function (req, res /*,responseData*/ ) {
-					// console.log('err',err,'/auth/reset/' + user_token);
-					if (err) {
-						// console.log('return to reset');
-						req.flash('error', err.message);
-						res.redirect('/auth/reset/' + user_token);
-					}
-					else {
-						// console.log('no return to x');
-						req.flash('success', 'Password Sucessfully Changed!');
-						res.redirect(loginExtSettings.settings.authLoginPath);
-					}
+			if (periodic.app.controller.extension.reactadmin) {
+				let reactadmin = periodic.app.controller.extension.reactadmin;
+				if (err) {
+					res.status(400).send({
+						result: 'error',
+						data: {
+							error:err.toString(),
+						},
+					});
+				} else {
+					res.status(200).send({
+						result: 'success',
+						data:'Password successfully changed',
+					})
 				}
-			});
+			} else { 
+				// console.log('These are the err', err);
+				// console.log('These are the results', results);
+				CoreController.respondInKind({
+					req: req,
+					res: res,
+					err: err,
+					responseData: results || {},
+					callback: function (req, res /*,responseData*/ ) {
+						// console.log('err',err,'/auth/reset/' + user_token);
+						if (err) {
+							// console.log('return to reset');
+							req.flash('error', err.message);
+							res.redirect('/auth/reset/' + user_token);
+						}
+						else {
+							// console.log('no return to x');
+							req.flash('success', 'Password Sucessfully Changed!');
+							res.redirect(loginExtSettings.settings.authLoginPath);
+						}
+					}
+				});
+			}
 		});
 };
 
@@ -599,7 +668,8 @@ var tokenController = function (resources, passportResources, UserModel) {
 		get_token: get_token,
 		create_user_activation_token: create_user_activation_token,
 		update_user_activation_token: update_user_activation_token,
-		token: token
+		token: token,
+		asyncreset
 	};
 };
 

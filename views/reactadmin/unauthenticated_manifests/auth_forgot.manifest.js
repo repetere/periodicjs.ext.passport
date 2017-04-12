@@ -1,162 +1,192 @@
 'use strict';
 const path = require('path');
+const hrline = require('../components/hrline');
 
 module.exports = (periodic) => {
-  let reactadmin = periodic.app.controller.extension.reactadmin;
-  // console.log('`${reactadmin.manifest_prefix}api/oauth2async/signin?format=json`',
-  // `${reactadmin.manifest_prefix}api/oauth2async/signin?format=json`);
-  // console.log('reactadmin.manifest_prefix', reactadmin.manifest_prefix);
-  return {
-    containers: {
-      [`${reactadmin.manifest_prefix}auth/forgot`]: {
-        "layout": {
-          "component": "Hero",
-          "props": {
-            "size": "isFullheight"
-          },
-          "children": [{
-            "component": "HeroBody",
+  const reactadmin = periodic.app.controller.extension.reactadmin;
+  const getContainerManifest = (entitytype) => {
+    return {
+      // [`${reactadmin.manifest_prefix}auth/forgot`]: {
+      "layout": {
+        "component": "Hero",
+        "props": {
+          "size": "isFullheight"
+        },
+        "children": [ {
+          "component": "HeroBody",
+          "props": {},
+          "children": [ {
+            "component": "Container",
             "props": {},
-            "children": [{
-              "component": "Container",
-              "props": {},
-              "children": [{
-                "component": "Columns",
-                "children": [{
-                    "component": "Column",
-                    "props": {
-                      "size": "is3"
+            "children": [ {
+              "component": "Columns",
+              "children": [ {
+                "component": "Column",
+                "props": {
+                  "size": "is3"
+                }
+              },
+              {
+                "component": "Column",
+                "props": {},
+                "children": [ {
+                  "component": "Title",
+                  "props": {
+                    "style": {
+                      "textAlign": "center"
                     }
                   },
-                  {
-                    "component": "Column",
-                    "props": {},
-                    "children": [{
-                        "component": "Title",
-                        "props": {
-                          "style": {
-                            "textAlign": "center"
+                  "children": "Recover Password"
+                },
+                {
+                  "component": "ResponsiveForm",
+                  "props": {
+                    "cardForm": true,
+                    // cardFormTitle:'Sign In',
+                    "cardFormProps": {
+                      "isFullwidth": true,
+                    },
+                    onSubmit: {
+                      url: '/auth/forgot',
+                      // url: `${reactadmin.manifest_prefix}auth/forgot`,
+                      options: {
+                        method: 'POST',
+                      },
+                      success: {
+                        notification: {
+                          text: 'Password reset instructions were sent to your email address',
+                          timeout: 4000,
+                          type: 'success',
+                        }
+                      },
+                    },
+                    hiddenFields: [
+                      {
+                        form_name: 'entitytype',
+                        form_static_val: entitytype||reactadmin.settings.login.options.headers.entitytype
+                      },
+                    ],
+                    'validations': [
+                      {
+                        'name': 'email',
+                        'constraints': {
+                          'email': {
+                            presence: {
+                              message: '^Your email is required.',
+                            },
+                            'length': {
+                              'minimum': 3,
+                              'message': '^Your email is required.',
+                            },
+                          },
+                        },
+                      },
+                    ],
+                    "formgroups": [
+                      {
+                        "gridProps": {},
+                        "formElements": [ {
+                          "type": "text",
+                          "label": "Email",
+                          "name": "email",
+                          "submitOnEnter": true,
+                          "passProps": {
+                            "type": "email"
+                          },
+                          "layoutProps": {
+                            "horizontalform": true
+                          }
+                        }]
+                      },
+                      hrline,
+                      {
+                        "gridProps": {
+                          style: {
+                            justifyContent: 'center',
                           }
                         },
-                        "children": "PUBLIC SIGN IN"
-                      },
-                      {
-                        "component": "ResponsiveForm",
-                        "asyncprops": {
-                          onSubmit: ['oauth2data', 'data']
-                        },
-                        "props": {
-                          "cardForm": true,
-                          "cardFormProps": {
-                            "isFullwidth": true
-                          },
-                          // "onSubmit": "func:this.props.loginUser",
-                          // onSubmit: {
-                          //   url: '/api/oauth2async/signin',
-                          //   options: {
-                          //     method: 'POST',
-                          //   },
-                          //   successCallback: 'func:this.props.loginUser',
-                          // },
-                          "footergroups": [{
-                            "gridProps": {},
-                            "formElements": [{
-                                "type": "submit",
-                                "value": "Login",
-                                "name": "login",
-                                "passProps": {
-                                  "style": {
-                                    "color": "#1fc8db"
-                                  }
-                                },
-                                "layoutProps": {}
-                              },
-                              {
-                                "type": "submit",
-                                "value": "Forgot Password",
-                                "name": "forgot",
-                                "passProps": {
-                                  "style": {
-                                    "color": "#69707a"
-                                  }
-                                },
-                                "layoutProps": {}
-                              },
-                              {
-                                "type": "submit",
-                                "value": "New User",
-                                "name": "register",
-                                "passProps": {
-                                  "style": {
-                                    "color": "#69707a"
-                                  }
-                                },
-                                "layoutProps": {}
-                              }
-                            ]
-                          }],
-                          "formgroups": [{
-                              "gridProps": {},
-                              "formElements": [{
-                                "type": "text",
-                                "label": "Username",
-                                "name": "username",
-                                "layoutProps": {
-                                  "horizontalform": true
-                                }
-                              }]
+                        "formElements": [
+                          {
+                            "type": "submit",
+                            "value": "Recover Password",
+                            // "placeholder": "Remember Me",
+                            "name": "recoverpassword",
+                            "passProps": {
+                              "color": "isPrimary"
                             },
-                            {
-                              "gridProps": {},
-                              "formElements": [{
-                                "type": "text",
-                                "label": "Password",
-                                "name": "password",
-                                "submitOnEnter": true,
-                                "passProps": {
-                                  "type": "password"
-                                },
-                                "layoutProps": {
-                                  "horizontalform": true
-                                }
-                              }]
-                            },
-                            {
-                              "gridProps": {},
-                              "formElements": [{
-                                "type": "checkbox",
-                                "label": "",
-                                "placeholder": "Remember Me",
-                                "name": "rememberme",
-                                "passProps": {
-                                  "type": "rememberme"
-                                },
-                                "layoutProps": {
-                                  "horizontalform": true
-                                }
-                              }]
+                            "layoutProps": {
+                              formItemStyle: {
+                                justifyContent: 'center'
+                              },
+                              "horizontalform": true
                             }
-                          ]
-                        }
+                          },
+                          {
+                            "type": "layout",
+                            value: {
+                              component: 'FormHorizontal',
+                              props: {
+                                style: {
+                                  justifyContent: 'center'
+                                },
+                              },
+                              children: [
+                                {
+                                  component: 'ResponsiveButton',
+                                  props: {
+                                    onClick: 'func:this.props.reduxRouter.push',
+                                    onclickProps: '/auth/login',
+                                    // onclickProps:`${reactadmin.manifest_prefix}auth/login`,
+                                    style: {
+                                    },
+                                    buttonProps: {
+                                      // color: 'isPrimary',
+                                    },
+                                  },
+                                  children: 'Login',
+                                }
+                              ]
+                                    
+                            },
+                            "layoutProps": {
+                              style: {
+                                justifyContent: 'center'
+                              },
+                              // "horizontalform": true
+                            }
+                          }
+                        ]
                       }
                     ]
-                  },
-                  {
-                    "component": "Column",
-                    "props": {
-                      "size": "is3"
-                    }
                   }
+                }
                 ]
-              }]
+              },
+              {
+                "component": "Column",
+                "props": {
+                  "size": "is3"
+                }
+              }
+              ]
             }]
           }]
-        },
-        "resources": {
-          // oauth2data: `${reactadmin.manifest_prefix}api/oauth2async/signin?format=json`,
-        },
-        "onFinish": "render"
-      }
+        }]
+      },
+      "resources": {
+        // oauth2data: `${reactadmin.manifest_prefix}api/oauth2async/signin?format=json`,
+      },
+      'pageData': {
+        'title': `Forgot Password | ${reactadmin.settings.name}`,
+        'navLabel': 'Forgot Password',
+      },
+      "onFinish": "render"
+    };
+  };
+  return {
+    containers: {
+      '/auth/forgot': getContainerManifest(),
+      '/auth/forgot/user': getContainerManifest('user'),
     },
   };
 };
