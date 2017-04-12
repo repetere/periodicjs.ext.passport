@@ -1,5 +1,6 @@
 'use strict';
 const path = require('path');
+const hrline = require('../components/hrline');
 
 module.exports = (periodic) => {
   let reactadmin = periodic.app.controller.extension.reactadmin;
@@ -32,72 +33,60 @@ module.exports = (periodic) => {
                     "component": "Column",
                     "props": {},
                     "children": [
+                      {
+                        "component": "Title",
+                        "props": {
+                          "style": {
+                            "textAlign": "center"
+                          }
+                        },
+                        "children": "Sign in"
+                      },
                       { 
                         "component": "ResponsiveForm",
-                        "asyncprops": {
-                          onSubmit: ['oauth2data', 'data']
-                        },
                         "props": {
                           "cardForm": true,
-                          cardFormTitle:'Sign In',
+                          // cardFormTitle:'Sign In',
                           "cardFormProps": {
                             "isFullwidth": true,
-                           
                           },
-                          // "onSubmit": "func:this.props.loginUser",
-                          // onSubmit: {
-                          //   url: '/api/oauth2async/signin',
-                          //   options: {
-                          //     method: 'POST',
-                          //   },
-                          //   successCallback: 'func:this.props.loginUser',
-                          // },
-                          /*
-                          "footergroups": [{
-                            "gridProps": {},
-                            "formElements": [{
-                                "type": "submit",
-                                "value": "Login",
-                                "name": "login",
-                                "passProps": {
-                                  "style": {
-                                    "color": "#1fc8db"
-                                  }
-                                },
-                                "layoutProps": {}
-                              },
-                              {
-                                "type": "layout",
-                                "value": {
-                                  component: 'div',
-                                  props: {
-                                    style: {
-                                      color:'black'
-                                    }
+                          "onSubmit": "func:this.props.loginUser",
+                          hiddenFields: [
+                            {
+                              form_name: '__returnURL',
+                              form_static_val:reactadmin.settings.auth.logged_in_homepage
+                            },
+                          ],
+                          'validations': [
+                            {
+                              'name': 'username',
+                              'constraints': {
+                                'username': {
+                                  presence: {
+                                    message: '^Your username is required.',
                                   },
-                                  children: "Forgot Password"
+                                  'length': {
+                                    'minimum': 3,
+                                    'message': '^Your username is required.',
+                                  },
                                 },
-                                // "name": "forgot",
-                                // "passProps": {
-                                //   "style": {
-                                //     "color": "#69707a"
-                                //   }
-                                // },
-                                "layoutProps": {}
                               },
-                              {
-                                "type": "submit",
-                                "value": "New User",
-                                "name": "register",
-                                "passProps": {
-                                  "style": {
-                                    "color": "#69707a"
-                                  }
+                            },
+                            {
+                              'name': 'password',
+                              'constraints': {
+                                'password': {
+                                  presence: {
+                                    message: '^Your username is required',
+                                  },
+                                  'length': {
+                                    'minimum': 8,
+                                    'message': '^Your password is too short',
+                                  },
                                 },
-                                "layoutProps": {}
-                              }
-                            ]
-                          }],*/
+                              },
+                            },
+                          ],
                           "formgroups": [{
                               "gridProps": {},
                               "formElements": [{
@@ -167,6 +156,7 @@ module.exports = (periodic) => {
                                 
                               ]
                             },
+                            hrline,
                             {
                               "gridProps": {
                                 style:{
@@ -193,6 +183,11 @@ module.exports = (periodic) => {
                                   "type": "layout",
                                   value: {
                                     component: 'FormHorizontal',
+                                    props:{
+                                      style: {
+                                        justifyContent:'center'
+                                      },
+                                    },
                                     children: [
                                       {
                                         component: 'ResponsiveButton',
