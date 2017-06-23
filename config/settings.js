@@ -2,7 +2,31 @@
 
 module.exports = {
   settings: {
-    defaults:true,
+    routing: {
+      authenication_route_prefix: 'auth',
+      login:'login',
+      logout:'logout',
+      forgot:'forgot',
+      reset: 'reset',
+      activate: 'activate',
+      register: 'new',
+      complete: 'complete',//finishregistration
+      sso:'sso',
+      oauth: {
+        facebook:'facebook',
+        twitter:'twitter',
+        google:'google',
+        instagram:'instagram',
+      },
+    },
+    data: {
+      user_core_data:'standard_user',
+      account_core_data:'standard_account',
+    },
+    passport: {
+      sessions: true,
+      use_csrf: false,
+    },
   },
   databases: {
   },

@@ -19,7 +19,10 @@
   "scripts": {
     "test": "mocha -R spec --recursive"
   },
-  "dependencies": {},
+  "dependencies": {
+    "csurf": "^1.9.0",
+    "passport": "^0.3.2"
+  },
   "devDependencies": {
     "browserify": "^13.0.0",
     "chai": "^3.0.0",
