@@ -6,7 +6,7 @@ const routeUtils = periodic.utilities.routing;
 // const auth_route_prefix = passportSettings.routing.authenication_route_prefix;
 // const auth_route = periodic.utilities.routing.route_prefix(auth_route_prefix);
 
-console.log({ utilities });
+// console.log({ utilities });
 
 /**
  * make sure a user is authenticated, if not logged in, send them to login page and return them to original resource after login
@@ -38,9 +38,10 @@ function forceAuthLogin(req, res) {
     ? `${utilities.routes.login}?return_url=${req.originalUrl}`
     : utilities.routes.login;
   if (utilities.controller.jsonReq(req)) {
-    res.send({
-      redirect: redirectURL,
-    });
+      res.send(routeUtils.formatResponse({data:{
+        redirect: redirectURL,
+      }
+    }));
   } else {
     res.redirect(redirectURL);
   }
