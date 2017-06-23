@@ -18,6 +18,10 @@ module.exports = {
         google:'google',
         instagram:'instagram',
       },
+      userauth: {
+        user_core_data:'user',
+        account_core_data:'account',
+      },
     },
     data: {
       user_core_data:'standard_user',
