@@ -31,6 +31,11 @@ module.exports = {
       sessions: true,
       use_csrf: false,
     },
+    registration: {
+      require_activation: false,
+      require_second_factor: false,
+      require_properties:['email'],
+    }
   },
   databases: {
   },

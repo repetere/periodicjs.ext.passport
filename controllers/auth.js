@@ -17,12 +17,23 @@ const routeUtils = periodic.utilities.routing;
 function ensureAuthenticated(req, res, next) {
   periodic.logger.info('require,auth');
   if (req.isAuthenticated()) { 
-
+    //link accounts
+    //required fields
+    //required activation
+    //required second factor  
+    next();
+  } else if (utilities.controller.jsonReq(req)) { 
+    res.status(401).send(routeUtils.formatResponse({
+        status:401,
+        result:'error',
+        data: {
+          error: new Error('Authentication required'),
+        }
+      }
+    ));  
   } else {
-    
+    forceAuthLogin(req, res);
   }
-
-  next();
 }
 
 /**

@@ -1,6 +1,7 @@
 'use strict';
 const periodic = require('periodicjs');
 const controller = require('./controller');
+const auth = require('./auth');
 const periodicRoutingUtil = periodic.utilities.routing;
 
 function getSettings() {
@@ -36,7 +37,8 @@ function getRoutes() {
 
 module.exports = {
   passport: require('passport'),
-  routes:getRoutes(),
+  routes: getRoutes(),
+  auth,
   adminRoute,
   getSettings,
   controller,
