@@ -98,7 +98,7 @@ function login(req, res) {
         req.flash('error', err);
       }
       periodic.core._utility_responder.error({ err, req, res });
-    } else (!user){
+    } else if(!user){
       periodic.core._utility_responder.error({ err:new Error(passportSettings.errors.invalid_credentials), req, res });
     } else {
       req.logIn(user, (err) => {
