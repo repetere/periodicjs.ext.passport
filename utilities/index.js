@@ -18,16 +18,16 @@ function getRoutes() {
   const adminURL = adminRoute(); 
   const passportRoutes = getSettings().routing;
   const generatedRoutes = Object.keys(passportRoutes).reduce((result, key) => { 
-    if ([ 'authenication_route_prefix', 'sso', 'oauth', 'userauth', 'activate', 'register','complete' ].indexOf(key) === -1) {
+    if ([ 'authenication_route_prefix', 'sso', 'oauth', 'userauth', 'activate', 'register', 'complete', 'signin', 'reset', 'forgot','login','logout' ].indexOf(key) === -1) {
       result[ key ] = `${adminURL}${periodicRoutingUtil.route_prefix(passportRoutes[key])}`;
     } else if (key === 'oauth') {
       Object.keys(passportRoutes.oauth).forEach(skey => {
         result[ `${passportRoutes.sso}_${passportRoutes.oauth[ skey ]}` ] = `${adminURL}${periodicRoutingUtil.route_prefix(passportRoutes.sso)}${periodicRoutingUtil.route_prefix(passportRoutes.oauth[ skey ])}`;
       });
     } else if (key === 'userauth') {
-      [ 'activate', 'register', 'complete' ].forEach(ukey => {
-        result[ `userauth_${ukey}` ] = `${adminURL}${periodicRoutingUtil.route_prefix(passportRoutes.userauth.user_core_data)}${periodicRoutingUtil.route_prefix(ukey)}`;
-        result[ `accountauth_${ukey}` ] = `${adminURL}${periodicRoutingUtil.route_prefix(passportRoutes.userauth.account_core_data)}${periodicRoutingUtil.route_prefix(ukey)}`;
+      [ 'activate', 'register', 'complete','signin','login','logout','forgot','reset' ].forEach(ukey => {
+        result[ `user_auth_${ukey}` ] = `${adminURL}${periodicRoutingUtil.route_prefix(passportRoutes.userauth.user_core_data)}${periodicRoutingUtil.route_prefix(ukey)}`;
+        result[ `account_auth_${ukey}` ] = `${adminURL}${periodicRoutingUtil.route_prefix(passportRoutes.userauth.account_core_data)}${periodicRoutingUtil.route_prefix(ukey)}`;
       });
     }
     return result;

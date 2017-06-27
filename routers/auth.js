@@ -8,6 +8,7 @@ const authRouter = periodic.express.Router();
 const passportSettings = utilities.getSettings();
 
 // authRouter.use(periodic.core.cache.disableCache);
+console.log('passportSettings.passport',passportSettings.passport)
 if (passportSettings.passport.use_csrf) {
   authRouter.use(csrf());
   authRouter.use(function (req, res, next) {
@@ -15,7 +16,8 @@ if (passportSettings.passport.use_csrf) {
     next();
   });
 }
-authRouter.get('/', controllers.auth.ensureAuthenticated, (req, res) => { res.send('login page') });
+authRouter.get('/test', controllers.auth.ensureAuthenticated, controllers.auth.testView);
+authRouter.get('/login', controllers.auth.loginView);
 
 /**
  * 	authRouter.get('/login', userController.login);

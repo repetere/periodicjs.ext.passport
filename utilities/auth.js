@@ -194,6 +194,14 @@ function authenticateUser(options) {
     .catch(doneCallback);
 }
 
+function getEntityTypeFromReq(options) {
+  const { req = {} } = options;
+  const reqCustomBody = Object.assign({}, req.body, req.query, req.controllerData);
+  return (reqCustomBody.entitytype && reqCustomBody.entitytype === 'account')
+    ? 'account'
+    : 'user';
+}
+
 module.exports = {
   getAuthCoreDataModel,
   serialize,
@@ -202,4 +210,5 @@ module.exports = {
   incrementLoginLimiter,
   localLoginVerifyCallback,
   authenticateUser,
+  getEntityTypeFromReq,
 };
