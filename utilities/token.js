@@ -43,7 +43,21 @@ function generateUserActivationData(options) {
       bcrypt.genSalt(10)
         .then(generatedSalt => {
           salt = generatedSalt;
-      })
+          const passportextensionattributes = {
+            user_activation_token,
+            user_activation_token_link: periodic.core.utilities.makeNiceName(bcrypt.hashSync(user_activation_token, salt)),
+            reset_activation_expires_millis : expires
+          };
+          /**
+           * userdata.attributes.user_activation_token = user_activation_token;
+    userdata.attributes.user_activation_token_link = CoreUtilities.makeNiceName(bcrypt.hashSync(userdata.attributes.user_activation_token, salt));
+    userdata.attributes.reset_activation_expires_millis = expires;
+           */
+          user.extensionattributes = Object.assign({}, user.extensionattributes, extensionattributes);
+          user.extensionattributes.passport = Object.assign({},user.extensionattributes.passport, passportextensionattributes);
+          resolve(user);
+        })
+        .catch(reject);
     } catch (e) {
       reject(e);
     }
