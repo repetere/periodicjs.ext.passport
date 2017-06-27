@@ -29,13 +29,17 @@ module.exports = {
     },
     passport: {
       sessions: true,
-      use_csrf: false,
+			use_csrf: false,
+			use_password: true,
     },
     registration: {
       require_activation: false,
       require_second_factor: false,
       require_properties:['email'],
-    }
+		},
+		timeout: {
+			use_limiter:true,
+		},
   },
   databases: {
   },
