@@ -36,7 +36,11 @@ module.exports = {
     registration: {
       require_activation: false,
       require_second_factor: false,
-      require_properties:['email'],
+      require_properties: [ 'email' ],
+      token: {
+        secret: 'abcdefghijklmnopqrstuvwxyz0123456789',
+        reset_token_expires_minutes:30,
+      },
     },
     timeout: {
       use_limiter:true,

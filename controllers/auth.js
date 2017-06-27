@@ -48,8 +48,8 @@ function forceAuthLogin(req, res) {
   req = utilities.controller.setReturnUrl(req);
   const entitytype = utilities.auth.getEntityTypeFromReq({req});  
   const redirectURL = (req.originalUrl)
-    ? `${utilities.routes[`${entitytype}_auth_login`]}?return_url=${req.originalUrl}`
-    : utilities.routes[`${entitytype}_auth_login`];
+    ? `${utilities.paths[`${entitytype}_auth_login`]}?return_url=${req.originalUrl}`
+    : utilities.paths[`${entitytype}_auth_login`];
   if (utilities.controller.jsonReq(req)) {
       res.send(routeUtils.formatResponse({data:{
         redirect: redirectURL,
@@ -69,7 +69,7 @@ function loginView(req, res) {
     // fileext,
   };
   const viewdata = {
-    loginPost: utilities.routes[`${entitytype}_auth_login`],
+    loginPost: utilities.paths[`${entitytype}_auth_login`],
   };
   periodic.core.controller.render(req, res, viewtemplate, viewdata)
 }
@@ -85,7 +85,7 @@ function testView(req, res) {
   periodic.core.controller.render(req, res, viewtemplate, viewdata)
 }
 
-function login(req, res) {
+function login(req, res, next) {
   const entitytype = utilities.auth.getEntityTypeFromReq({req});  
   periodic.logger.silly('starting login req.body', req.body);
   passport.authenticate('local', (err, user, info) => { 
@@ -97,20 +97,22 @@ function login(req, res) {
       if (req.flash) {
         req.flash('error', err);
       }
-      periodic.core._utility_responder.error({ err, req, res });
+      periodic.core.controller.renderError({ err, req, res });
     } else if(!user){
-      periodic.core._utility_responder.error({ err:new Error(passportSettings.errors.invalid_credentials), req, res });
+      periodic.core.controller.renderError({
+        err: new Error(passportSettings.errors.invalid_credentials),
+        req,
+        res,
+      });
     } else {
       req.logIn(user, (err) => {
         if (err) {
-          periodic.core.controller.logError({
-            req: req,
-            err: err
+          periodic.core.controller.renderError({
+              err,
+              req,
+              res,
+              opts: { logError: true, }
           });
-          if (req.flash) {
-            req.flash('error', err);
-          }
-          periodic.core._utility_responder.error({ err, req, res });
         } else {
           const redirectURL = req.session.return_url || passportSettings.redirect[entitytype].logged_in_homepage;
           if (utilities.controller.jsonReq(req)) {
@@ -127,7 +129,7 @@ function login(req, res) {
         }
       });
     }
-  });
+  })(req,res,next);
 }
 
 module.exports = {

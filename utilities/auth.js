@@ -11,8 +11,8 @@ const passportSettings = periodic.settings.extensions['periodicjs.ext.passport']
  */
 function getAuthCoreDataModel(authUser) {
   return (authUser.entitytype === 'account') ?
-    periodic.datas(passportSettings.data.account_core_data) :
-    periodic.datas(passportSettings.data.user_core_data);
+    periodic.datas.get(passportSettings.data.account_core_data) :
+    periodic.datas.get(passportSettings.data.user_core_data);
 }
 
 /**

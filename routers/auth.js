@@ -7,8 +7,6 @@ const utilities = require('../utilities');
 const authRouter = periodic.express.Router();
 const passportSettings = utilities.getSettings();
 
-// authRouter.use(periodic.core.cache.disableCache);
-console.log('passportSettings.passport',passportSettings.passport)
 if (passportSettings.passport.use_csrf) {
   authRouter.use(csrf());
   authRouter.use(function (req, res, next) {
@@ -18,11 +16,11 @@ if (passportSettings.passport.use_csrf) {
 }
 authRouter.get('/test', controllers.auth.ensureAuthenticated, controllers.auth.testView);
 authRouter.get('/login', controllers.auth.loginView);
+authRouter.post(utilities.routes.user_auth_login, controllers.auth.login);
+authRouter.post(utilities.routes.account_auth_login, controllers.auth.login);
+// authRouter.get('/logout', authController.logout);
 
 /**
- * 	authRouter.get('/login', userController.login);
-	authRouter.post('/login', authController.login);
-	authRouter.get('/logout', authController.logout);
 	//token controller & router
 	authRouter.get('/' + loginExtSettings.routes.forgot_password.default, userController.forgot);
 	authRouter.post('/' + loginExtSettings.routes.forgot_password.default, tokenController.forgot);

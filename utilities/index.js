@@ -2,6 +2,7 @@
 const periodic = require('periodicjs');
 const controller = require('./controller');
 const auth = require('./auth');
+const token = require('./token');
 const periodicRoutingUtil = periodic.utilities.routing;
 
 function getSettings() {
@@ -14,8 +15,8 @@ function adminRoute() {
   return periodicRoutingUtil.route_prefix(auth_route_prefix);
 }
 
-function getRoutes() {
-  const adminURL = adminRoute(); 
+function getRoutes(use_admin_prefix) {
+  const adminURL = (use_admin_prefix)?adminRoute():''; 
   const passportRoutes = getSettings().routing;
   const generatedRoutes = Object.keys(passportRoutes).reduce((result, key) => { 
     if ([ 'authenication_route_prefix', 'sso', 'oauth', 'userauth', 'activate', 'register', 'complete', 'signin', 'reset', 'forgot','login','logout' ].indexOf(key) === -1) {
@@ -38,7 +39,9 @@ function getRoutes() {
 module.exports = {
   passport: require('passport'),
   routes: getRoutes(),
+  paths: getRoutes(true),
   auth,
+  token,
   adminRoute,
   getSettings,
   controller,

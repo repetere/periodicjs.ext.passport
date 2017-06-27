@@ -5,20 +5,17 @@
   <main>
     <article>
         <section>
-          LOGIN FORM
+          <h3>Login</h3>
         </section>
         <section>
           <form method="post" action="<%- loginPost %>">
-            <input type="hidden" name="token" value="<%- token %>"/>
-            <div>
-              <input type="text" placeholder="username" name="username"/>
-            </div>
-            <div>
-              <input type="password" placeholder="password" name="password"/>
-            </div>
-            <div>
-              <input type="submit" value="Login"/>
-            </div>
+            <input type="hidden" name="_csrf" value="<%- token %>"/>
+            <input type="text" placeholder="username" name="username"/>
+            <input type="password" placeholder="password" name="password"/>
+            <section>
+              <button type="submit">Login</button>
+              <a type="button" href="">Create Account</a>
+            </section>
           </form>
         </section>
     </article>
