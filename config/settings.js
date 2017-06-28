@@ -36,11 +36,14 @@ module.exports = {
     registration: {
       require_activation: false,
       require_second_factor: false,
+      require_password: true,
       require_properties: [ 'email' ],
+      matched_password_field: 'confirmpassword',
       token: {
         secret: 'abcdefghijklmnopqrstuvwxyz0123456789',
         reset_token_expires_minutes:30,
       },
+      signin_after_create: true,
     },
     timeout: {
       use_limiter:true,

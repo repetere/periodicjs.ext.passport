@@ -70,6 +70,7 @@ function loginView(req, res) {
   };
   const viewdata = {
     loginPost: utilities.paths[`${entitytype}_auth_login`],
+    registerPost: utilities.paths[`${entitytype}_auth_register`],
   };
   periodic.core.controller.render(req, res, viewtemplate, viewdata)
 }
@@ -105,29 +106,7 @@ function login(req, res, next) {
         res,
       });
     } else {
-      req.logIn(user, (err) => {
-        if (err) {
-          periodic.core.controller.renderError({
-              err,
-              req,
-              res,
-              opts: { logError: true, }
-          });
-        } else {
-          const redirectURL = req.session.return_url || passportSettings.redirect[entitytype].logged_in_homepage;
-          if (utilities.controller.jsonReq(req)) {
-            res.send(routeUtils.formatResponse({
-              result: 'success',
-              data: {
-                message: 'successfully logged in',
-                redirect: redirectURL,
-              }
-            }));
-          } else {
-            res.redirect(redirectURL);
-          }
-        }
-      });
+      utilities.auth.loginUser({ req, res, passportSettings, utilities, routeUtils, user, });
     }
   })(req,res,next);
 }

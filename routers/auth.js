@@ -16,9 +16,17 @@ if (passportSettings.passport.use_csrf) {
 }
 authRouter.get('/test', controllers.auth.ensureAuthenticated, controllers.auth.testView);
 authRouter.get('/login', controllers.auth.loginView);
+authRouter.get(utilities.routes.user_auth_login, controllers.auth.loginView);
+authRouter.get(utilities.routes.account_auth_login, controllers.auth.loginView);
 authRouter.post(utilities.routes.user_auth_login, controllers.auth.login);
 authRouter.post(utilities.routes.account_auth_login, controllers.auth.login);
 // authRouter.get('/logout', authController.logout);
+	// userRouter.post('/new', tokenController.create_user_activation_token, userController.create);
+authRouter.get(utilities.routes.user_auth_register, controllers.user.registerView);
+authRouter.get(utilities.routes.account_auth_register, controllers.user.registerView);
+	// userRouter.get('/new|/register', userController.newuser);
+authRouter.post(utilities.routes.user_auth_register, controllers.user.create);
+authRouter.post(utilities.routes.account_auth_register, controllers.user.create);
 
 /**
 	//token controller & router
@@ -38,10 +46,8 @@ authRouter.post(utilities.routes.account_auth_login, controllers.auth.login);
 	authRouter.get('/twitter', socialPassportController.twitter);
 	authRouter.get('/twitter/callback', socialPassportController.twittercallback);
 
-	userRouter.get('/new|/register', userController.newuser);
 	userRouter.get('/finishregistration', authController.ensureAuthenticated, userController.finishregistration);
 
-	userRouter.post('/new', tokenController.create_user_activation_token, userController.create);
 	userRouter.post('/finishregistration', authController.ensureAuthenticated, userController.updateuserregistration);
 
 	periodic.app.use(authController.rememberme);

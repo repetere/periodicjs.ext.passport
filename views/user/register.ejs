@@ -5,16 +5,17 @@
   <main>
     <article>
         <section>
-          <h3>Login</h3>
+          <h3>Create <%- locals.entitytype %></h3>
         </section>
         <section>
-          <form method="post" action="<%- loginPost %>">
+          <form method="post" action="<%- registerPost %>">
             <input type="hidden" name="_csrf" value="<%- token %>"/>
             <input type="text" placeholder="username" name="username"/>
             <input type="password" placeholder="password" name="password"/>
+            <input type="password" placeholder="confirm password" name="confirmpassword"/>
             <section>
-              <button type="submit">Login</button>
-              <a type="button" href="<%- registerPost %>">Create Account</a>
+              <button type="submit">Create Account</button>
+              <a type="button" href="<%- loginPost %>">Login</a>
             </section>
           </form>
         </section>

@@ -36,7 +36,6 @@ function serialize(user, done) {
  */
 function deserialize(userFromSession, done) {
   const coreDataModel = getAuthCoreDataModel(userFromSession);
-
   coreDataModel.load({
       query: {
         entitytype: userFromSession.entitytype,
@@ -135,7 +134,7 @@ function localLoginVerifyCallback(req, username, password, done) {
       });
     },
     existingUserCallback: (user) => {
-      if (!passportSettings.passport.use_password) {
+      if (!passportSettings.passport.registration.require_password) {
         return done(null, user);
       } else {
         periodic.utilities.auth.comparePassword({
@@ -202,6 +201,33 @@ function getEntityTypeFromReq(options) {
     : 'user';
 }
 
+function loginUser(options) {
+  const { req, res, passportSettings, utilities, routeUtils, user, entitytype = user.entitytype} = options;
+  req.logIn(user, (err) => {
+    if (err) {
+      periodic.core.controller.renderError({
+          err,
+          req,
+          res,
+          opts: { logError: true, }
+      });
+    } else {
+      const redirectURL = req.session.return_url || passportSettings.redirect[entitytype].logged_in_homepage;
+      if (utilities.controller.jsonReq(req)) {
+        res.send(routeUtils.formatResponse({
+          result: 'success',
+          data: {
+            message: 'successfully logged in',
+            redirect: redirectURL,
+          }
+        }));
+      } else {
+        res.redirect(redirectURL);
+      }
+    }
+  });
+}
+
 module.exports = {
   getAuthCoreDataModel,
   serialize,
@@ -211,4 +237,5 @@ module.exports = {
   localLoginVerifyCallback,
   authenticateUser,
   getEntityTypeFromReq,
+  loginUser,
 };
