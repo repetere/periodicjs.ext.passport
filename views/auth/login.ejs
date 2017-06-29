@@ -1,0 +1,23 @@
+<%- include('../../../../app/views/shared/header') %>
+<%- include('../../../../app/views/shared/simple_nav') %>
+<% //console.log(locals)
+ %>
+  <main>
+    <article>
+        <section>
+          <h3>Login</h3>
+        </section>
+        <section>
+          <form method="post" action="<%- loginPost %>">
+            <input type="hidden" name="_csrf" value="<%- token %>"/>
+            <input type="text" placeholder="username" name="username"/>
+            <input type="password" placeholder="password" name="password"/>
+            <section>
+              <button type="submit">Login</button>
+              <a type="button" href="<%- registerPost %>">Create Account</a>
+            </section>
+          </form>
+        </section>
+    </article>
+  </main>
+<%- include('../../../../app/views/shared/footer') %>
