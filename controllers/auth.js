@@ -6,7 +6,6 @@ const routeUtils = periodic.utilities.routing;
 const passport = utilities.passport;
 // const auth_route_prefix = passportSettings.routing.authenication_route_prefix;
 // const auth_route = periodic.utilities.routing.route_prefix(auth_route_prefix);
-
 // console.log({ utilities });
 
 /**
@@ -82,7 +81,10 @@ function testView(req, res) {
     extname: 'periodicjs.ext.passport',
     // fileext,
   };
-  const viewdata = {};
+  const viewdata = {
+    user:req.user,
+    passportUser:req.user  
+  };
   periodic.core.controller.render(req, res, viewtemplate, viewdata)
 }
 
@@ -90,6 +92,7 @@ function login(req, res, next) {
   const entitytype = utilities.auth.getEntityTypeFromReq({req});  
   periodic.logger.silly('starting login req.body', req.body);
   passport.authenticate('local', (err, user, info) => { 
+      console.log('passport authenticate local', { err, user, info });  
     if (err) {
       periodic.core.controller.logError({
         req: req,
@@ -111,10 +114,38 @@ function login(req, res, next) {
   })(req,res,next);
 }
 
+function logout(req, res) {
+  // console.log('loging out', req.user);
+  const entitytype = req.user.entitytype || 'user';  
+  const redirectURL = req.session.return_url || passportSettings.redirect[entitytype].logged_out_homepage;
+  
+  req.logout();
+  req.session.destroy((err) => {
+    if (err) {
+      periodic.core.controller.renderError({
+        err,
+        req,
+        res,
+      });  
+    } else if (utilities.controller.jsonReq(req)) {
+      res.send(routeUtils.formatResponse({
+        result: 'success',
+        data: {
+          message: 'successfully logged out',
+          redirect: redirectURL,
+        }
+      }));
+    } else {
+      res.redirect(redirectURL);
+    }     
+  });
+}
+
 module.exports = {
   ensureAuthenticated,
   forceAuthLogin,
   loginView,
   testView,
   login,
+  logout,
 };

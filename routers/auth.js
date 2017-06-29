@@ -6,6 +6,7 @@ const controllers = require('../controllers');
 const utilities = require('../utilities');
 const authRouter = periodic.express.Router();
 const passportSettings = utilities.getSettings();
+const periodicRoutingUtil = periodic.utilities.routing;
 
 if (passportSettings.passport.use_csrf) {
   authRouter.use(csrf());
@@ -15,6 +16,7 @@ if (passportSettings.passport.use_csrf) {
   });
 }
 authRouter.get('/test', controllers.auth.ensureAuthenticated, controllers.auth.testView);
+authRouter.get(periodicRoutingUtil.route_prefix(passportSettings.routing.logout), controllers.auth.logout);
 authRouter.get('/login', controllers.auth.loginView);
 authRouter.get(utilities.routes.user_auth_login, controllers.auth.loginView);
 authRouter.get(utilities.routes.account_auth_login, controllers.auth.loginView);

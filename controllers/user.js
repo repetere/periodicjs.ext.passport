@@ -69,7 +69,7 @@ function create(req, res, next) {
         ));  
       } else {
         const signInOnCreate = (userRequest.signin_after_create === false || userRequest.signin_after_create === 'false' || passportSettings.registration.signin_after_create === false) ? false : passportSettings.registration.signin_after_create;
-        console.log({ signInOnCreate });
+        // console.log({ signInOnCreate });
         if (signInOnCreate) {
           utilities.auth.loginUser({ req, res, passportSettings, utilities, routeUtils, user:newUser, });
         } else {
