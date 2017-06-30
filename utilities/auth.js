@@ -119,7 +119,7 @@ function localLoginVerifyCallback(req, username, password, done) {
     req,
     existingUserQuery: {
       $or: [{
-        username: {
+        name: {
           $regex: new RegExp('^' + usernameRegex + '$', 'i')
         }
       }, {
@@ -134,7 +134,7 @@ function localLoginVerifyCallback(req, username, password, done) {
       });
     },
     existingUserCallback: (user) => {
-      if (!passportSettings.passport.registration.require_password) {
+      if (!passportSettings.passport.use_password) {
         return done(null, user);
       } else {
         periodic.utilities.auth.comparePassword({
@@ -175,7 +175,8 @@ function authenticateUser(options) {
   const { req, existingUserQuery, noUserCallback, existingUserCallback, doneCallback } = options;
   const userRequest = Object.assign({}, req.body, req.query, req.controllerData);
   const coreDataModel = getAuthCoreDataModel(userRequest);
-
+  // const util = require('util')
+  // console.log('existingUserQuery', util.inspect(existingUserQuery,{depth:10}));
   coreDataModel.load({
     query: existingUserQuery,
   })
