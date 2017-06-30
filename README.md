@@ -68,5 +68,16 @@
   $ grunt doc
   $ jsdoc2md commands/**/*.js config/**/*.js controllers/**/*.js  transforms/**/*.js utilities/**/*.js index.js > doc/api.md
   ```
-  ##Notes
+
+ ## Todo
+
+ * re-add user creation validation
+ * re-add welcome email
+ * re-add forgot password
+ * re-add activation
+ * re-add social login
+ * re-add two factor
+ * re-add reset password
+
+## Notes
   * Check out https://github.com/typesettin/periodicjs for the full Periodic Documentation
