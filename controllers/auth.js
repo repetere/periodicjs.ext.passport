@@ -15,7 +15,7 @@ const passport = utilities.passport;
  * @return {Function} next() callback
  */
 function ensureAuthenticated(req, res, next) {
-  periodic.logger.info('require,auth');
+  // periodic.logger.info('require,auth');
   if (req.isAuthenticated()) { 
     //link accounts
     //required fields
@@ -90,9 +90,9 @@ function testView(req, res) {
 
 function login(req, res, next) {
   const entitytype = utilities.auth.getEntityTypeFromReq({req});  
-  periodic.logger.silly('starting login req.body', req.body);
+  // periodic.logger.silly('starting login req.body', req.body);
   passport.authenticate('local', (err, user, info) => { 
-      console.log('passport authenticate local', { err, user, info });  
+      // console.log('passport authenticate local', { err, user, info });  
     if (err) {
       periodic.core.controller.logError({
         req: req,
