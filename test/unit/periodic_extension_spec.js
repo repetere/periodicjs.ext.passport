@@ -36,13 +36,13 @@ describe('Valid Periodic extension', function() {
             app_root: initTestPathDir,
             cli: true,
             environment: 'test',
-          })
+        })
           .then(() => {
             return fs.copy(extension_root_dir, path.join(initTestPathDir, 'node_modules', extensionPACKAGE_JSON.name), {
               filter: (src, dest) => {
                 if (src.indexOf(path.join(extension_root_dir, 'test')) === -1 &&
                   src.indexOf(path.join(extension_root_dir, 'node_modules')) === -1 &&
-                  src.indexOf(path.join(extension_root_dir, 'node_modules', extensionPACKAGE_JSON.name, '__LEGACY')) === -1) {
+                  src.indexOf(path.join(extension_root_dir, '__LEGACY')) === -1) {
                   return true;
                 } else {
                   return false;
@@ -53,8 +53,12 @@ describe('Valid Periodic extension', function() {
           .then(() => {
             return extPeriodic.crud.ext.create(extensionPACKAGE_JSON.name);
           })
+          .then(() => { 
+            return fs.copy(path.join(extension_root_dir, 'node_modules'), path.join(initTestPathDir, 'node_modules'), (err, result) => {
+              return true;
+            });
+          })
           .then(result => {
-            console.log({ result });
             done();
           })
           .catch(done);
@@ -155,10 +159,10 @@ describe('Valid Periodic extension', function() {
       expect(extensionJSON.periodic_config).to.be.a('object');
     });
   });
-  // after('remove extension test periodic dir', (done) => {
-  //   fs.remove(initTestPathDir)
-  //     .then(() => {
-  //       done();
-  //     }).catch(done);
-  // });
+  after('remove extension test periodic dir', (done) => {
+    fs.remove(initTestPathDir)
+      .then(() => {
+        done();
+      }).catch(done);
+  });
 });
