@@ -2,7 +2,7 @@
   "periodic_compatibility": "10.0.0",
   "periodic_dependencies": [],
   "periodic_type": 2,
-  "periodic_priority": 0,
+  "periodic_priority": 1,
   "periodic_config": {
   }
 }
