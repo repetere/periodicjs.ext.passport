@@ -1,6 +1,7 @@
 'use strict';
 const periodic = require('periodicjs');
 const utilities = require('../utilities');
+const path = require('path');
 const passportSettings = utilities.getSettings();
 const routeUtils = periodic.utilities.routing;
 const passport = utilities.passport;
@@ -60,7 +61,7 @@ function create(req, res, next) {
         from: periodic.settings.periodic.emails.server_from_address,
         to: createdUser.email,
         bcc: periodic.settings.periodic.emails.notification_address,
-        subject: `Welcome to ${periodic.settings.name}${(periodic.application.environment !== 'production') ? ' [' + periodic.application.environment + ']' : ''}`,
+        subject: `Welcome to ${periodic.settings.name}${(periodic.settings.application.environment !== 'production') ? ' [' + periodic.settings.application.environment + ']' : ''}`,
         generateTextFromHTML: true,
         // html: "<h1>Welcome User</h1><p>email rocks</p>"
         emailtemplatefilepath: path.resolve(periodic.config.app_root, utilities.getSettings().emails.welcome),

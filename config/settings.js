@@ -53,7 +53,7 @@ module.exports = {
     },
     redirect: {
       user: {
-        logged_in_homepage: '/home',
+        logged_in_homepage: '/',
         logged_out_homepage: '/',
       },
       account: {
