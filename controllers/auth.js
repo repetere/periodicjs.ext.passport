@@ -16,21 +16,20 @@ const passport = utilities.passport;
  */
 function ensureAuthenticated(req, res, next) {
   // periodic.logger.info('require,auth');
-  if (req.isAuthenticated()) { 
+  if (req.isAuthenticated()) {
     //link accounts
     //required fields
     //required activation
     //required second factor  
     next();
-  } else if (utilities.controller.jsonReq(req)) { 
+  } else if (utilities.controller.jsonReq(req)) {
     res.status(401).send(routeUtils.formatResponse({
-        status:401,
-        result:'error',
-        data: {
-          error: new Error('Authentication required'),
-        }
+      status: 401,
+      result: 'error',
+      data: {
+        error: new Error('Authentication required'),
       }
-    ));  
+    }));
   } else {
     forceAuthLogin(req, res);
   }
@@ -45,9 +44,9 @@ function ensureAuthenticated(req, res, next) {
 function forceAuthLogin(req, res) {
   const loginPath = routeUtils.admin_prefix(passportSettings.routing.login);
   req = utilities.controller.setReturnUrl(req);
-  const entitytype = utilities.auth.getEntityTypeFromReq({req});  
-  const redirectURL = (req.originalUrl)
-    ? `${utilities.paths[`${entitytype}_auth_login`]}?return_url=${req.originalUrl}`
+  const entitytype = utilities.auth.getEntityTypeFromReq({ req });
+  const redirectURL = (req.originalUrl) ?
+    `${utilities.paths[`${entitytype}_auth_login`]}?return_url=${req.originalUrl}`
     : utilities.paths[`${entitytype}_auth_login`];
   if (utilities.controller.jsonReq(req)) {
       res.send(routeUtils.formatResponse({data:{
@@ -141,6 +140,11 @@ function logout(req, res) {
   });
 }
 
+function useCSRF(req, res, next) {
+  res.locals.token = req.csrfToken();
+  next();
+}
+
 module.exports = {
   ensureAuthenticated,
   forceAuthLogin,
@@ -148,4 +152,5 @@ module.exports = {
   testView,
   login,
   logout,
+  useCSRF,
 };

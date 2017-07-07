@@ -1,5 +1,6 @@
 'use strict';
-// const periodic = require('periodicjs');
+const path = require('path');
+const periodic = require('periodicjs');
 const LocalStrategy = require('passport-local').Strategy;
 const utilities = require('./utilities');
 const passport = utilities.passport;

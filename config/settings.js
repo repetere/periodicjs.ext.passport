@@ -4,29 +4,32 @@ module.exports = {
   settings: {
     routing: {
       authenication_route_prefix: 'auth',
-      login:'login',
-      logout:'logout',
-      forgot:'forgot',
+      login: 'login',
+      logout: 'logout',
+      forgot: 'forgot',
       reset: 'reset',
       activate: 'activate',
       register: 'new',
       signin: 'signin',
-      complete: 'complete',//finishregistration
-      sso:'sso',
+      complete: 'complete', //finishregistration
+      sso: 'sso',
       oauth: {
-        facebook:'facebook',
-        twitter:'twitter',
-        google:'google',
-        instagram:'instagram',
+        facebook: 'facebook',
+        twitter: 'twitter',
+        google: 'google',
+        instagram: 'instagram',
       },
       userauth: {
-        user_core_data:'user',
-        account_core_data:'account',
+        user_core_data: 'user',
+        account_core_data: 'account',
       },
     },
+    emails: {
+      welcome: 'node_modules/periodicjs.ext.passport/views/email/welcome.ejs',
+    },
     data: {
-      user_core_data:'standard_user',
-      account_core_data:'standard_account',
+      user_core_data: 'standard_user',
+      account_core_data: 'standard_account',
     },
     passport: {
       sessions: true,
@@ -37,33 +40,32 @@ module.exports = {
       require_activation: false,
       require_second_factor: false,
       require_password: true,
-      require_properties: [ 'email' ],
+      require_properties: ['email'],
       matched_password_field: 'confirmpassword',
       token: {
         secret: 'abcdefghijklmnopqrstuvwxyz0123456789',
-        reset_token_expires_minutes:30,
+        reset_token_expires_minutes: 30,
       },
       signin_after_create: true,
     },
     timeout: {
-      use_limiter:true,
+      use_limiter: true,
     },
     redirect: {
       user: {
-        logged_in_homepage:'/home',
-        logged_out_homepage:'/',
+        logged_in_homepage: '/home',
+        logged_out_homepage: '/',
       },
       account: {
-        logged_in_homepage:'/admin',
-        logged_out_homepage:'/',
+        logged_in_homepage: '/admin',
+        logged_out_homepage: '/',
       }
     },
     errors: {
-      invalid_credentials:'Invalid credentials',
+      invalid_credentials: 'Invalid credentials',
     },
   },
-  databases: {
-  },
+  databases: {},
 };
 
 /**

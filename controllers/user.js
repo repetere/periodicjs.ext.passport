@@ -12,7 +12,7 @@ const passport = utilities.passport;
  * @param {object} res http response object
  */
 function registerView(req, res) {
-  const entitytype = utilities.auth.getEntityTypeFromReq({req});  
+  const entitytype = utilities.auth.getEntityTypeFromReq({ req });
   const viewtemplate = {
     // themename,
     viewname: 'user/register',
@@ -21,7 +21,7 @@ function registerView(req, res) {
   };
   const viewdata = {
     loginPost: utilities.paths[`${entitytype}_auth_login`],
-    registerPost: utilities.paths[ `${entitytype}_auth_register` ],
+    registerPost: utilities.paths[`${entitytype}_auth_register`],
     entitytype,
   };
   periodic.core.controller.render(req, res, viewtemplate, viewdata);
@@ -35,16 +35,17 @@ function registerView(req, res) {
  * @param {function} next 
  */
 function create(req, res, next) {
-  const entitytype = utilities.auth.getEntityTypeFromReq({req});  
+  const entitytype = utilities.auth.getEntityTypeFromReq({ req });
   const user = Object.assign({}, req.body);
   const userRequest = Object.assign({}, req.body, req.query, req.controllerData);
   const coreDataModel = utilities.auth.getAuthCoreDataModel(userRequest);
   const loginRedirectURL = routeUtils.route_prefix(passportSettings.redirect[entitytype].logged_in_homepage);
+  let dbCreatedUser;
   //validate user/account props
   //create activation data
   //create user document
   //send welcome email
-  utilities.account.validate({user})
+  utilities.account.validate({ user })
     .then(validatedUser => {
       return utilities.token.generateUserActivationData({ user: validatedUser });
     })
@@ -53,25 +54,40 @@ function create(req, res, next) {
         newdoc: activationUser,
       });
     })
-    // .then(createdUser => {
-    //   return periodic.core.email.send({ email, data: { user: createdUser } });
-    // })
     .then(createdUser => {
-      const newUser = Object.assign({}, createdUser, { password: undefined });
-      if (utilities.controller.jsonReq(req)) { 
+      dbCreatedUser = createdUser;
+      const welcomeEmail = {
+        from: periodic.settings.periodic.emails.server_from_address,
+        to: createdUser.email,
+        bcc: periodic.settings.periodic.emails.notification_address,
+        subject: `Welcome to ${periodic.settings.name}${(periodic.application.environment !== 'production') ? ' [' + periodic.application.environment + ']' : ''}`,
+        generateTextFromHTML: true,
+        // html: "<h1>Welcome User</h1><p>email rocks</p>"
+        emailtemplatefilepath: path.resolve(periodic.config.app_root, utilities.getSettings().emails.welcome),
+        emailtemplatedata: {
+          appname: periodic.settings.name,
+          hostname: periodic.settings.application.hostname || periodic.settings.name,
+          update_message: 'welcome',
+        }
+      };
+      return periodic.core.mailer.sendEmail(welcomeEmail);
+    })
+    .then(emailStatus => {
+      periodic.logger.silly({ emailStatus });
+      const newUser = Object.assign({}, dbCreatedUser, { password: undefined });
+      if (utilities.controller.jsonReq(req)) {
         res.send(routeUtils.formatResponse({
-            result:'success',
-            data: {
-              user: newUser,
-              redirect:loginRedirectURL,
-            }
+          result: 'success',
+          data: {
+            user: newUser,
+            redirect: loginRedirectURL,
           }
-        ));  
+        }));
       } else {
         const signInOnCreate = (userRequest.signin_after_create === false || userRequest.signin_after_create === 'false' || passportSettings.registration.signin_after_create === false) ? false : passportSettings.registration.signin_after_create;
         // console.log({ signInOnCreate });
         if (signInOnCreate) {
-          utilities.auth.loginUser({ req, res, passportSettings, utilities, routeUtils, user:newUser, });
+          utilities.auth.loginUser({ req, res, passportSettings, utilities, routeUtils, user: newUser, });
         } else {
           res.redirect(loginRedirectURL);
         }
@@ -84,7 +100,7 @@ function create(req, res, next) {
         res,
       });
     });
- 
+
 }
 
 module.exports = {
