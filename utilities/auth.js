@@ -36,11 +36,7 @@ function serialize(user, done) {
  */
 function deserialize(userFromSession, done) {
   const coreDataModel = getAuthCoreDataModel(userFromSession);
-  coreDataModel.load({
-      query: {
-        _id: userFromSession._id,
-      },
-    })
+  coreDataModel.load({ query: { _id: userFromSession._id, }, })
     .then(user => {
       done(null, user);
     })

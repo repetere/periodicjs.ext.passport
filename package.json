@@ -1,7 +1,7 @@
 {
   "name": "periodicjs.ext.passport",
   "description": "Passport extension for periodicjs",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "main": "index.js",
   "engines": {
     "node": "^6.x"
@@ -17,7 +17,9 @@
   },
   "license": "MIT",
   "scripts": {
-    "test": "mocha -R spec --recursive"
+    "test": "mocha -R spec --recursive",
+    "postinstall": "cd ../../ && periodicjs aex periodicjs.ext.passport",
+    "postuninstall": "cd ../../ && periodicjs rex periodicjs.ext.passport"
   },
   "dependencies": {
     "csurf": "^1.9.0",

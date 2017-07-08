@@ -37,19 +37,19 @@
 
   ### Installing the Extension
 
-  Install like any other extension, run `npm run install periodicjs.ext.passport` from your periodic application root directory and then run `periodicjs addExtension periodicjs.ext.passport`.
+  Install like any other extension, run `npm run install periodicjs.ext.passport` from your periodic application root directory and then normally you would run `periodicjs addExtension periodicjs.ext.passport` but this is handled by the npm post install script.
   ```
   $ cd path/to/application/root
   $ npm run install periodicjs.ext.passport
-  $ periodicjs addExtension periodicjs.ext.passport
+  $ periodicjs addExtension periodicjs.ext.passport // this is handled by npm post install script
   ```
   ### Uninstalling the Extension
 
-  Run `npm run uninstall periodicjs.ext.passport` from your periodic application root directory and then run `periodicjs removeExtension periodicjs.ext.passport`.
+  Run `npm run uninstall periodicjs.ext.passport` from your periodic application root directory and then normally you would run `periodicjs removeExtension periodicjs.ext.passport` but this is handled by the npm post install script.
   ```
   $ cd path/to/application/root
   $ npm run uninstall periodicjs.ext.passport
-  $ periodicjs removeExtension periodicjs.ext.passport
+  $ periodicjs removeExtension periodicjs.ext.passport // this is handled by npm post uninstall script
   ```
 
 

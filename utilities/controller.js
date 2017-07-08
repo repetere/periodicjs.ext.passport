@@ -6,9 +6,7 @@ module.exports = {
     return req.is('json') || req.query.format === 'json';
   },
   setReturnUrl: (req) => {
-    if (req.orginalUrl && req.session) {
-      req.session.return_url = req.originalUrl;
-    }
+    req.session.return_url = (req.query && req.query.return_url) ? req.query.return_url : req.originalUrl;
     return req;
   },
 };
