@@ -38,7 +38,6 @@ function deserialize(userFromSession, done) {
   const coreDataModel = getAuthCoreDataModel(userFromSession);
   coreDataModel.load({
       query: {
-        entitytype: userFromSession.entitytype,
         _id: userFromSession._id,
       },
     })
@@ -51,17 +50,17 @@ function deserialize(userFromSession, done) {
 }
 
 function resetLoginLimiter(options) {
-  const { user } = options;
+  const { user, } = options;
   return new Promise((resolve, reject) => {
     resolve(user);
-  })
+  });
 }
 
 function incrementLoginLimiter(options) {
-  const { user } = options;
+  const { user, } = options;
   return new Promise((resolve, reject) => {
     resolve(user);
-  })
+  });
   /*
     user.extensionattributes = user.extensionattributes || {};
     if (!user.extensionattributes.login) {
@@ -120,17 +119,17 @@ function localLoginVerifyCallback(req, username, password, done) {
     existingUserQuery: {
       $or: [{
         name: {
-          $regex: new RegExp('^' + usernameRegex + '$', 'i')
-        }
+          $regex: new RegExp('^' + usernameRegex + '$', 'i'),
+        },
       }, {
         email: {
-          $regex: new RegExp('^' + usernameRegex + '$', 'i')
-        }
-      }]
+          $regex: new RegExp('^' + usernameRegex + '$', 'i'),
+        },
+      }, ],
     },
     noUserCallback: () => {
       return done(null, false, {
-        message: 'Unknown user ' + username
+        message: 'Unknown user ' + username,
       });
     },
     existingUserCallback: (user) => {
@@ -138,28 +137,28 @@ function localLoginVerifyCallback(req, username, password, done) {
         return done(null, user);
       } else {
         periodic.utilities.auth.comparePassword({
-          candidatePassword: user.password,
-          userPassword: password,
-        })
-        .then(isMatch => {
-          if (isMatch) {
-            if (passportSettings.timeout.use_limiter) { 
-              resetLoginLimiter({user}).then(user => { 
+            candidatePassword: user.password,
+            userPassword: password,
+          })
+          .then(isMatch => {
+            if (isMatch) {
+              if (passportSettings.timeout.use_limiter) {
+                resetLoginLimiter({ user, }).then(user => {
+                  return done(null, user);
+                }).catch(done);
+              } else {
                 return done(null, user);
-              }).catch(done);
+              }
             } else {
-              return done(null, user);
+              return done(null, false, {
+                message: 'Invalid password',
+              });
             }
-          } else {
-            return done(null, false, {
-              message:'Invalid password',
-            });
-          }
-        }).catch(done);
+          }).catch(done);
       }
     },
-    doneCallback:done,
-  })
+    doneCallback: done,
+  });
 }
 
 /**
@@ -172,19 +171,19 @@ function localLoginVerifyCallback(req, username, password, done) {
  * @param {function} options.doneCallback callback function to passport, this will handle errors
  */
 function authenticateUser(options) {
-  const { req, existingUserQuery, noUserCallback, existingUserCallback, doneCallback } = options;
+  const { req, existingUserQuery, noUserCallback, existingUserCallback, doneCallback, } = options;
   const userRequest = Object.assign({}, req.body, req.query, req.controllerData);
   const coreDataModel = getAuthCoreDataModel(userRequest);
   // const util = require('util')
   // console.log('existingUserQuery', util.inspect(existingUserQuery,{depth:10}));
   coreDataModel.load({
-    query: existingUserQuery,
-  })
+      query: existingUserQuery,
+    })
     .then(user => {
       if (!user || !user._id) {
         noUserCallback();
-      } else if(passportSettings.timeout.use_limiter) {
-        incrementLoginLimiter({ user }).then(user => { 
+      } else if (passportSettings.timeout.use_limiter) {
+        incrementLoginLimiter({ user, }).then(user => {
           existingUserCallback(user);
         }).catch(doneCallback);
       } else {
@@ -195,22 +194,22 @@ function authenticateUser(options) {
 }
 
 function getEntityTypeFromReq(options) {
-  const { req = {} } = options;
+  const { req = {}, } = options;
   const reqCustomBody = Object.assign({}, req.body, req.query, req.controllerData);
-  return (reqCustomBody.entitytype && reqCustomBody.entitytype === 'account')
-    ? 'account'
-    : 'user';
+  return (reqCustomBody.entitytype && reqCustomBody.entitytype === 'account') ?
+    'account' :
+    'user';
 }
 
 function loginUser(options) {
-  const { req, res, passportSettings, utilities, routeUtils, user, entitytype = user.entitytype} = options;
+  const { req, res, passportSettings, utilities, routeUtils, user, entitytype = user.entitytype, } = options;
   req.logIn(user, (err) => {
     if (err) {
       periodic.core.controller.renderError({
-          err,
-          req,
-          res,
-          opts: { logError: true, }
+        err,
+        req,
+        res,
+        opts: { logError: true, },
       });
     } else {
       const redirectURL = req.session.return_url || passportSettings.redirect[entitytype].logged_in_homepage;
@@ -220,7 +219,7 @@ function loginUser(options) {
           data: {
             message: 'successfully logged in',
             redirect: redirectURL,
-          }
+          },
         }));
       } else {
         res.redirect(redirectURL);
