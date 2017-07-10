@@ -13,7 +13,8 @@ const passport = utilities.passport;
  * @param {object} res http response object
  */
 function registerView(req, res) {
-  const entitytype = utilities.auth.getEntityTypeFromReq({ req });
+  const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_register, });
+
   const viewtemplate = {
     // themename,
     viewname: 'user/register',

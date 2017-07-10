@@ -190,8 +190,10 @@ function authenticateUser(options) {
 }
 
 function getEntityTypeFromReq(options) {
-  const { req = {}, } = options;
-  const reqCustomBody = Object.assign({}, req.body, req.query, req.controllerData);
+  const { req = {}, accountPath} = options;
+  const reqCustomBody = Object.assign({
+    entitytype:(accountPath && req.originalUrl && req.originalUrl.indexOf(accountPath) > -1) ? 'account' : 'user',
+  }, req.body, req.query, req.controllerData);
   return (reqCustomBody.entitytype && reqCustomBody.entitytype === 'account') ?
     'account' :
     'user';

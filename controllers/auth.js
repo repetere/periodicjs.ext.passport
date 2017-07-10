@@ -28,7 +28,7 @@ function ensureAuthenticated(req, res, next) {
       result: 'error',
       data: {
         error: new Error('Authentication required'),
-      }
+      },
     }));
   } else {
     forceAuthLogin(req, res);
@@ -44,22 +44,22 @@ function ensureAuthenticated(req, res, next) {
 function forceAuthLogin(req, res) {
   const loginPath = routeUtils.admin_prefix(passportSettings.routing.login);
   req = utilities.controller.setReturnUrl(req);
-  const entitytype = utilities.auth.getEntityTypeFromReq({ req });
+  const entitytype = utilities.auth.getEntityTypeFromReq({ req, });
   const redirectURL = (req.originalUrl) ?
     `${utilities.paths[`${entitytype}_auth_login`]}?return_url=${req.originalUrl}`
     : utilities.paths[`${entitytype}_auth_login`];
   if (utilities.controller.jsonReq(req)) {
-      res.send(routeUtils.formatResponse({data:{
-        redirect: redirectURL,
-      }
+    res.send(routeUtils.formatResponse({ data:{
+      redirect: redirectURL,
+    },
     }));
   } else {
     res.redirect(redirectURL);
   }
-};
+}
 
 function loginView(req, res) {
-  const entitytype = utilities.auth.getEntityTypeFromReq({req});  
+  const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_login, });  
   const viewtemplate = {
     // themename,
     viewname: 'auth/login',
@@ -67,10 +67,11 @@ function loginView(req, res) {
     // fileext,
   };
   const viewdata = {
+    entityType: entitytype,
     loginPost: utilities.paths[`${entitytype}_auth_login`],
     registerPost: utilities.paths[`${entitytype}_auth_register`],
   };
-  periodic.core.controller.render(req, res, viewtemplate, viewdata)
+  periodic.core.controller.render(req, res, viewtemplate, viewdata);
 }
 
 function testView(req, res) {
@@ -82,25 +83,25 @@ function testView(req, res) {
   };
   const viewdata = {
     user:req.user,
-    passportUser:req.user  
+    passportUser:req.user,  
   };
-  periodic.core.controller.render(req, res, viewtemplate, viewdata)
+  periodic.core.controller.render(req, res, viewtemplate, viewdata);
 }
 
 function login(req, res, next) {
-  const entitytype = utilities.auth.getEntityTypeFromReq({req});  
+  const entitytype = utilities.auth.getEntityTypeFromReq({ req, });  
   // periodic.logger.silly('starting login req.body', req.body);
   passport.authenticate('local', (err, user, info) => { 
       // console.log('passport authenticate local', { err, user, info });  
     if (err) {
       periodic.core.controller.logError({
         req: req,
-        err: err
+        err: err,
       });
       if (req.flash) {
         req.flash('error', err);
       }
-      periodic.core.controller.renderError({ err, req, res });
+      periodic.core.controller.renderError({ err, req, res, });
     } else if(!user){
       periodic.core.controller.renderError({
         err: new Error(passportSettings.errors.invalid_credentials),
@@ -110,7 +111,7 @@ function login(req, res, next) {
     } else {
       utilities.auth.loginUser({ req, res, passportSettings, utilities, routeUtils, user, });
     }
-  })(req,res,next);
+  })(req, res, next);
 }
 
 function logout(req, res) {
@@ -132,7 +133,7 @@ function logout(req, res) {
         data: {
           message: 'successfully logged out',
           redirect: redirectURL,
-        }
+        },
       }));
     } else {
       res.redirect(redirectURL);

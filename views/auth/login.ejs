@@ -10,6 +10,7 @@
         <section>
           <form method="post" action="<%- loginPost %>">
             <input type="hidden" name="_csrf" value="<%- token %>"/>
+            <input type="hidden" name="entitytype" value="<%- entityType %>"/>
             <input type="text" placeholder="username" name="username"/>
             <input type="password" placeholder="password" name="password"/>
             <section>
