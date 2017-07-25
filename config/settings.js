@@ -78,6 +78,7 @@ module.exports = {
         user_entity_type: 'account',
         user_email: 'tech@promisefin.com',
         token_url: 'https://some-oauth2-server:8787/api/oauth2/token',
+        service_url: 'https://some-oauth2-server:8787',
         service_name: 'some-oauth2-server',
         scope: ['email', 'publish_actions', 'offline_access', 'user_status', 'user_checkins', 'user_about_me', 'read_stream', ],
       }, ],
