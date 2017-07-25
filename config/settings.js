@@ -40,7 +40,7 @@ module.exports = {
       require_activation: false,
       require_second_factor: false,
       require_password: true,
-      require_properties: ['email'],
+      require_properties: ['email', ],
       matched_password_field: 'confirmpassword',
       token: {
         secret: 'abcdefghijklmnopqrstuvwxyz0123456789',
@@ -59,10 +59,28 @@ module.exports = {
       account: {
         logged_in_homepage: '/admin',
         logged_out_homepage: '/',
-      }
+      },
     },
     errors: {
       invalid_credentials: 'Invalid credentials',
+    },
+    oauth: {
+      facebook: {
+        appid: 'NEED***FB***APPID',
+        appsecret: 'NEED***FB***APP***SECRET',
+        callbackurl: 'https://localhost:8786/auth/facebook/callback',
+        scope: ['email', 'publish_actions', 'offline_access', 'user_status', 'user_checkins', 'user_about_me', 'read_stream', ],
+      },
+      oauth2client: [{
+        client_token_id: '***NEED**CLIENT**TOKEN**ID***',
+        client_secret: '***NEED**CLIENT**SECRET***',
+        authorization_url: 'https://some-oauth2-server:8787/api/oauth2/authorize',
+        user_entity_type: 'account',
+        user_email: 'tech@promisefin.com',
+        token_url: 'https://some-oauth2-server:8787/api/oauth2/token',
+        service_name: 'some-oauth2-server',
+        scope: ['email', 'publish_actions', 'offline_access', 'user_status', 'user_checkins', 'user_about_me', 'read_stream', ],
+      }, ],
     },
   },
   databases: {},
