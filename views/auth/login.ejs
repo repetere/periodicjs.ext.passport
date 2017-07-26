@@ -1,11 +1,12 @@
 <%- include('../../../../app/views/shared/header') %>
 <%- include('../../../../app/views/shared/simple_nav') %>
-<% //console.log(locals)
+<% //console.log(locals.entityType)
+  const capitalize = periodic.viewHelper.capitalize;
  %>
   <main>
     <article>
         <section>
-          <h3>Login</h3>
+          <h3>Login <%-(locals.entityType!=='account')?'<span style="font-weight:normal">User</span> | <a href="'+locals.loginPaths.account_auth_login+'">Account</a>':'<a href="'+locals.loginPaths.user_auth_login+'">User</a> | <span style="font-weight:normal">Account</span>'%></h3>
         </section>
         <section>
           <form method="post" action="<%- loginPost %>">
@@ -15,7 +16,7 @@
             <input type="password" placeholder="password" name="password"/>
             <section>
               <button type="submit">Login</button>
-              <a type="button" href="<%- registerPost %>">Create Account</a>
+              <a type="button" href="<%- registerPost %>">Create <%- capitalize(entityType) ||'User' %></a>
             </section>
           </form>
         </section>

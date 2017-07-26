@@ -68,6 +68,7 @@ function loginView(req, res) {
   };
   const viewdata = {
     entityType: entitytype,
+    loginPaths: utilities.paths,
     loginPost: utilities.paths[`${entitytype}_auth_login`],
     registerPost: utilities.paths[`${entitytype}_auth_register`],
   };
