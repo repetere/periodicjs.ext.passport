@@ -44,7 +44,11 @@ function ensureAuthenticated(req, res, next) {
 function forceAuthLogin(req, res) {
   const loginPath = routeUtils.admin_prefix(passportSettings.routing.login);
   req = utilities.controller.setReturnUrl(req);
-  const entitytype = utilities.auth.getEntityTypeFromReq({ req, });
+  const entitytype = utilities.auth.getEntityTypeFromReq({
+    req,
+    accountPath: utilities.paths.account_auth_login,
+    userPath: utilities.paths.user_auth_login,
+  });
   const redirectURL = (req.originalUrl) ?
     `${utilities.paths[`${entitytype}_auth_login`]}?return_url=${req.originalUrl}`
     : utilities.paths[`${entitytype}_auth_login`];
@@ -59,10 +63,38 @@ function forceAuthLogin(req, res) {
 }
 
 function loginView(req, res) {
-  const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_login, });  
+  const entitytype = utilities.auth.getEntityTypeFromReq({
+    req,
+    accountPath: utilities.paths.account_auth_login,
+    userPath: utilities.paths.user_auth_login,
+  });  
   const viewtemplate = {
     // themename,
     viewname: 'auth/login',
+    extname: 'periodicjs.ext.passport',
+    // fileext,
+  };
+  const flashMsg = (req.query.msg) ? req.query.msg.toString() : false;
+  const viewdata = {
+    entityType: entitytype,
+    loginPaths: utilities.paths,
+    loginPost: utilities.paths[`${entitytype}_auth_login`],
+    registerPost: utilities.paths[`${entitytype}_auth_register`],
+    forgotPost: utilities.paths[ `${entitytype}_auth_forgot` ],
+    notification: (flashMsg)?passportSettings.notifications[flashMsg]:false,
+  };
+  periodic.core.controller.render(req, res, viewtemplate, viewdata);
+}
+
+function forgotView(req, res) {
+  const entitytype = utilities.auth.getEntityTypeFromReq({
+    req, 
+    accountPath: utilities.paths.account_auth_login,
+    userPath: utilities.paths.user_auth_login,
+  });  
+  const viewtemplate = {
+    // themename,
+    viewname: 'auth/forgot',
     extname: 'periodicjs.ext.passport',
     // fileext,
   };
@@ -71,20 +103,7 @@ function loginView(req, res) {
     loginPaths: utilities.paths,
     loginPost: utilities.paths[`${entitytype}_auth_login`],
     registerPost: utilities.paths[`${entitytype}_auth_register`],
-  };
-  periodic.core.controller.render(req, res, viewtemplate, viewdata);
-}
-
-function testView(req, res) {
-  const viewtemplate = {
-    // themename,
-    viewname: 'auth/test',
-    extname: 'periodicjs.ext.passport',
-    // fileext,
-  };
-  const viewdata = {
-    user:req.user,
-    passportUser:req.user,  
+    forgotPost: utilities.paths[`${entitytype}_auth_forgot`],
   };
   periodic.core.controller.render(req, res, viewtemplate, viewdata);
 }
@@ -151,7 +170,7 @@ module.exports = {
   ensureAuthenticated,
   forceAuthLogin,
   loginView,
-  testView,
+  forgotView,
   login,
   logout,
   useCSRF,

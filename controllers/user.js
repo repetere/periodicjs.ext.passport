@@ -13,7 +13,7 @@ const passport = utilities.passport;
  * @param {object} res http response object
  */
 function registerView(req, res) {
-  const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_register, });
+  const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_register, userPath: utilities.paths.user_auth_register, });
 
   const viewtemplate = {
     // themename,
@@ -27,6 +27,34 @@ function registerView(req, res) {
     entitytype,
   };
   periodic.core.controller.render(req, res, viewtemplate, viewdata);
+}
+
+function forgot(req, res, next) {
+  const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_forgot, userPath: utilities.paths.user_auth_forgot, });
+  const loginPath = routeUtils.route_prefix(passportSettings.redirect[entitytype].logged_in_homepage);
+  const loginRedirectURL = (loginPath.indexOf('?')) ? loginPath + '&msg=forgot' : loginPath + '?msg=forgot';
+
+  utilities.account.forgotPassword({
+      req,
+      email: req.body.email,
+      entitytype,
+      sendEmail: true,
+    })
+    .then(result => {
+      // console.log({ result });
+      if (utilities.controller.jsonReq(req)) {
+        res.send(routeUtils.formatResponse({
+          result: 'success',
+          data: {
+            result,
+            redirect: loginRedirectURL,
+          }
+        }));
+      } else {
+        res.redirect(loginRedirectURL);
+      }
+    })
+    .catch(next);
 }
 
 /**
@@ -62,7 +90,7 @@ function create(req, res, next) {
         from: periodic.settings.periodic.emails.server_from_address,
         to: createdUser.email,
         bcc: periodic.settings.periodic.emails.notification_address,
-        subject: `Welcome to ${periodic.settings.name}${(periodic.settings.application.environment !== 'production') ? ' [' + periodic.settings.application.environment + ']' : ''}`,
+        subject: passportSettings.email_subjects.welcome || `Welcome to ${periodic.settings.name}${(periodic.settings.application.environment !== 'production') ? ' [' + periodic.settings.application.environment + ']' : ''}`,
         generateTextFromHTML: true,
         // html: "<h1>Welcome User</h1><p>email rocks</p>"
         emailtemplatefilepath: path.resolve(periodic.config.app_root, utilities.getSettings().emails.welcome),
@@ -108,4 +136,5 @@ function create(req, res, next) {
 module.exports = {
   registerView,
   create,
+  forgot,
 };

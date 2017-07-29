@@ -190,13 +190,14 @@ function authenticateUser(options) {
 }
 
 function getEntityTypeFromReq(options) {
-  const { req = {}, accountPath} = options;
+  const { req = {}, accountPath, userPath } = options;
   const reqCustomBody = Object.assign({
-    entitytype:(accountPath && req.originalUrl && req.originalUrl.indexOf(accountPath) > -1) ? 'account' : 'user',
+    entitytype: (accountPath && req.originalUrl && req.originalUrl.indexOf(accountPath) > -1) ?
+      'account' :
+      (userPath && req.originalUrl && req.originalUrl.indexOf('/auth/user') > -1) ? 'user' : passportSettings.passport.default_entitytype,
   }, req.body, req.query, req.controllerData);
   return (reqCustomBody.entitytype && reqCustomBody.entitytype === 'account') ?
-    'account' :
-    'user';
+    'account' : 'user';
 }
 
 function loginUser(options) {

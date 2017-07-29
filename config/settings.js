@@ -26,6 +26,14 @@ module.exports = {
     },
     emails: {
       welcome: 'node_modules/periodicjs.ext.passport/views/email/welcome.ejs',
+      forgot: 'node_modules/periodicjs.ext.passport/views/email/forgot.ejs',
+    },
+    email_subjects: {
+      welcome: false,
+      forgot: false,
+    },
+    notifications: {
+      forgot: 'Password reset instructions were sent to your email address',
     },
     data: {
       user_core_data: 'standard_user',
@@ -35,6 +43,7 @@ module.exports = {
       sessions: true,
       use_csrf: false,
       use_password: true,
+      default_entitytype: 'user',
     },
     registration: {
       require_activation: false,
@@ -47,6 +56,12 @@ module.exports = {
         reset_token_expires_minutes: 30,
       },
       signin_after_create: true,
+    },
+    forgot: {
+      token: {
+        secret: 'abcdefghijklmnopqrstuvwxyz0123456789',
+        reset_token_expires_minutes: 30,
+      }
     },
     timeout: {
       use_limiter: true,

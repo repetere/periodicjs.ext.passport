@@ -1,22 +1,39 @@
 <%- include('../../../../app/views/shared/header') %>
 <%- include('../../../../app/views/shared/simple_nav') %>
-<% //console.log(locals.entityType)
+<% 
+
+console.log(locals.notification)
+//console.log(locals.entityType)
   const capitalize = periodic.viewHelper.capitalize;
  %>
   <main>
     <article>
+      <% if(locals.notification){%>
+        <section>
+        <input value="<%- locals.notification %>" disabled readonly style="width: 100%;
+    font-size: 120%;
+    margin: 0rem 0rem 1rem;
+    padding: 1rem;
+    background: whitesmoke;
+    box-sizing: border-box;
+    border: 1px solid lightgray;"/>
+        </section> 
+      <%}%>
         <section>
           <h3>Login <%-(locals.entityType!=='account')?'<span style="font-weight:normal">User</span> | <a href="'+locals.loginPaths.account_auth_login+'">Account</a>':'<a href="'+locals.loginPaths.user_auth_login+'">User</a> | <span style="font-weight:normal">Account</span>'%></h3>
         </section>
         <section>
-          <form method="post" action="<%- loginPost %>">
+          <form method="post" autocomplete="off" action="<%- loginPost %>">
             <input type="hidden" name="_csrf" value="<%- token %>"/>
             <input type="hidden" name="entitytype" value="<%- entityType %>"/>
             <input type="text" placeholder="username" name="username"/>
             <input type="password" placeholder="password" name="password"/>
             <section>
-              <button type="submit">Login</button>
-              <a type="button" href="<%- registerPost %>">Create <%- capitalize(entityType) ||'User' %></a>
+              <button type="submit" style="justify-content: center">Login</button>
+              <a type="button" href="<%- registerPost %>" style="justify-content: center">Create <%- capitalize(entityType) ||'User' %></a>
+            </section>
+            <section>
+              <a type="button" href="<%- forgotPost %>" style="justify-content: center; font-size:90%;">Forgot Password</a>
             </section>
           </form>
         </section>
