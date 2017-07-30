@@ -2,7 +2,7 @@
 <%- include('../../../../app/views/shared/simple_nav') %>
 <% 
 
-console.log(locals.notification)
+// console.log(locals.notification)
 //console.log(locals.entityType)
   const capitalize = periodic.viewHelper.capitalize;
  %>
@@ -26,8 +26,8 @@ console.log(locals.notification)
           <form method="post" autocomplete="off" action="<%- loginPost %>">
             <input type="hidden" name="_csrf" value="<%- token %>"/>
             <input type="hidden" name="entitytype" value="<%- entityType %>"/>
-            <input type="text" placeholder="username" name="username"/>
-            <input type="password" placeholder="password" name="password"/>
+            <input type="text" placeholder="username" autocomplete="off"  name="username"/>
+            <input type="password" autocomplete="off"  placeholder="password" name="password"/>
             <section>
               <button type="submit" style="justify-content: center">Login</button>
               <a type="button" href="<%- registerPost %>" style="justify-content: center">Create <%- capitalize(entityType) ||'User' %></a>

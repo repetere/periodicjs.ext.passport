@@ -132,6 +132,10 @@ function localLoginVerifyCallback(req, username, password, done) {
       if (!passportSettings.passport.use_password) {
         return done(null, user);
       } else {
+        console.log({
+          candidatePassword: user.password,
+          userPassword: password,
+        });
         periodic.utilities.auth.comparePassword({
             candidatePassword: user.password,
             userPassword: password,

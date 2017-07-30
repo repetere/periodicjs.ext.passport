@@ -57,6 +57,60 @@ function forgot(req, res, next) {
     .catch(next);
 }
 
+function resetPassword(req, res, next) {
+  const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_forgot, userPath: utilities.paths.user_auth_forgot, });
+  const loginPath = routeUtils.route_prefix(passportSettings.redirect[entitytype].logged_in_homepage);
+  const loginRedirectURL = (loginPath.indexOf('?')) ? loginPath + '&msg=reset' : loginPath + '?msg=reset';
+
+  utilities.account.getToken({
+      req,
+      token: req.params.token,
+      entitytype,
+    })
+    .then(result => {
+      return utilities.account.resetPassword({
+        req,
+        user: result.user,
+        entitytype,
+        sendEmail: true,
+      });
+    })
+    .then(result => {
+      if (utilities.controller.jsonReq(req)) {
+        res.send(routeUtils.formatResponse({
+          result: 'success',
+          data: {
+            result,
+            redirect: loginRedirectURL,
+          }
+        }));
+      } else {
+        res.redirect(loginRedirectURL);
+      }
+    })
+    .catch(next);
+}
+
+function getToken(req, res, next) {
+  const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_forgot, userPath: utilities.paths.user_auth_forgot, });
+  const loginPath = routeUtils.route_prefix(passportSettings.redirect[entitytype].logged_in_homepage);
+  const loginRedirectURL = (loginPath.indexOf('?')) ? loginPath + '&msg=reset' : loginPath + '?msg=reset';
+
+  utilities.account.getToken({
+      req,
+      token: req.params.token,
+      entitytype,
+    })
+    .then(result => {
+      req.controllerData = Object.assign({}, req.controllerData, {
+        reset_token: result.reset_token,
+      });
+      next();
+    })
+    .catch(next);
+}
+
+
 /**
  * create a new user/account by validating requirements and sending welcome email
  * 
@@ -136,5 +190,7 @@ function create(req, res, next) {
 module.exports = {
   registerView,
   create,
+  resetPassword,
   forgot,
+  getToken,
 };

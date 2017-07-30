@@ -27,6 +27,7 @@ module.exports = {
     emails: {
       welcome: 'node_modules/periodicjs.ext.passport/views/email/welcome.ejs',
       forgot: 'node_modules/periodicjs.ext.passport/views/email/forgot.ejs',
+      reset_notification: 'node_modules/periodicjs.ext.passport/views/email/reset_notification.ejs',
     },
     email_subjects: {
       welcome: false,
@@ -34,6 +35,7 @@ module.exports = {
     },
     notifications: {
       forgot: 'Password reset instructions were sent to your email address',
+      reset: 'Password successfully changed',
     },
     data: {
       user_core_data: 'standard_user',
@@ -56,6 +58,28 @@ module.exports = {
         reset_token_expires_minutes: 30,
       },
       signin_after_create: true,
+      use_complexity: true,
+      use_complexity_setting: 'medium',
+      complexity_settings: {
+        weak: {
+          uppercase: 1,
+          lowercase: 1,
+          min: 8,
+        },
+        medium: {
+          uppercase: 1,
+          lowercase: 1,
+          digit: 1,
+          min: 8,
+        },
+        strong: {
+          uppercase: 1,
+          lowercase: 1,
+          digit: 1,
+          special: 1,
+          min: 8,
+        },
+      },
     },
     forgot: {
       token: {

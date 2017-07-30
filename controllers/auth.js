@@ -86,6 +86,30 @@ function loginView(req, res) {
   periodic.core.controller.render(req, res, viewtemplate, viewdata);
 }
 
+function resetView(req, res) {
+  const entitytype = utilities.auth.getEntityTypeFromReq({
+    req,
+    accountPath: utilities.paths.account_auth_reset,
+    userPath: utilities.paths.user_auth_reset,
+  });  
+  const viewtemplate = {
+    // themename,
+    viewname: 'user/reset',
+    extname: 'periodicjs.ext.passport',
+    // fileext,
+  };
+  const flashMsg = (req.query.msg) ? req.query.msg.toString() : false;
+  const viewdata = {
+    entitytype,
+    loginPaths: utilities.paths,
+    loginPost: utilities.paths[`${entitytype}_auth_login`],
+    registerPost: utilities.paths[`${entitytype}_auth_register`],
+    resetPost: utilities.paths[ `${entitytype}_auth_reset` ],
+    notification: (flashMsg)?passportSettings.notifications[flashMsg]:false,
+  };
+  periodic.core.controller.render(req, res, viewtemplate, viewdata);
+}
+
 function forgotView(req, res) {
   const entitytype = utilities.auth.getEntityTypeFromReq({
     req, 
@@ -171,6 +195,7 @@ module.exports = {
   forceAuthLogin,
   loginView,
   forgotView,
+  resetView,
   login,
   logout,
   useCSRF,
