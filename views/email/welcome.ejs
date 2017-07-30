@@ -1,12 +1,22 @@
 <html>
+<% const activationLink = locals.protocol+locals.url+locals.basepath+'?activation_token='+locals.user.extensionattributes.passport.user_activation_token_link; %>
+<% const homeLink = locals.protocol+locals.url; %>
 <body style="background:#ececec; margin:1em; padding:1em;">
 	<div style="margin:1em; background:#fff; padding:0.5em;">
 		<h2>Welcome to your new account.</h2>
-		<div><%- update_message %></div>
+		<p>Sign in with your email address (<%- user.email %>)
+		 <% 
+		if(user.name){%> or username (<%- user.name %>)
+		<%}%> 
+		</p>
+		<%if(locals.user.extensionattributes && locals.user.extensionattributes.passport && locals.user.extensionattributes.passport.user_activation_token_link){%>
+			<p>Click here to validate your user account, <a href="<%- activationLink %>">click here</a> or copy this url (<%- activationLink %>) to validate your user account</p>
+		<%}%>
+		
 		<p>
 			Login to <%- appname %> at 
-			<a href='http://<%- hostname %>/' target='_blank'>
-			http://<%- hostname %>/
+			<a href='<%- homeLink %>' target='_blank'>
+			<%- homeLink %>
 			</a> 
 		</p>
 	</div>

@@ -3,6 +3,7 @@ const path = require('path');
 const periodic = require('periodicjs');
 const moment = require('moment');
 const utilAuth = require('./auth');
+const utilToken = require('./token');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const complexity = require('complexity');
@@ -108,6 +109,37 @@ function resetPasswordNotification(options) {
         },
       };
       return resolve(periodic.core.mailer.sendEmail(resetPasswordEmail));
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+function emailWelcomeMessage(options) {
+  return new Promise((resolve, reject) => {
+    try {
+      const passportLocals = periodic.locals.extensions.get('periodicjs.ext.passport');
+      const { user, } = options;
+      user.password = '******';
+      user.apikey = '******';
+      const welcomeEmail = {
+        from: periodic.settings.periodic.emails.server_from_address,
+        to: user.email,
+        bcc: periodic.settings.periodic.emails.notification_address,
+        subject: passportSettings.email_subjects.welcome || `Welcome to ${periodic.settings.name}${(periodic.settings.application.environment !== 'production') ? ' [' + periodic.settings.application.environment + ']' : ''}`,
+        generateTextFromHTML: true,
+        emailtemplatefilepath: path.resolve(periodic.config.app_root, passportSettings.emails.welcome),
+        emailtemplatedata: {
+          appname: periodic.settings.name,
+          hostname: periodic.settings.application.hostname || periodic.settings.name,
+          basepath: passportLocals.paths[`${user.entitytype}_auth_complete`],
+          url: periodic.settings.application.url,
+          protocol: periodic.settings.application.protocol,
+          user,
+          // update_message: 'welcome', 
+        },
+      };
+      return resolve(periodic.core.mailer.sendEmail(welcomeEmail));
     } catch (e) {
       reject(e);
     }
@@ -291,6 +323,41 @@ function resetPassword(options) {
   });
 }
 
+function fastRegister(options) {
+  const { user, entitytype = 'user', sendEmail, } = options;
+  const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype, });
+
+  return new Promise((resolve, reject) => {
+    try {
+      let dbCreatedUser = {};
+      validate({ user, })
+        .then(validatedUser => {
+          return utilToken.generateUserActivationData({ user: validatedUser, });
+        })
+        .then(activationUser => {
+          return coreDataModel.create({
+            newdoc: activationUser,
+          });
+        })
+        .then(createdUser => {
+          dbCreatedUser = createdUser;
+
+          if (sendEmail) {
+            return emailWelcomeMessage({ user: createdUser, });
+          } else {
+            return true;
+          }
+        })
+        .then(emailStatus => {
+          resolve(dbCreatedUser);
+        })
+        .catch(reject);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
 module.exports = {
   validate,
   getToken,
@@ -298,4 +365,5 @@ module.exports = {
   resetPassword,
   forgotPassword,
   hasExpired,
+  fastRegister,
 };

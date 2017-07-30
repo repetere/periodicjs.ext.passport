@@ -3,7 +3,7 @@ const periodic = require('periodicjs');
 const moment = require('moment');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const passportSettings = periodic.settings.extensions[ 'periodicjs.ext.passport' ];
+const passportSettings = periodic.settings.extensions['periodicjs.ext.passport'];
 
 function encode(data) {
   return jwt.sign(data, passportSettings.registration.token.secret);
@@ -44,11 +44,11 @@ function generateUserActivationData(options) {
           const passportextensionattributes = {
             user_activation_token,
             user_activation_token_link: periodic.core.utilities.makeNiceName(bcrypt.hashSync(user_activation_token, generatedSalt)),
-            reset_activation_expires_millis : expires
+            reset_activation_expires_millis: expires
           };
-          console.log({ passportextensionattributes, user });
+          // console.log({ passportextensionattributes, user });
           user.extensionattributes = Object.assign({}, user.extensionattributes);
-          user.extensionattributes.passport = Object.assign({},user.extensionattributes.passport, passportextensionattributes);
+          user.extensionattributes.passport = Object.assign({}, user.extensionattributes.passport, passportextensionattributes);
           resolve(user);
         })
         .catch(reject);

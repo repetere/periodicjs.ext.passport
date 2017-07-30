@@ -48,7 +48,7 @@ function forgot(req, res, next) {
           data: {
             result,
             redirect: loginRedirectURL,
-          }
+          },
         }));
       } else {
         res.redirect(loginRedirectURL);
@@ -82,7 +82,7 @@ function resetPassword(req, res, next) {
           data: {
             result,
             redirect: loginRedirectURL,
-          }
+          },
         }));
       } else {
         res.redirect(loginRedirectURL);
@@ -119,57 +119,26 @@ function getToken(req, res, next) {
  * @param {function} next 
  */
 function create(req, res, next) {
-  const entitytype = utilities.auth.getEntityTypeFromReq({ req });
+  const entitytype = utilities.auth.getEntityTypeFromReq({ req, });
   const user = Object.assign({}, req.body);
   const userRequest = Object.assign({}, req.body, req.query, req.controllerData);
-  const coreDataModel = utilities.auth.getAuthCoreDataModel(userRequest);
   const loginRedirectURL = routeUtils.route_prefix(passportSettings.redirect[entitytype].logged_in_homepage);
   let dbCreatedUser;
-  //validate user/account props
-  //create activation data
-  //create user document
-  //send welcome email
-  utilities.account.validate({ user })
-    .then(validatedUser => {
-      return utilities.token.generateUserActivationData({ user: validatedUser });
-    })
-    .then(activationUser => {
-      return coreDataModel.create({
-        newdoc: activationUser,
-      });
-    })
-    .then(createdUser => {
-      dbCreatedUser = createdUser;
-      const welcomeEmail = {
-        from: periodic.settings.periodic.emails.server_from_address,
-        to: createdUser.email,
-        bcc: periodic.settings.periodic.emails.notification_address,
-        subject: passportSettings.email_subjects.welcome || `Welcome to ${periodic.settings.name}${(periodic.settings.application.environment !== 'production') ? ' [' + periodic.settings.application.environment + ']' : ''}`,
-        generateTextFromHTML: true,
-        // html: "<h1>Welcome User</h1><p>email rocks</p>"
-        emailtemplatefilepath: path.resolve(periodic.config.app_root, utilities.getSettings().emails.welcome),
-        emailtemplatedata: {
-          appname: periodic.settings.name,
-          hostname: periodic.settings.application.hostname || periodic.settings.name,
-          update_message: 'welcome',
-        }
-      };
-      return periodic.core.mailer.sendEmail(welcomeEmail);
-    })
-    .then(emailStatus => {
-      periodic.logger.silly({ emailStatus });
-      const newUser = Object.assign({}, dbCreatedUser, { password: undefined });
+
+  utilities.account.fastRegister({ user, entitytype, sendEmail: true, })
+    .then(newDBCreatedUser => {
+      dbCreatedUser = (newDBCreatedUser && typeof newDBCreatedUser.toJSON === 'function') ? newDBCreatedUser.toJSON() : newDBCreatedUser;
+      const newUser = Object.assign({}, dbCreatedUser, { password: undefined, });
       if (utilities.controller.jsonReq(req)) {
         res.send(routeUtils.formatResponse({
           result: 'success',
           data: {
             user: newUser,
             redirect: loginRedirectURL,
-          }
+          },
         }));
       } else {
         const signInOnCreate = (userRequest.signin_after_create === false || userRequest.signin_after_create === 'false' || passportSettings.registration.signin_after_create === false) ? false : passportSettings.registration.signin_after_create;
-        // console.log({ signInOnCreate });
         if (signInOnCreate) {
           utilities.auth.loginUser({ req, res, passportSettings, utilities, routeUtils, user: newUser, });
         } else {
