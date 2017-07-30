@@ -9,17 +9,18 @@ const complexity = require('complexity');
 const passportSettings = periodic.settings.extensions['periodicjs.ext.passport'];
 
 function checkUserPassword(options) {
-  const { user } = options;
+  const { user, } = options;
   return new Promise((resolve, reject) => {
     try {
       if (passportSettings.registration.require_password) {
         if (user.password !== user[passportSettings.registration.matched_password_field]) {
           return reject(new Error('Passwords do not match'));
         } else if (passportSettings.registration.use_complexity && user.password && !complexity.check(user.password, passportSettings.registration.complexity_settings[passportSettings.registration.use_complexity_setting])) {
-          console.log(complexity.check(user.password, passportSettings.registration.complexity_settings[passportSettings.registration.use_complexity_setting]));
-          return new Error('Password does not meet complexity requirements');
+          const complexityErrors = complexity.checkError(user.password, passportSettings.registration.complexity_settings[passportSettings.registration.use_complexity_setting]);
+          const complexityErrArray = Object.keys(complexityErrors).filter(complexError => complexityErrors[complexError] === false);
+          return reject(new Error(`Password does not meet complexity requirements (missing: ${complexityErrArray.toString()})`));
         } else {
-          periodic.utilities.auth.encryptPassword({ password: user.password })
+          periodic.utilities.auth.encryptPassword({ password: user.password, })
             .then(passwordHash => {
               user.password = passwordHash;
               user.name = (user.name) ? user.name : user.username;
@@ -39,7 +40,7 @@ function checkUserPassword(options) {
 }
 
 function validate(options) {
-  const { user } = options;
+  const { user, } = options;
   return new Promise((resolve, reject) => {
     try {
       checkUserPassword(options)
@@ -55,7 +56,7 @@ function emailForgotPasswordLink(options) {
   return new Promise((resolve, reject) => {
     try {
       const passportLocals = periodic.locals.extensions.get('periodicjs.ext.passport');
-      const { user } = options;
+      const { user, } = options;
       user.password = '******';
       user.apikey = '******';
       const forgotEmail = {
@@ -73,20 +74,20 @@ function emailForgotPasswordLink(options) {
           protocol: periodic.settings.application.protocol,
           user,
           // update_message: 'welcome', 
-        }
+        },
       };
       return resolve(periodic.core.mailer.sendEmail(forgotEmail));
     } catch (e) {
       reject(e);
     }
   });
-};
+}
 
 function resetPasswordNotification(options) {
   return new Promise((resolve, reject) => {
     try {
       const passportLocals = periodic.locals.extensions.get('periodicjs.ext.passport');
-      const { user } = options;
+      const { user, } = options;
       user.password = '******';
       user.apikey = '******';
       const resetPasswordEmail = {
@@ -104,18 +105,18 @@ function resetPasswordNotification(options) {
           protocol: periodic.settings.application.protocol,
           user,
           // update_message: 'welcome', 
-        }
+        },
       };
       return resolve(periodic.core.mailer.sendEmail(resetPasswordEmail));
     } catch (e) {
       reject(e);
     }
   });
-};
+}
 
 function encode(data) {
   return jwt.sign(data, passportSettings.forgot.token.secret);
-};
+}
 
 function generateToken(options) {
   return new Promise((resolve, reject) => {
@@ -151,7 +152,7 @@ function generateToken(options) {
       reject(e);
     }
   });
-};
+}
 
 function invalidateToken(options) {
   return new Promise((resolve, reject) => {
@@ -177,19 +178,19 @@ function invalidateToken(options) {
       reject(e);
     }
   });
-};
+}
 
 function hasExpired(token_expires_millis) {
   const now = new Date();
   const diff = (now.getTime() - token_expires_millis);
   return diff > 0;
-};
+}
 
 function getToken(options) {
   const { req, entitytype, token, } = options;
   return new Promise((resolve, reject) => {
     try {
-      const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype });
+      const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype, });
       let updatedUserAccount = {};
       coreDataModel.load({ query: { 'extensionattributes.passport.reset_token_link': token, }, })
         .then(user => {
@@ -214,21 +215,21 @@ function getToken(options) {
 }
 
 function forgotPassword(options) {
-  const { req, entitytype, email, sendEmail } = options;
+  const { req, entitytype, email, sendEmail, } = options;
   return new Promise((resolve, reject) => {
     try {
-      const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype });
+      const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype, });
       let updatedUserAccount = {};
       coreDataModel.load({ query: { email, }, })
         .then(user => {
           updatedUserAccount = user;
           // console.log({ user });
-          return generateToken({ user });
+          return generateToken({ user, });
         })
         .then(updatedUser => {
           // console.log({ updatedUser });
           if (sendEmail) {
-            return emailForgotPasswordLink({ user: updatedUserAccount });
+            return emailForgotPasswordLink({ user: updatedUserAccount, });
           } else {
             return true;
           }
@@ -247,17 +248,17 @@ function forgotPassword(options) {
 }
 
 function resetPassword(options) {
-  const { req, user, entitytype, sendEmail } = options;
+  const { req, user, entitytype, sendEmail, } = options;
   return new Promise((resolve, reject) => {
     try {
-      const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype });
+      const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype, });
       let updatedUserAccount = {};
-      invalidateToken({ user })
+      invalidateToken({ user, })
         .then(updatedUser => {
           updatedUser.password = req.body.password;
           updatedUser[passportSettings.registration.matched_password_field] = req.body[passportSettings.registration.matched_password_field];
           updatedUserAccount = updatedUser;
-          return validate({ user: updatedUser });
+          return validate({ user: updatedUser, });
         })
         .then(validatedUser => {
           updatedUserAccount = validatedUser;
@@ -272,7 +273,7 @@ function resetPassword(options) {
         })
         .then(updatedUser => {
           if (sendEmail) {
-            return resetPasswordNotification({ user: updatedUserAccount });
+            return resetPasswordNotification({ user: updatedUserAccount, });
           } else {
             return true;
           }
