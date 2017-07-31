@@ -15,13 +15,76 @@ const passport = utilities.passport;
  * @return {Function} next() callback
  */
 function ensureAuthenticated(req, res, next) {
+  const entitytype = utilities.auth.getEntityTypeFromReq({
+    req,
+    accountPath: utilities.paths.account_auth_login,
+    userPath: utilities.paths.user_auth_login,
+  });
   // periodic.logger.info('require,auth');
   if (req.isAuthenticated()) {
-    //link accounts
+    const entitytype = utilities.auth.getEntityTypeFromReq({
+      req,
+      accountPath: utilities.paths.account_auth_login,
+      userPath: utilities.paths.user_auth_login,
+    });
+    if (req.session.linkaccount === true) {
+      const entitytype = utilities.auth.getEntityTypeFromReq({
+        req,
+        accountPath: utilities.paths.account_auth_login,
+        userPath: utilities.paths.user_auth_login,
+      });
+      //link accounts
+
+      utilities.auth.linkSocialAccount({
+          req,
+          findSocialAccountQuery: req.session.findSocialAccountQuery,
+          newAccountData: req.session.newAccountData,
+          linkAccountService: req.session.linkAccountService,
+          linkAccountAttributes: req.session.linkAccountAttributes,
+          entitytype,
+        })
+        .then(user => {
+          req.user = user;
+          logger.verbose('linked ', req.session.linkAccountService, ' account for ', req.user.id, req.user.email, req.user.username);
+          req.session.linkAccount = false;
+          delete req.session.linkAccount;
+          delete req.session.linkAccountAttributes;
+          delete req.session.linkAccountService;
+          next();
+        })
+        .catch(next);
+    }
     //required fields
+    else if (passportSettings && passportSettings.registration.require_properties.length > 0 && passportSettings.registration.require_properties.filter(requiredProp => req.user[requiredProp]).length !== passportSettings.registration.require_properties.length && req.method === 'GET' && req.originalUrl.indexOf(utilities.paths[`${entitytype}_auth_complete`]) !== 0) {
+      const requireActivationLink = `${utilities.paths[ `${entitytype}_auth_complete` ]}?return_url=${req.originalUrl}`;
+      // res.redirect('/' + adminPostRoute + '/user/finishregistration?reason=social-sign-in-pending');
+      res.redirect(requireActivationLink);
+    }
     //required activation
-    //required second factor  
-    next();
+    else if (passportSettings && passportSettings.registration.require_activation && req.user.activated !== true && req.query.required !== 'activation' && req.method === 'GET'
+      && req.originalUrl.indexOf(utilities.paths[ `${entitytype}_auth_complete` ]) !== 0
+    ) {
+      // console.log('req.originalUrl.indexOf(utilities.paths[ `${entitytype}_auth_complete` ])!==0 ', req.originalUrl.indexOf(utilities.paths[ `${entitytype}_auth_complete` ]) !== 0);
+      const requireActivationLink = `${utilities.paths[ `${entitytype}_auth_complete` ]}?return_url=${req.originalUrl}`;
+      // console.log({ requireActivationLink });
+      // res.redirect('/' + adminPostRoute + '/user/finishregistration?required=activation');
+      res.redirect(requireActivationLink);
+    }
+    //required second factor
+    else if (passportSettings && passportSettings.registration.require_second_factor !== false && req.controllerData.skip_mfa_check !== true && req.method === 'GET') {
+      if (req.session.secondFactor === 'totp') {
+        next();
+      } else if (req.originalUrl.indexOf(`${utilities.paths[ `${entitytype}_auth_login` ]}${passportSettings.redirect[ entitytype ].second_factor_required}`) === 0 ){ 
+        next();
+      } else {
+        const secondFactorLink = `${utilities.paths[ `${entitytype}_auth_login` ]}${passportSettings.redirect[ entitytype ].second_factor_required}?return_url=${req.originalUrl}`;
+        // console.log({secondFactorLink})
+        // res.redirect('/' + adminPostRoute + '/login-otp');
+        res.redirect(secondFactorLink);
+      }
+    } else {
+      next();
+    }
   } else if (utilities.controller.jsonReq(req)) {
     res.status(401).send(routeUtils.formatResponse({
       status: 401,
@@ -110,6 +173,30 @@ function resetView(req, res) {
   periodic.core.controller.render(req, res, viewtemplate, viewdata);
 }
 
+function completeView(req, res) {
+  const entitytype = utilities.auth.getEntityTypeFromReq({
+    req, 
+    accountPath: utilities.paths.account_auth_login,
+    userPath: utilities.paths.user_auth_login,
+  });  
+  const viewtemplate = {
+    // themename,
+    viewname: 'auth/complete',
+    extname: 'periodicjs.ext.passport',
+    // fileext,
+  };
+  const viewdata = {
+    entityType: entitytype,
+    loginPaths: utilities.paths,
+    loginPost: utilities.paths[`${entitytype}_auth_login`],
+    completePost: utilities.paths[ `${entitytype}_auth_complete` ],
+    missingProps: passportSettings.registration.require_properties.filter(requiredProp => typeof req.user[ requiredProp ] === 'undefined'),
+    missingActivation: (passportSettings.registration.require_activation && !req.user.activated) ? true : false,
+  };
+  periodic.core.controller.render(req, res, viewtemplate, viewdata);
+}
+
+
 function forgotView(req, res) {
   const entitytype = utilities.auth.getEntityTypeFromReq({
     req, 
@@ -196,6 +283,7 @@ module.exports = {
   loginView,
   forgotView,
   resetView,
+  completeView,
   login,
   logout,
   useCSRF,

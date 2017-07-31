@@ -3,17 +3,18 @@ const periodic = require('periodicjs');
 const moment = require('moment');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const logger = periodic.logger;
 const passportSettings = periodic.settings.extensions['periodicjs.ext.passport'];
 
 function encode(data) {
   return jwt.sign(data, passportSettings.registration.token.secret);
-};
+}
 
 function decode(data) {
   return new Promise((resolve, reject) => {
     try {
       jwt.verify(data, passportSettings.registration.token.secret, {}, (err, decoded_token) => {
-        logger.debug('jwt decode data', { data, decoded_token });
+        logger.debug('jwt decode data', { data, decoded_token, });
         if (err) {
           reject(err);
         } else {
@@ -24,15 +25,15 @@ function decode(data) {
       reject(e);
     }
   });
-};
+}
 
 function getTokenExpiresTime() {
   const now = new Date();
-  return new Date(now.getTime() + (passportSettings.registration.token.reset_token_expires_minutes * 60 * 1000)).getTime();
-};
+  return new Date(now.getTime() + (passportSettings.registration.token.activation_token_expires_minutes * 60 * 1000)).getTime();
+}
 
 function generateUserActivationData(options) {
-  const { user } = options;
+  const { user, } = options;
   return new Promise((resolve, reject) => {
     try {
       const expires = getTokenExpiresTime();
@@ -44,7 +45,7 @@ function generateUserActivationData(options) {
           const passportextensionattributes = {
             user_activation_token,
             user_activation_token_link: periodic.core.utilities.makeNiceName(bcrypt.hashSync(user_activation_token, generatedSalt)),
-            reset_activation_expires_millis: expires
+            reset_activation_expires_millis: expires,
           };
           // console.log({ passportextensionattributes, user });
           user.extensionattributes = Object.assign({}, user.extensionattributes);

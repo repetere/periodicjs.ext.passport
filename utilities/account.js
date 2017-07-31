@@ -115,6 +115,37 @@ function resetPasswordNotification(options) {
   });
 }
 
+function accountUpdateNotification(options) {
+  return new Promise((resolve, reject) => {
+    try {
+      const passportLocals = periodic.locals.extensions.get('periodicjs.ext.passport');
+      const { user, } = options;
+      user.password = '******';
+      user.apikey = '******';
+      const resetPasswordEmail = {
+        from: periodic.settings.periodic.emails.server_from_address,
+        to: user.email,
+        bcc: periodic.settings.periodic.emails.notification_address,
+        subject: passportSettings.email_subjects.account_update || `${periodic.settings.name} - Account update notification ${(periodic.settings.application.environment!=='production')?'['+periodic.settings.application.environment+']':''}`,
+        generateTextFromHTML: true,
+        emailtemplatefilepath: path.resolve(periodic.config.app_root, passportSettings.emails.account_update),
+        emailtemplatedata: {
+          appname: periodic.settings.name,
+          hostname: periodic.settings.application.hostname || periodic.settings.name,
+          basepath: passportLocals.paths[`${user.entitytype}_auth_reset`],
+          url: periodic.settings.application.url,
+          protocol: periodic.settings.application.protocol,
+          user,
+          // update_message: 'welcome', 
+        },
+      };
+      return resolve(periodic.core.mailer.sendEmail(resetPasswordEmail));
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
 function emailWelcomeMessage(options) {
   return new Promise((resolve, reject) => {
     try {
@@ -246,6 +277,49 @@ function getToken(options) {
   });
 }
 
+function checkActivationToken(options) {
+  const { req, user, entitytype, token, } = options;
+  return new Promise((resolve, reject) => {
+    try {
+      const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype, });
+      let updatedUserAccount = {};
+      if (!token) {
+        if (!user) {
+          throw new Error('Missing token and user');
+        } else {
+          user.extensionattributes.passport.reset_activation_expires_millis = undefined;
+          user.extensionattributes.passport.user_activation_token_link = undefined;
+          user.extensionattributes.passport.user_activation_token = undefined;
+          resolve((typeof user.toJSON === 'function') ? user.toJSON() : user);
+        }
+      } else {
+        coreDataModel.load({ query: { 'extensionattributes.passport.user_activation_token_link': token, }, })
+          .then(DBuser => {
+            if (!DBuser) {
+              throw new Error('Invalid token');
+            }
+            updatedUserAccount = user;
+            if (hasExpired(DBuser.extensionattributes.passport.reset_activation_expires_millis)) {
+              throw new Error('Activation token has expired');
+            } else {
+              DBuser = (typeof DBuser.toJSON === 'function') ? DBuser.toJSON() : DBuser;
+              DBuser.activated = true;
+              DBuser.extensionattributes.passport.reset_activation_expires_millis = undefined;
+              DBuser.extensionattributes.passport.user_activation_token_link = undefined;
+              DBuser.extensionattributes.passport.user_activation_token = undefined;
+              resolve(DBuser);
+            }
+          })
+          .catch(reject);
+      }
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+
+
 function forgotPassword(options) {
   const { req, entitytype, email, sendEmail, } = options;
   return new Promise((resolve, reject) => {
@@ -323,6 +397,63 @@ function resetPassword(options) {
   });
 }
 
+function completeRegistration(options) {
+  const { req, user, entitytype, sendEmail, } = options;
+  return new Promise((resolve, reject) => {
+    try {
+      const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype, });
+      let updatedUserAccount = {};
+      checkActivationToken({ req, user, entitytype, token: req.body.activation_token, })
+        .then(updatedUser => {
+          if (req.body.password) {
+            updatedUser.password = req.body.password;
+            updatedUser[passportSettings.registration.matched_password_field] = req.body[passportSettings.registration.matched_password_field];
+            updatedUserAccount = updatedUser;
+            return validate({ user: updatedUser, });
+          } else {
+            return updatedUser;
+          }
+        })
+        .then(validatedUser => {
+          const updatedUserData = Object.assign({}, req.body);
+          delete updatedUserData._csrf;
+          delete updatedUserData.entitytype;
+          delete updatedUserData.userroles;
+          delete updatedUserData.accounttype;
+          delete updatedUserData.activation_token;
+          // console.log({ updatedUserData });
+
+          updatedUserAccount = Object.assign({}, validatedUser, updatedUserData);
+          // console.log({ updatedUserAccount });
+          coreDataModel.update({
+              updatedoc: updatedUserAccount,
+              depopulate: false,
+            })
+            .then(changedPWUser => {
+              return changedPWUser;
+            })
+            .catch(reject);
+        })
+        .then(updatedUser => {
+          if (sendEmail) {
+            return accountUpdateNotification({ user: updatedUserAccount, });
+          } else {
+            return true;
+          }
+        })
+        .then(emailStatus => {
+          resolve({
+            email: emailStatus,
+            user: updatedUserAccount,
+          });
+        })
+        .catch(reject);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
 function fastRegister(options) {
   const { user, entitytype = 'user', sendEmail, } = options;
   const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype, });
@@ -362,6 +493,7 @@ module.exports = {
   validate,
   getToken,
   checkUserPassword,
+  completeRegistration,
   resetPassword,
   forgotPassword,
   hasExpired,

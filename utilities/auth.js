@@ -161,6 +161,111 @@ function localLoginVerifyCallback(req, username, password, done) {
   });
 }
 
+function linkSocialAccount(options) {
+  logger.silly({ options })
+    // var done = options.donecallback,
+    // 	findsocialaccountquery = options.findsocialaccountquery,
+    // 	socialaccountattributes = options.socialaccountattributes,
+    // 	newaccountdata = options.newaccountdata,
+    // 	linkaccountservice = options.linkaccountservice,
+    // 	requestobj = options.requestobj;
+    // User.findOne(findsocialaccountquery,
+    // 	function (err, existingUser) {
+    // 		logger.silly({ existingUser });
+    // 		// console.log({ User });
+    // 		if (err) {
+    // 			return done(err);
+    // 		}
+    // 		else if (existingUser) {
+    // 			logger.debug('ext - controller/auth.js - already has an account, trying to connect account');
+    // 			existingUser.attributes = merge(existingUser.attributes, socialaccountattributes);
+    // 			existingUser.markModified('attributes');
+    // 			existingUser.save(done);
+    // 		}
+    // 		else if(requestobj.user){
+    // 			mongoose.model('Account').findOne({ _id: requestobj.user._id }, (err, existingAccount) => {
+    // 				// console.log({err, existingAccount})
+    // 				if (err) {
+    // 					return done(err);
+    // 				}
+    // 				else if (existingAccount) {
+    // 					logger.debug('ext - controller/auth.js - already has an account, trying to connect account');
+    // 					existingAccount.attributes = merge(existingAccount.attributes, socialaccountattributes);
+    // 					existingAccount.markModified('attributes');
+    // 					existingAccount.save(done);
+    // 				}
+    // 				else {
+    // 					logger.debug('ext - controller/auth.js - creating new ' + linkaccountservice + ' user');
+    // 					newaccountdata.attributes = socialaccountattributes;
+    // 					mongoose.model('Account').create(newaccountdata, done);
+    // 				}
+    // 			});
+    // 		}	
+    // 		else if (requestobj.user && !requestobj.session) {
+    // 			logger.debug('ext - controller/auth.js - already has is logged in, link account requestobj.user', requestobj.user);
+    // 			requestobj.user.linkaccount = true;
+    // 			requestobj.user.linkaccountservice = linkaccountservice;
+    // 			requestobj.user.linkaccountdata = socialaccountattributes;
+    // 			done(null, requestobj.user);
+    // 		}
+    // 		else if (requestobj.user) {
+    // 			logger.debug('ext - controller/auth.js - already has is logged in, link account requestobj.user', requestobj.user);
+    // 			requestobj.session.linkaccount = true;
+    // 			requestobj.session.linkaccountservice = linkaccountservice;
+    // 			requestobj.session.linkaccountdata = socialaccountattributes;
+    // 			done(null, requestobj.user);
+    // 		}
+    // 		else {
+    // 			logger.debug('ext - controller/auth.js - creating new ' + linkaccountservice + ' user');
+    // 			newaccountdata.attributes = socialaccountattributes;
+    // 			User.create(newaccountdata, done);
+    // 		}
+    // 	});
+
+  return new Promise((resolve, reject) => {
+    try {
+      const { req, findSocialAccountQuery, newAccountData, linkAccountService, linkAccountAttributes, entitytype, } = options;
+      const userRequest = Object.assign({}, { entitytype }, req.body, req.query, req.controllerData);
+      const coreDataModel = getAuthCoreDataModel(userRequest);
+
+      coreDataModel.load({
+          query: findSocialAccountQuery,
+        })
+        .then(user => {
+          if (!user || !user._id) {
+            newAccountData.extensionattributes = Object.assign({}, {
+              passport: {
+                [linkAccountService]: linkAccountAttributes,
+              }
+            });
+            coreDataModel.create({
+                newdoc: newAccountData,
+              })
+              .then(user => {
+                resolve(user);
+              })
+              .catch(reject);
+          } else {
+            user.extensionattributes.passport = Object.assign({}, user.extensionattributes.passport, {
+              [linkAccountService]: linkAccountAttributes,
+            });
+            coreDataModel.update({
+                updatedoc: user,
+                depopulate: true,
+              })
+              .then(user => {
+                resolve(user);
+              })
+              .catch(reject);
+          }
+        })
+        .catch(reject);
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 /**
  * this function is a generic handler for passport authentication, it allows for the same authentication logic to be used between single sign-on auth and local auth
  * 
@@ -238,6 +343,7 @@ module.exports = {
   resetLoginLimiter,
   incrementLoginLimiter,
   localLoginVerifyCallback,
+  linkSocialAccount,
   authenticateUser,
   getEntityTypeFromReq,
   loginUser,

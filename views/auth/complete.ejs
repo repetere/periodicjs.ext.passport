@@ -1,0 +1,47 @@
+<%- include('../../../../app/views/shared/header') %>
+<%- include('../../../../app/views/shared/simple_nav') %>
+<% 
+  const capitalize = periodic.viewHelper.capitalize;
+  console.log({locals})
+ %>
+  <main>
+    <article>
+        <section>
+          <h3>Complete your account registration</h3>
+        </section>
+        <section>
+          <form action="<%- completePost %>" method="post" autocomplete="off" >
+            <input type="hidden" name="_csrf" value="<%- token %>"/>
+            <input type="hidden" name="entitytype" value="<%- entityType %>"/>
+              <%if(locals.missingActivation){%>
+              <label>Activation token</label>
+              <input type="activation_token" name="activation_token" value="<%- (locals.request.query.activation_token) ? locals.request.query.activation_token:'' %>" placeholder="activation token"/>
+              <%}%>
+              <% if (locals.missingProps.length){
+                  locals.missingProps.forEach(missingProp=>{
+                    if(missingProp==='password'){%>
+                      <input type="password" placeholder="password" name="password"/>
+                      <input type="password" placeholder="confirm password" name="confirmpassword"/>
+                    <%} else { 
+                    let missingPropPlaceholder =  (missingProp === 'name') ? 'username':missingProp; %>
+                      <input type="text" placeholder="<%- missingPropPlaceholder %>" name="<%- missingProp %>"/>
+                    <% }
+                  });
+                } %>
+            <!--
+            <section>
+              <input type="email" name="email" placeholder="email@domain.com"/>
+              <input type="text" placeholder="username" name="username"/>
+              <input type="text" placeholder="email" name="email"/>
+              <input type="password" placeholder="password" name="password"/>
+              <input type="password" placeholder="confirm password" name="confirmpassword"/>
+            </section>
+            -->
+            <section>
+              <button type="submit" style="justify-content: center">Complete Registration</button>
+            </section>
+          </form>
+        </section>
+    </article>
+  </main>
+<%- include('../../../../app/views/shared/footer') %>

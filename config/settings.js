@@ -28,6 +28,7 @@ module.exports = {
       welcome: 'node_modules/periodicjs.ext.passport/views/email/welcome.ejs',
       forgot: 'node_modules/periodicjs.ext.passport/views/email/forgot.ejs',
       reset_notification: 'node_modules/periodicjs.ext.passport/views/email/reset_notification.ejs',
+      account_update: 'node_modules/periodicjs.ext.passport/views/email/account_update.ejs',
     },
     email_subjects: {
       welcome: false,
@@ -48,14 +49,14 @@ module.exports = {
       default_entitytype: 'user',
     },
     registration: {
-      require_activation: false,
+      require_activation: true,
       require_second_factor: false,
       require_password: true,
-      require_properties: ['email', ],
+      require_properties: ['email', 'name', 'password'],
       matched_password_field: 'confirmpassword',
       token: {
         secret: 'abcdefghijklmnopqrstuvwxyz0123456789',
-        reset_token_expires_minutes: 30,
+        activation_token_expires_minutes: 30,
       },
       signin_after_create: true,
       use_complexity: true,
@@ -94,10 +95,12 @@ module.exports = {
       user: {
         logged_in_homepage: '/',
         logged_out_homepage: '/',
+        second_factor_required: '/login-otp',
       },
       account: {
         logged_in_homepage: '/admin',
         logged_out_homepage: '/',
+        second_factor_required: '/login-otp',
       },
     },
     errors: {
