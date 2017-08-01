@@ -4,6 +4,7 @@ const utilities = require('../utilities');
 const passportSettings = utilities.getSettings();
 const routeUtils = periodic.utilities.routing;
 const passport = utilities.passport;
+const logger = periodic.logger;
 // const auth_route_prefix = passportSettings.routing.authenication_route_prefix;
 // const auth_route = periodic.utilities.routing.route_prefix(auth_route_prefix);
 // console.log({ utilities });
@@ -15,6 +16,7 @@ const passport = utilities.passport;
  * @return {Function} next() callback
  */
 function ensureAuthenticated(req, res, next) {
+  req.controllerData = Object.assign({}, req.controllerData);
   const entitytype = utilities.auth.getEntityTypeFromReq({
     req,
     accountPath: utilities.paths.account_auth_login,
@@ -22,11 +24,6 @@ function ensureAuthenticated(req, res, next) {
   });
   // periodic.logger.info('require,auth');
   if (req.isAuthenticated()) {
-    const entitytype = utilities.auth.getEntityTypeFromReq({
-      req,
-      accountPath: utilities.paths.account_auth_login,
-      userPath: utilities.paths.user_auth_login,
-    });
     if (req.session.linkaccount === true) {
       const entitytype = utilities.auth.getEntityTypeFromReq({
         req,
