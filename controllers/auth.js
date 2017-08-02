@@ -52,20 +52,23 @@ function ensureAuthenticated(req, res, next) {
         .catch(next);
     }
     //required fields
-    else if (passportSettings && passportSettings.registration.require_properties.length > 0 && passportSettings.registration.require_properties.filter(requiredProp => req.user[requiredProp]).length !== passportSettings.registration.require_properties.length && req.method === 'GET' && req.originalUrl.indexOf(utilities.paths[`${entitytype}_auth_complete`]) !== 0) {
-      const requireActivationLink = `${utilities.paths[ `${entitytype}_auth_complete` ]}?return_url=${req.originalUrl}`;
-      // res.redirect('/' + adminPostRoute + '/user/finishregistration?reason=social-sign-in-pending');
-      res.redirect(requireActivationLink);
+    else if (passportSettings && passportSettings.registration.require_properties.length > 0 && passportSettings.registration.require_properties.filter(requiredProp => req.user[requiredProp]).length !== passportSettings.registration.require_properties.length && req.method === 'GET') {
+      if (req.originalUrl.indexOf(utilities.paths[`${entitytype}_auth_complete`]) !== 0) {
+        const requireActivationLink = `${utilities.paths[ `${entitytype}_auth_complete` ]}?return_url=${req.originalUrl}`;
+        res.redirect(requireActivationLink);
+      } else {
+        next();
+      }
     }
     //required activation
     else if (passportSettings && passportSettings.registration.require_activation && req.user.activated !== true && req.query.required !== 'activation' && req.method === 'GET'
-      && req.originalUrl.indexOf(utilities.paths[ `${entitytype}_auth_complete` ]) !== 0
     ) {
-      // console.log('req.originalUrl.indexOf(utilities.paths[ `${entitytype}_auth_complete` ])!==0 ', req.originalUrl.indexOf(utilities.paths[ `${entitytype}_auth_complete` ]) !== 0);
-      const requireActivationLink = `${utilities.paths[ `${entitytype}_auth_complete` ]}?return_url=${req.originalUrl}`;
-      // console.log({ requireActivationLink });
-      // res.redirect('/' + adminPostRoute + '/user/finishregistration?required=activation');
-      res.redirect(requireActivationLink);
+      if (req.originalUrl.indexOf(utilities.paths[ `${entitytype}_auth_complete` ]) !== 0) {
+        const requireActivationLink = `${utilities.paths[ `${entitytype}_auth_complete` ]}?return_url=${req.originalUrl}`;
+        res.redirect(requireActivationLink);
+      } else {
+        next();
+      }
     }
     //required second factor
     else if (passportSettings && passportSettings.registration.require_second_factor !== false && req.controllerData.skip_mfa_check !== true && req.method === 'GET') {
