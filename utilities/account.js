@@ -287,6 +287,8 @@ function checkActivationToken(options) {
         if (!user) {
           throw new Error('Missing token and user');
         } else {
+          user.extensionattributes = Object.assign({}, user.extensionattributes);
+          user.extensionattributes.passport = Object.assign({}, user.extensionattributes.passport);
           user.extensionattributes.passport.reset_activation_expires_millis = undefined;
           user.extensionattributes.passport.user_activation_token_link = undefined;
           user.extensionattributes.passport.user_activation_token = undefined;
@@ -304,6 +306,8 @@ function checkActivationToken(options) {
             } else {
               DBuser = (typeof DBuser.toJSON === 'function') ? DBuser.toJSON() : DBuser;
               DBuser.activated = true;
+              DBuser.extensionattributes = Object.assign({}, DBuser.extensionattributes);
+              DBuser.extensionattributes.passport = Object.assign({}, DBuser.extensionattributes.passport);
               DBuser.extensionattributes.passport.reset_activation_expires_millis = undefined;
               DBuser.extensionattributes.passport.user_activation_token_link = undefined;
               DBuser.extensionattributes.passport.user_activation_token = undefined;
