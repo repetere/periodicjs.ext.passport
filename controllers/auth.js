@@ -250,7 +250,7 @@ function login(req, res, next) {
 
 function logout(req, res) {
   // console.log('loging out', req.user);
-  const entitytype = req.user.entitytype || 'user';  
+  const entitytype = (req.user) ? req.user.entitytype : 'user';  
   const redirectURL = req.session.return_url || passportSettings.redirect[entitytype].logged_out_homepage;
   
   req.logout();
