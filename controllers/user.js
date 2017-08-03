@@ -118,6 +118,31 @@ function completeRegistration(req, res, next) {
     .catch(next);
 }
 
+function resendActivation(req, res, next) {
+  const entitytype = req.user.entitytype;
+  const activationURL = req.originalUrl + '&msg=resent_activation';
+  // console.log({ activationURL });
+  utilities.account.resendActivation({
+      user: req.user,
+      entitytype,
+      sendEmail: true,
+    })
+    .then(result => {
+      if (utilities.controller.jsonReq(req)) {
+        res.send(routeUtils.formatResponse({
+          result: 'success',
+          data: {
+            result,
+            redirect: activationURL,
+          },
+        }));
+      } else {
+        res.redirect(activationURL);
+      }
+    })
+    .catch(next);
+}
+
 function getToken(req, res, next) {
   const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_forgot, userPath: utilities.paths.user_auth_forgot, });
   const loginPath = routeUtils.route_prefix(passportSettings.redirect[entitytype].logged_in_homepage);
@@ -136,7 +161,6 @@ function getToken(req, res, next) {
     })
     .catch(next);
 }
-
 
 /**
  * create a new user/account by validating requirements and sending welcome email
@@ -180,14 +204,14 @@ function create(req, res, next) {
         res,
       });
     });
-
 }
 
 module.exports = {
   registerView,
-  create,
+  forgot,
   resetPassword,
   completeRegistration,
-  forgot,
+  resendActivation,
   getToken,
+  create,
 };

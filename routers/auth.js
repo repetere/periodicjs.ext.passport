@@ -23,6 +23,8 @@ authRouter.get(utilities.routes.account_auth_complete, controllers.auth.ensureAu
 authRouter.get(utilities.routes.user_auth_complete, controllers.auth.ensureAuthenticated, controllers.auth.completeView);
 authRouter.post(utilities.routes.account_auth_complete, controllers.auth.ensureAuthenticated, controllers.user.completeRegistration);
 authRouter.post(utilities.routes.user_auth_complete, controllers.auth.ensureAuthenticated, controllers.user.completeRegistration);
+authRouter.post(utilities.routes.account_auth_activate, controllers.auth.ensureAuthenticated, controllers.user.resendActivation);
+authRouter.post(utilities.routes.user_auth_activate, controllers.auth.ensureAuthenticated, controllers.user.resendActivation);
 authRouter.get(utilities.routes.user_auth_forgot, controllers.auth.forgotView);
 authRouter.get(utilities.routes.account_auth_forgot, controllers.auth.forgotView);
 authRouter.post(utilities.routes.user_auth_forgot, controllers.user.forgot);

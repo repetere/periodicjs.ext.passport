@@ -6,6 +6,17 @@
  %>
   <main>
     <article>
+        <% if(locals.notification){%>
+          <section>
+            <input value="<%- locals.notification %>" disabled readonly style="width: 100%;
+              font-size: 120%;
+              margin: 0rem 0rem 1rem;
+              padding: 1rem;
+              background: whitesmoke;
+              box-sizing: border-box;
+              border: 1px solid lightgray;"/>
+          </section> 
+        <%}%>
         <section>
           <h3>Complete your account registration</h3>
         </section>
@@ -28,17 +39,13 @@
                     <% }
                   });
                 } %>
-            <!--
-            <section>
-              <input type="email" name="email" placeholder="email@domain.com"/>
-              <input type="text" placeholder="username" name="username"/>
-              <input type="text" placeholder="email" name="email"/>
-              <input type="password" placeholder="password" name="password"/>
-              <input type="password" placeholder="confirm password" name="confirmpassword"/>
-            </section>
-            -->
             <section>
               <button type="submit" style="justify-content: center">Complete Registration</button>
+            </section>
+          </form>
+          <form action="<%- activatePost %>" method="post" autocomplete="off" >
+            <section>
+              <button type="submit" style="justify-content: center">Resend Activation</button>
             </section>
           </form>
         </section>

@@ -458,6 +458,38 @@ function completeRegistration(options) {
   });
 }
 
+function resendActivation(options) {
+  const { user, entitytype = 'user', sendEmail, } = options;
+  const coreDataModel = utilAuth.getAuthCoreDataModel(user);
+  let dbUpdatedUser = {};
+  return new Promise((resolve, reject) => {
+    try {
+      utilToken.generateUserActivationData({ user, })
+        .then(activationUser => {
+          dbUpdatedUser = activationUser;
+          return coreDataModel.update({
+            updatedoc: activationUser,
+            depopulate: false,
+          });
+        })
+        .then(updatedUser => {
+          // console.log({ updatedUser });
+          if (sendEmail) {
+            return emailWelcomeMessage({ user: dbUpdatedUser, });
+          } else {
+            return true;
+          }
+        })
+        .then(emailStatus => {
+          resolve(dbUpdatedUser);
+        })
+        .catch(reject);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
 function fastRegister(options) {
   const { user, entitytype = 'user', sendEmail, } = options;
   const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype, });
@@ -501,5 +533,6 @@ module.exports = {
   resetPassword,
   forgotPassword,
   hasExpired,
+  resendActivation,
   fastRegister,
 };

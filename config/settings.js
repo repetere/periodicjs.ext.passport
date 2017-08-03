@@ -36,6 +36,7 @@ module.exports = {
     },
     notifications: {
       forgot: 'Password reset instructions were sent to your email address',
+      resent_activation: 'Your activation token was resent to your email address',
       reset: 'Password successfully changed',
     },
     data: {

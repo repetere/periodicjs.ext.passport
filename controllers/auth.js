@@ -185,17 +185,20 @@ function completeView(req, res) {
     extname: 'periodicjs.ext.passport',
     // fileext,
   };
+  const flashMsg = (req.query.msg) ? req.query.msg.toString() : false;
   const viewdata = {
     entityType: entitytype,
+    passportUser: req.user,
     loginPaths: utilities.paths,
     loginPost: utilities.paths[`${entitytype}_auth_login`],
     completePost: utilities.paths[ `${entitytype}_auth_complete` ],
+    activatePost: utilities.paths[ `${entitytype}_auth_activate` ],
     missingProps: passportSettings.registration.require_properties.filter(requiredProp => typeof req.user[ requiredProp ] === 'undefined'),
     missingActivation: (passportSettings.registration.require_activation && !req.user.activated) ? true : false,
+    notification: (flashMsg)?passportSettings.notifications[flashMsg]:false,
   };
   periodic.core.controller.render(req, res, viewtemplate, viewdata);
 }
-
 
 function forgotView(req, res) {
   const entitytype = utilities.auth.getEntityTypeFromReq({
