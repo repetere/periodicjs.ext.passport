@@ -119,7 +119,7 @@ module.exports = {
         client_secret: '***NEED**CLIENT**SECRET***',
         authorization_url: 'https://some-oauth2-server:8787/api/oauth2/authorize',
         user_entity_type: 'account',
-        user_email: 'tech@promisefin.com',
+        user_email: 'user@domain.com',
         token_url: 'https://some-oauth2-server:8787/api/oauth2/token',
         service_url: 'https://some-oauth2-server:8787',
         service_name: 'some-oauth2-server',
