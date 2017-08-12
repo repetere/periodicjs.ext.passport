@@ -44,6 +44,8 @@
             </section>
           </form>
           <form action="<%- activatePost %>" method="post" autocomplete="off" >
+            <input type="hidden" name="_csrf" value="<%- token %>"/>
+            <input type="hidden" name="entitytype" value="<%- entityType %>"/>
             <section>
               <button type="submit" style="justify-content: center">Resend Activation</button>
             </section>

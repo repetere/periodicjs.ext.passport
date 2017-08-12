@@ -87,7 +87,7 @@ module.exports = {
       token: {
         secret: 'abcdefghijklmnopqrstuvwxyz0123456789',
         reset_token_expires_minutes: 30,
-      }
+      },
     },
     timeout: {
       use_limiter: true,
@@ -99,7 +99,7 @@ module.exports = {
         second_factor_required: '/login-otp',
       },
       account: {
-        logged_in_homepage: '/admin',
+        logged_in_homepage: '/',
         logged_out_homepage: '/',
         second_factor_required: '/login-otp',
       },

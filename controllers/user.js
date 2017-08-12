@@ -120,7 +120,7 @@ function completeRegistration(req, res, next) {
 
 function resendActivation(req, res, next) {
   const entitytype = req.user.entitytype;
-  const activationURL = req.originalUrl + '&msg=resent_activation';
+  const activationURL = utilities.paths[ `${entitytype}_auth_complete` ] + '?msg=resent_activation';//req.originalUrl +((req.originalUrl.indexOf('?')!==-1)?'':'?')+ '?msg=resent_activation';
   // console.log({ activationURL });
   utilities.account.resendActivation({
       user: req.user,
