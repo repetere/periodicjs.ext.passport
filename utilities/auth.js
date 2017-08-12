@@ -304,7 +304,7 @@ function getEntityTypeFromReq(options) {
     entitytype: (accountPath && req.originalUrl && req.originalUrl.indexOf(accountPath) > -1) ?
       'account' :
       (userPath && req.originalUrl && req.originalUrl.indexOf('/auth/user') > -1) ? 'user' : passportSettings.passport.default_entitytype,
-  }, req.body, req.query, req.controllerData);
+  }, req.user, req.body, req.query, req.controllerData);
   return (reqCustomBody.entitytype && reqCustomBody.entitytype === 'account') ?
     'account' : 'user';
 }
