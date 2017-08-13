@@ -3,6 +3,11 @@
 <% /* console.log(locals) */ %>
   <main>
     <article>
+        <% if(locals.notification){%>
+          <section>
+            <input value="<%- locals.notification %>" disabled readonly style="width: 100%; font-size: 120%; margin: 0rem 0rem 1rem; padding: 1rem; background: whitesmoke; box-sizing: border-box; border: 1px solid lightgray;"/>
+          </section> 
+        <%}%>
         <section>
           <h3>Reset Password</h3>
         </section>
