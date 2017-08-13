@@ -93,9 +93,10 @@ function resetPassword(req, res, next) {
 
 function completeRegistration(req, res, next) {
   const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_forgot, userPath: utilities.paths.user_auth_forgot, });
-  const loginPath = routeUtils.route_prefix(passportSettings.redirect[entitytype].logged_in_homepage);
-  const loginRedirectURL = req.session.return_url || (loginPath.indexOf('?')) ? loginPath + '&msg=registration_complete' : loginPath + '?msg=registration_complete';
-
+  const loginPath = routeUtils.route_prefix(passportSettings.redirect[ entitytype ].logged_in_homepage);
+  const regComplete = (loginPath.indexOf('?') === -1) ? loginPath + '&msg=registration_complete' : loginPath + '?msg=registration_complete';
+  const loginRedirectURL = req.session.return_url || regComplete;
+  
   utilities.account.completeRegistration({
       req,
       user: req.user,

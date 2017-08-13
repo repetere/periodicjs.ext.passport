@@ -203,8 +203,8 @@ function completeView(req, res) {
 function forgotView(req, res) {
   const entitytype = utilities.auth.getEntityTypeFromReq({
     req, 
-    accountPath: utilities.paths.account_auth_login,
-    userPath: utilities.paths.user_auth_login,
+    accountPath: utilities.paths.account_auth_forgot,
+    userPath: utilities.paths.user_auth_forgot,
   });  
   const viewtemplate = {
     // themename,
