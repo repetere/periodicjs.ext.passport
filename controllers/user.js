@@ -32,7 +32,7 @@ function registerView(req, res) {
 function forgot(req, res, next) {
   const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_forgot, userPath: utilities.paths.user_auth_forgot, });
   const loginPath = routeUtils.route_prefix(passportSettings.redirect[entitytype].logged_in_homepage);
-  const loginRedirectURL = (loginPath.indexOf('?')!==-1) ? loginPath + '&msg=forgot' : loginPath + '?msg=forgot';
+  const loginRedirectURL = (loginPath.indexOf('?') !== -1) ? loginPath + '&msg=forgot' : loginPath + '?msg=forgot';
 
   utilities.account.forgotPassword({
       req,
@@ -60,7 +60,7 @@ function forgot(req, res, next) {
 function resetPassword(req, res, next) {
   const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_forgot, userPath: utilities.paths.user_auth_forgot, });
   const loginPath = routeUtils.route_prefix(passportSettings.redirect[entitytype].logged_in_homepage);
-  const loginRedirectURL = (loginPath.indexOf('?')) ? loginPath + '&msg=reset' : loginPath + '?msg=reset';
+  const loginRedirectURL = (loginPath.indexOf('?') !== -1) ? loginPath + '&msg=reset' : loginPath + '?msg=reset';
 
   utilities.account.getToken({
       req,
