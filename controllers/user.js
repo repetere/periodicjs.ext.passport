@@ -145,7 +145,7 @@ function resendActivation(req, res, next) {
 }
 
 function getToken(req, res, next) {
-  const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_forgot, userPath: utilities.paths.user_auth_forgot, });
+  const entitytype = utilities.auth.getEntityTypeFromReq({ req, accountPath: utilities.paths.account_auth_reset, userPath: utilities.paths.user_auth_reset, });
   const loginPath = routeUtils.route_prefix(passportSettings.redirect[entitytype].logged_in_homepage);
   const loginRedirectURL = (loginPath.indexOf('?')) ? loginPath + '&msg=reset' : loginPath + '?msg=reset';
 
