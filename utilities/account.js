@@ -53,16 +53,36 @@ function validate(options) {
   });
 }
 
+function getEmailPaths(options) {
+  const passportLocals = periodic.locals.extensions.get('periodicjs.ext.passport');  
+  const { user, ra, routeSuffix } = options; //routeSuffix='_auth_complete'
+  const emailUser = Object.assign({}, (typeof user.toJSON === 'function') ? user.toJSON() : user);
+  emailUser.password = '******';
+  emailUser.apikey = '******';
+  let manifestPrefix = '';
+  if (periodic.extensions.has('periodicjs.ext.reactapp')) {
+    let reactapp = periodic.locals.extensions.get('periodicjs.ext.reactapp').reactapp();
+    manifestPrefix = reactapp.manifest_prefix;
+  }
+  const basepath = (ra) ?
+  path.join(manifestPrefix, passportLocals.paths[ `${emailUser.entitytype}${routeSuffix}` ])       
+    : passportLocals.paths[ `${emailUser.entitytype}${routeSuffix}` ];
+  
+  return {
+    emailUser,
+    basepath,
+    url: periodic.settings.application.url,
+  };
+}
+
 function emailForgotPasswordLink(options) {
   return new Promise((resolve, reject) => {
     try {
-      const passportLocals = periodic.locals.extensions.get('periodicjs.ext.passport');
-      const { user, } = options;
-      user.password = '******';
-      user.apikey = '******';
+      const { user, ra } = options;
+      const { emailUser, basepath, url, } = getEmailPaths(Object.assign({routeSuffix:'_auth_reset'}, options));
       const forgotEmail = {
         from: periodic.settings.periodic.emails.server_from_address,
-        to: user.email,
+        to: emailUser.email,
         bcc: periodic.settings.periodic.emails.notification_address,
         subject: passportSettings.email_subjects.forgot || `${periodic.settings.name} - Reset your password ${(periodic.settings.application.environment!=='production')?'['+periodic.settings.application.environment+']':''}`,
         generateTextFromHTML: true,
@@ -70,10 +90,10 @@ function emailForgotPasswordLink(options) {
         emailtemplatedata: {
           appname: periodic.settings.name,
           hostname: periodic.settings.application.hostname || periodic.settings.name,
-          basepath: passportLocals.paths[`${user.entitytype}_auth_reset`],
-          url: periodic.settings.application.url,
+          basepath,
+          url,
           protocol: periodic.settings.application.protocol,
-          user,
+          user:emailUser,
           // update_message: 'welcome', 
         },
       };
@@ -87,13 +107,11 @@ function emailForgotPasswordLink(options) {
 function resetPasswordNotification(options) {
   return new Promise((resolve, reject) => {
     try {
-      const passportLocals = periodic.locals.extensions.get('periodicjs.ext.passport');
-      const { user, } = options;
-      user.password = '******';
-      user.apikey = '******';
+      const { user, ra } = options;
+      const { emailUser, basepath, url, } = getEmailPaths(Object.assign({routeSuffix:'_auth_reset'}, options));
       const resetPasswordEmail = {
         from: periodic.settings.periodic.emails.server_from_address,
-        to: user.email,
+        to: emailUser.email,
         bcc: periodic.settings.periodic.emails.notification_address,
         subject: passportSettings.email_subjects.reset_notification || `${periodic.settings.name} - Password reset notification ${(periodic.settings.application.environment!=='production')?'['+periodic.settings.application.environment+']':''}`,
         generateTextFromHTML: true,
@@ -101,10 +119,10 @@ function resetPasswordNotification(options) {
         emailtemplatedata: {
           appname: periodic.settings.name,
           hostname: periodic.settings.application.hostname || periodic.settings.name,
-          basepath: passportLocals.paths[`${user.entitytype}_auth_reset`],
-          url: periodic.settings.application.url,
+          basepath,
+          url,
           protocol: periodic.settings.application.protocol,
-          user,
+          user: emailUser,
           // update_message: 'welcome', 
         },
       };
@@ -120,11 +138,13 @@ function accountUpdateNotification(options) {
     try {
       const passportLocals = periodic.locals.extensions.get('periodicjs.ext.passport');
       const { user, } = options;
-      user.password = '******';
-      user.apikey = '******';
+      const emailUser = Object.assign({}, (typeof user.toJSON==='function')?user.toJSON(): user);
+
+      emailUser.password = '******';
+      emailUser.apikey = '******';
       const resetPasswordEmail = {
         from: periodic.settings.periodic.emails.server_from_address,
-        to: user.email,
+        to: emailUser.email,
         bcc: periodic.settings.periodic.emails.notification_address,
         subject: passportSettings.email_subjects.account_update || `${periodic.settings.name} - Account update notification ${(periodic.settings.application.environment!=='production')?'['+periodic.settings.application.environment+']':''}`,
         generateTextFromHTML: true,
@@ -132,10 +152,10 @@ function accountUpdateNotification(options) {
         emailtemplatedata: {
           appname: periodic.settings.name,
           hostname: periodic.settings.application.hostname || periodic.settings.name,
-          basepath: passportLocals.paths[`${user.entitytype}_auth_reset`],
+          basepath: passportLocals.paths[`${emailUser.entitytype}_auth_reset`],
           url: periodic.settings.application.url,
           protocol: periodic.settings.application.protocol,
-          user,
+          user:emailUser,
           // update_message: 'welcome', 
         },
       };
@@ -149,13 +169,11 @@ function accountUpdateNotification(options) {
 function emailWelcomeMessage(options) {
   return new Promise((resolve, reject) => {
     try {
-      const passportLocals = periodic.locals.extensions.get('periodicjs.ext.passport');
-      const { user, } = options;
-      user.password = '******';
-      user.apikey = '******';
+      const { user, ra } = options;
+      const { emailUser, basepath, url, } = getEmailPaths(Object.assign({routeSuffix:'_auth_complete'}, options));
       const welcomeEmail = {
         from: periodic.settings.periodic.emails.server_from_address,
-        to: user.email,
+        to: emailUser.email,
         bcc: periodic.settings.periodic.emails.notification_address,
         subject: passportSettings.email_subjects.welcome || `Welcome to ${periodic.settings.name}${(periodic.settings.application.environment !== 'production') ? ' [' + periodic.settings.application.environment + ']' : ''}`,
         generateTextFromHTML: true,
@@ -163,10 +181,10 @@ function emailWelcomeMessage(options) {
         emailtemplatedata: {
           appname: periodic.settings.name,
           hostname: periodic.settings.application.hostname || periodic.settings.name,
-          basepath: passportLocals.paths[`${user.entitytype}_auth_complete`],
-          url: periodic.settings.application.url,
+          basepath,
+          url,
           protocol: periodic.settings.application.protocol,
-          user,
+          user: emailUser,
           // update_message: 'welcome', 
         },
       };
@@ -325,7 +343,7 @@ function checkActivationToken(options) {
 
 
 function forgotPassword(options) {
-  const { req, entitytype, email, sendEmail, } = options;
+  const { req, entitytype, email, sendEmail, ra } = options;
   return new Promise((resolve, reject) => {
     try {
       const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype, });
@@ -339,7 +357,7 @@ function forgotPassword(options) {
         .then(updatedUser => {
           // console.log({ updatedUser });
           if (sendEmail) {
-            return emailForgotPasswordLink({ user: updatedUserAccount, });
+            return emailForgotPasswordLink({ user: updatedUserAccount, ra });
           } else {
             return true;
           }
@@ -358,7 +376,7 @@ function forgotPassword(options) {
 }
 
 function resetPassword(options) {
-  const { req, user, entitytype, sendEmail, } = options;
+  const { req, user, entitytype, sendEmail, ra, } = options;
   return new Promise((resolve, reject) => {
     try {
       const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype, });
@@ -383,7 +401,7 @@ function resetPassword(options) {
         })
         .then(updatedUser => {
           if (sendEmail) {
-            return resetPasswordNotification({ user: updatedUserAccount, });
+            return resetPasswordNotification({ user: updatedUserAccount, ra, });
           } else {
             return true;
           }
@@ -459,7 +477,7 @@ function completeRegistration(options) {
 }
 
 function resendActivation(options) {
-  const { user, entitytype = 'user', sendEmail, } = options;
+  const { user, entitytype = 'user', sendEmail, ra, } = options;
   const coreDataModel = utilAuth.getAuthCoreDataModel(user);
   let dbUpdatedUser = {};
   return new Promise((resolve, reject) => {
@@ -475,7 +493,7 @@ function resendActivation(options) {
         .then(updatedUser => {
           // console.log({ updatedUser });
           if (sendEmail) {
-            return emailWelcomeMessage({ user: dbUpdatedUser, });
+            return emailWelcomeMessage({ user: dbUpdatedUser, ra, });
           } else {
             return true;
           }
@@ -491,7 +509,7 @@ function resendActivation(options) {
 }
 
 function fastRegister(options) {
-  const { user, entitytype = 'user', sendEmail, } = options;
+  const { user, entitytype = 'user', sendEmail, ra } = options;
   const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype, });
 
   return new Promise((resolve, reject) => {
@@ -510,7 +528,7 @@ function fastRegister(options) {
           dbCreatedUser = createdUser;
 
           if (sendEmail) {
-            return emailWelcomeMessage({ user: createdUser, });
+            return emailWelcomeMessage({ user: createdUser, ra});
           } else {
             return true;
           }
@@ -535,4 +553,5 @@ module.exports = {
   hasExpired,
   resendActivation,
   fastRegister,
+  getEmailPaths,
 };

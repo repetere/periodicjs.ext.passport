@@ -3,5 +3,15 @@
   "periodic_dependencies": [],
   "periodic_type": 2,
   "periodic_priority": 1,
-  "periodic_config": {}
+  "periodic_config": {
+    "periodicjs_ext_reactapp": {
+      "manifests": [
+        "node_modules/periodicjs.ext.passport/views/reactapp/manifests"
+      ],
+      "unauthenticated_manifests": [
+        "node_modules/periodicjs.ext.passport/views/reactapp/unauthenticated_manifests"
+      ],
+      "navigation": "node_modules/periodicjs.ext.passport/views/reactapp/components/navigation.manifest.js"
+    }
+  }
 }

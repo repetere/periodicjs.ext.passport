@@ -39,6 +39,7 @@ function forgot(req, res, next) {
       email: req.body.email,
       entitytype,
       sendEmail: true,
+      ra: req.query.ra,
     })
     .then(result => {
       // console.log({ result });
@@ -127,6 +128,7 @@ function resendActivation(req, res, next) {
       user: req.user,
       entitytype,
       sendEmail: true,
+      ra: req.query.ra,
     })
     .then(result => {
       if (utilities.controller.jsonReq(req)) {
@@ -157,6 +159,7 @@ function getToken(req, res, next) {
     .then(result => {
       req.controllerData = Object.assign({}, req.controllerData, {
         reset_token: result.reset_token,
+        user:{email:result.user.email}
       });
       next();
     })
@@ -177,7 +180,7 @@ function create(req, res, next) {
   const loginRedirectURL = routeUtils.route_prefix(passportSettings.redirect[entitytype].logged_in_homepage);
   let dbCreatedUser;
 
-  utilities.account.fastRegister({ user, entitytype, sendEmail: true, })
+  utilities.account.fastRegister({ user, entitytype, sendEmail: true, ra: req.query.ra })
     .then(newDBCreatedUser => {
       dbCreatedUser = (newDBCreatedUser && typeof newDBCreatedUser.toJSON === 'function') ? newDBCreatedUser.toJSON() : newDBCreatedUser;
       const newUser = Object.assign({}, dbCreatedUser, { password: undefined, });

@@ -1,5 +1,6 @@
 'use strict';
 const periodic = require('periodicjs');
+const path = require('path');
 const utilities = require('../utilities');
 const passportSettings = utilities.getSettings();
 const routeUtils = periodic.utilities.routing;
@@ -280,6 +281,43 @@ function useCSRF(req, res, next) {
   next();
 }
 
+function getQueryParams(req, res) {
+  res.send(routeUtils.formatResponse({
+    result: 'success',
+    data: req.query,
+  }));
+}
+function getControllerData(req, res) {
+  res.send(routeUtils.formatResponse({
+    result: 'success',
+    data: Object.assign({},req.params,req.query,req.controllerData),
+  }));
+}
+
+function requiredReactAppLogin(req, res, next) {
+  const entitytype = utilities.auth.getEntityTypeFromReq({
+    req, 
+    accountPath: utilities.paths.account_auth_complete,
+    userPath: utilities.paths.user_auth_complete,
+  });  
+  if (!req.headers.clientid || !req.headers[ 'x-access-token' ]) {
+    res.status(401).send({
+      status:401,
+      data: {
+        error: {
+          pathname: path.join(periodic.locals.extensions.get('periodicjs.ext.reactapp').reactapp().manifest_prefix, utilities.paths[`${entitytype}_auth_login`])+'?return_url='+req.headers.referer,
+          type: 'error',
+          text: 'You must be logged in to complete account activation',
+          message: 'You must be logged in to complete account activation',
+          timeout: 10000,
+        }
+      }
+    });    
+  } else {
+    next();
+  }
+}
+
 module.exports = {
   ensureAuthenticated,
   forceAuthLogin,
@@ -290,4 +328,7 @@ module.exports = {
   login,
   logout,
   useCSRF,
+  getQueryParams,
+  getControllerData,
+  requiredReactAppLogin,
 };

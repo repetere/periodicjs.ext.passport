@@ -107,6 +107,9 @@ module.exports = {
     errors: {
       invalid_credentials: 'Invalid credentials',
     },
+    reactapp: {
+      include_manifests:true,
+    },
     oauth: {
       facebook: {
         appid: 'NEED***FB***APPID',
