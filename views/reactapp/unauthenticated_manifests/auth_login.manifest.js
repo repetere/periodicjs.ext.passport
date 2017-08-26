@@ -11,49 +11,49 @@ module.exports = (periodic) => {
   const getContainerManifest = (entitytype) => {
     return {
       // [`${reactapp.manifest_prefix}auth/login`]: {
-      "layout": {
-        "component": "Hero",
-        "props": {
-          "size": "isFullheight"
+      'layout': {
+        'component': 'Hero',
+        'props': {
+          'size': 'isFullheight',
         },
-        "children": [ {
-          "component": "HeroBody",
-          "props": {},
-          "children": [ {
-            "component": "Container",
-            "props": {},
-            "children": [ {
-              "component": "Columns",
-              "children": [ {
-                "component": "Column",
-                "props": {
-                  "size": "is3"
-                }
+        'children': [{
+          'component': 'HeroBody',
+          'props': {},
+          'children': [{
+            'component': 'Container',
+            'props': {},
+            'children': [{
+              'component': 'Columns',
+              'children': [{
+                'component': 'Column',
+                'props': {
+                  'size': 'is3',
+                },
               },
               {
-                "component": "Column",
-                "props": {},
-                "children": [
+                'component': 'Column',
+                'props': {},
+                'children': [
                   entityLink({
                     reactapp,
                     entitytype,
                     passport,
                     title: 'Sign in',
-                    linkSuffix: '_auth_login'
+                    linkSuffix: '_auth_login',
                   }),
                   {
-                    "component": "ResponsiveForm",
-                    "props": {
-                      "cardForm": true,
+                    'component': 'ResponsiveForm',
+                    'props': {
+                      'cardForm': true,
                       // cardFormTitle:'Sign In',
-                      "cardFormProps": {
-                        "isFullwidth": true,
+                      'cardFormProps': {
+                        'isFullwidth': true,
                       },
-                      "onSubmit": "func:this.props.loginUser",
+                      'onSubmit': 'func:this.props.loginUser',
                       hiddenFields: [
                         {
                           form_name: '__returnURL',
-                          form_static_val: reactapp.settings.auth.logged_in_homepage
+                          form_static_val: reactapp.settings.auth.logged_in_homepage,
                         },
                       ],
                       'validations': [
@@ -86,105 +86,105 @@ module.exports = (periodic) => {
                           },
                         },
                       ],
-                      "formgroups": [ {
-                        "gridProps": {},
-                        "formElements": [ {
-                          "type": "text",
-                          "label": "Username",
-                          "name": "username",
-                          "layoutProps": {
-                            "horizontalform": true
-                          }
-                        }]
-                      },
-                      {
-                        "gridProps": {},
-                        "formElements": [ {
-                          "type": "text",
-                          "label": "Password",
-                          "name": "password",
-                          "submitOnEnter": true,
-                          "passProps": {
-                            "type": "password"
+                      'formgroups': [{
+                        'gridProps': {},
+                        'formElements': [{
+                          'type': 'text',
+                          'label': 'Username',
+                          'name': 'username',
+                          'layoutProps': {
+                            'horizontalform': true,
                           },
-                          "layoutProps": {
-                            "horizontalform": true
-                          }
-                        }]
+                        }, ],
                       },
                       {
-                        "gridProps": {
+                        'gridProps': {},
+                        'formElements': [{
+                          'type': 'text',
+                          'label': 'Password',
+                          'name': 'password',
+                          'submitOnEnter': true,
+                          'passProps': {
+                            'type': 'password',
+                          },
+                          'layoutProps': {
+                            'horizontalform': true,
+                          },
+                        }, ],
+                      },
+                      {
+                        'gridProps': {
                           style: {
                             justifyContent: 'center',
-                          }
+                          },
                         },
-                        "formElements": [
+                        'formElements': [
                           {
-                            type: "group",
-                            label: " ",
-                            "layoutProps": {
-                              "horizontalform": true,
+                            type: 'group',
+                            label: ' ',
+                            'layoutProps': {
+                              'horizontalform': true,
                               innerFormItem: true,
                             },
                             groupElements: [
                               {
-                                "type": "checkbox",
+                                'type': 'checkbox',
                                 // "label": "a",
-                                "placeholder": "Remember Me",
-                                "name": "rememberme",
-                                "passProps": {
-                                  "type": "rememberme"
+                                'placeholder': 'Remember Me',
+                                'name': 'rememberme',
+                                'passProps': {
+                                  'type': 'rememberme',
                                 },
-                                "layoutProps": {
-                                  "horizontalform": true
-                                }
+                                'layoutProps': {
+                                  'horizontalform': true,
+                                },
                               },
                               {
-                                "type": "layout",
+                                'type': 'layout',
                                 value: {
                                   component: 'ResponsiveLink',
                                   props: {
                                     location: path.join(reactapp.manifest_prefix, passport.paths[ `${entitytype}_auth_forgot` ]),
                                   },
-                                  children: 'Forgot Password'
-                                }
-                              }
+                                  children: 'Forgot Password',
+                                },
+                              },
                                     
-                            ]
-                          }
+                            ],
+                          },
                                 
-                        ]
+                        ],
                       },
                         hrline,
                       {
-                        "gridProps": {
+                        'gridProps': {
                           style: {
                             justifyContent: 'center',
-                          }
+                          },
                         },
-                        "formElements": [
+                        'formElements': [
                           {
-                            "type": "submit",
-                            "value": "Login",
+                            'type': 'submit',
+                            'value': 'Login',
                             // "placeholder": "Remember Me",
-                            "name": "login",
-                            "passProps": {
-                              "color": "isPrimary"
+                            'name': 'login',
+                            'passProps': {
+                              'color': 'isPrimary',
                             },
-                            "layoutProps": {
+                            'layoutProps': {
                               formItemStyle: {
-                                justifyContent: 'center'
+                                justifyContent: 'center',
                               },
-                              "horizontalform": true
-                            }
+                              'horizontalform': true,
+                            },
                           },
                           {
-                            "type": "layout",
+                            'type': 'layout',
                             value: {
                               component: 'FormHorizontal',
                               props: {
                                 style: {
-                                  justifyContent: 'center'
+                                  justifyContent: 'center',
                                 },
                               },
                               children: [
@@ -200,49 +200,49 @@ module.exports = (periodic) => {
                                     },
                                   },
                                   children: 'New User',
-                                }
-                              ]
+                                },
+                              ],
                                     
                             },
-                            "layoutProps": {
+                            'layoutProps': {
                               style: {
-                                justifyContent: 'center'
+                                justifyContent: 'center',
                               },
                               // "horizontalform": true
-                            }
-                          }
-                        ]
-                      }
-                      ]
-                    }
-                  }
-                ]
+                            },
+                          },
+                        ],
+                      },
+                      ],
+                    },
+                  },
+                ],
               },
               {
-                "component": "Column",
-                "props": {
-                  "size": "is3"
-                }
-              }
-              ]
-            }]
-          }]
-        }]
+                'component': 'Column',
+                'props': {
+                  'size': 'is3',
+                },
+              },
+              ],
+            }, ],
+          }, ],
+        }, ],
       },
-      "resources": {
+      'resources': {
         // oauth2data: `${reactapp.manifest_prefix}api/oauth2async/signin?format=json`,
       },
       'pageData': {
         'title': `Login | ${reactapp.settings.name}`,
         'navLabel': 'Login',
       },
-      "onFinish": "render"
+      'onFinish': 'render',
     };
   };
   return {
-    containers:  (passportSettings.include_manifests) ? {
-      [ path.join(reactapp.manifest_prefix, passport.paths[ 'account_auth_login' ]) ]: getContainerManifest('account'), 
-      [ path.join(reactapp.manifest_prefix, passport.paths[ 'user_auth_login' ]) ]: getContainerManifest('user'), 
-    }:{}
+    containers: (passportSettings.include_manifests) ? {
+      [ path.join(reactapp.manifest_prefix, passport.paths[ 'account_auth_login' ]) ]: getContainerManifest('account'),
+      [ path.join(reactapp.manifest_prefix, passport.paths[ 'user_auth_login' ]) ]: getContainerManifest('user'),
+    } : {},
   };
 };

@@ -14,43 +14,43 @@ module.exports = (periodic) => {
   const getContainerManifest = (entitytype) => {
     return {
       layout: {
-        "component": "Hero",
-        "props": {
-          "size": "isFullheight"
+        'component': 'Hero',
+        'props': {
+          'size': 'isFullheight',
         },
-        "children": [ {
-          "component": "HeroBody",
-          "props": {},
-          "children": [ {
-            "component": "Container",
-            "props": {},
-            "children": [ {
-              "component": "Columns",
-              "children": [ {
-                "component": "Column",
-                "props": {
-                  "size": "is3"
-                }
+        'children': [{
+          'component': 'HeroBody',
+          'props': {},
+          'children': [{
+            'component': 'Container',
+            'props': {},
+            'children': [{
+              'component': 'Columns',
+              'children': [{
+                'component': 'Column',
+                'props': {
+                  'size': 'is3',
+                },
               },
               {
-                "component": "Column",
-                "props": {},
-                "children": [
+                'component': 'Column',
+                'props': {},
+                'children': [
                   entityLink({
                     reactapp,
                     entitytype,
                     passport,
                     title: 'Register',
-                    linkSuffix: '_auth_register'
+                    linkSuffix: '_auth_register',
                   }),
                   {
-                    "component": "ResponsiveForm",
-                    "props": {
-                      "cardForm": true,
+                    'component': 'ResponsiveForm',
+                    'props': {
+                      'cardForm': true,
                       // cardFormTitle:'Register',
                       // cardFormTitle:'Register',
-                      "cardFormProps": {
-                        "isFullwidth": true,
+                      'cardFormProps': {
+                        'isFullwidth': true,
                       },
                       onSubmit: {
                         url: passport.paths[ `${entitytype}_auth_register` ]+'?ra=true',
@@ -62,11 +62,11 @@ module.exports = (periodic) => {
                       hiddenFields: [
                         {
                           form_name: '__returnURL',
-                          form_static_val: reactapp.settings.auth.logged_in_homepage
+                          form_static_val: reactapp.settings.auth.logged_in_homepage,
                         },
                         {
                           form_name: 'entitytype',
-                          form_static_val: entitytype||reactapp.settings.login.options.headers.entitytype
+                          form_static_val: entitytype||reactapp.settings.login.options.headers.entitytype,
                         },
                       ],
                       'validations': [
@@ -99,89 +99,89 @@ module.exports = (periodic) => {
                           },
                         },
                       ],
-                      "formgroups": [
+                      'formgroups': [
                         {
-                          "gridProps": {},
-                          "formElements": [ {
-                            "type": "text",
-                            "label": "Email",
-                            "name": "email",
-                            "layoutProps": {
+                          'gridProps': {},
+                          'formElements': [{
+                            'type': 'text',
+                            'label': 'Email',
+                            'name': 'email',
+                            'layoutProps': {
                               // "horizontalform": true
-                            }
-                          }]
+                            },
+                          }, ],
                         },
                         {
-                          "gridProps": {},
-                          "formElements": [ {
-                            "type": "text",
-                            "label": "Username",
-                            "name": "username",
-                            "layoutProps": {
+                          'gridProps': {},
+                          'formElements': [{
+                            'type': 'text',
+                            'label': 'Username',
+                            'name': 'username',
+                            'layoutProps': {
                               // "horizontalform": true
-                            }
-                          }]
+                            },
+                          }, ],
                         },
                         {
-                          "gridProps": {},
-                          "formElements": [ {
-                            "type": "text",
-                            "label": "Password",
-                            "name": "password",
+                          'gridProps': {},
+                          'formElements': [{
+                            'type': 'text',
+                            'label': 'Password',
+                            'name': 'password',
                             // "submitOnEnter": true,
-                            "passProps": {
-                              "type": "password"
+                            'passProps': {
+                              'type': 'password',
                             },
-                            "layoutProps": {
+                            'layoutProps': {
                               // "horizontalform": true
-                            }
-                          }]
+                            },
+                          }, ],
                         },
                         {
-                          "gridProps": {},
-                          "formElements": [ {
-                            "type": "text",
-                            "label": "Confirm password",
-                            "name": "confirmpassword",
-                            "submitOnEnter": true,
-                            "passProps": {
-                              "type": "password"
+                          'gridProps': {},
+                          'formElements': [{
+                            'type': 'text',
+                            'label': 'Confirm password',
+                            'name': 'confirmpassword',
+                            'submitOnEnter': true,
+                            'passProps': {
+                              'type': 'password',
                             },
-                            "layoutProps": {
+                            'layoutProps': {
                               // "horizontalform": true
-                            }
-                          }]
+                            },
+                          }, ],
                         },
                         hrline,
                         {
-                          "gridProps": {
+                          'gridProps': {
                             style: {
                               justifyContent: 'center',
-                            }
+                            },
                           },
-                          "formElements": [
+                          'formElements': [
                             {
-                              "type": "submit",
-                              "value": "Register",
+                              'type': 'submit',
+                              'value': 'Register',
                               // "placeholder": "Remember Me",
-                              "name": "register",
-                              "passProps": {
-                                "color": "isPrimary"
+                              'name': 'register',
+                              'passProps': {
+                                'color': 'isPrimary',
                               },
-                              "layoutProps": {
+                              'layoutProps': {
                                 formItemStyle: {
-                                  justifyContent: 'center'
+                                  justifyContent: 'center',
                                 },
-                                "horizontalform": true
-                              }
+                                'horizontalform': true,
+                              },
                             },
                             {
-                              "type": "layout",
+                              'type': 'layout',
                               value: {
                                 component: 'FormHorizontal',
                                 props: {
                                   style: {
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
                                   },
                                 },
                                 children: [
@@ -197,53 +197,53 @@ module.exports = (periodic) => {
                                       },
                                     },
                                     children: 'Login',
-                                  }
-                                ]
+                                  },
+                                ],
                               
                               },
-                              "layoutProps": {
+                              'layoutProps': {
                                 formItemStyle: {
-                                  justifyContent: 'center'
+                                  justifyContent: 'center',
                                 },
                                 style: {
-                                  justifyContent: 'center'
+                                  justifyContent: 'center',
                                 },
                                 // "horizontalform": true
-                              }
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  }
-                ]
+                              },
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                ],
               },
               {
-                "component": "Column",
-                "props": {
-                  "size": "is3"
-                }
-              }
-              ]
-            }]
-          }]
-        }]
+                'component': 'Column',
+                'props': {
+                  'size': 'is3',
+                },
+              },
+              ],
+            }, ],
+          }, ],
+        }, ],
       },
-      "resources": {
+      'resources': {
         // oauth2data: `${reactapp.manifest_prefix}api/oauth2async/signin?format=json`,
       },
       'pageData': {
         'title': `Register | ${reactapp.settings.name}`,
         'navLabel': 'Register',
       },
-      "onFinish": "render"
+      'onFinish': 'render',
     };
   };
     
   return {
-    containers:  (passportSettings.include_manifests) ? {
+    containers: (passportSettings.include_manifests) ? {
       [ path.join(reactapp.manifest_prefix, passport.paths[ 'account_auth_register' ]) ]: getContainerManifest('account'),
-      [ path.join(reactapp.manifest_prefix, passport.paths[ 'user_auth_register' ]) ]: getContainerManifest('user')
-    }:{}
+      [ path.join(reactapp.manifest_prefix, passport.paths[ 'user_auth_register' ]) ]: getContainerManifest('user'),
+    } : {},
   };
 };

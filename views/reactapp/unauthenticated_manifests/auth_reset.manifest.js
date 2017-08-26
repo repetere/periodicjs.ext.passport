@@ -12,47 +12,47 @@ module.exports = (periodic) => {
   const getContainerManifest = (entitytype) => {
     return {
       // [`${reactapp.manifest_prefix}auth/reset/:token`]: {
-      "layout": {
-        "component": "Hero",
-        "props": {
-          "size": "isFullheight"
+      'layout': {
+        'component': 'Hero',
+        'props': {
+          'size': 'isFullheight',
         },
-        "children": [ {
-          "component": "HeroBody",
-          "props": {},
-          "children": [ {
-            "component": "Container",
-            "props": {},
-            "children": [ {
-              "component": "Columns",
-              "children": [ {
-                "component": "Column",
-                "props": {
-                  "size": "is3"
-                }
+        'children': [{
+          'component': 'HeroBody',
+          'props': {},
+          'children': [{
+            'component': 'Container',
+            'props': {},
+            'children': [{
+              'component': 'Columns',
+              'children': [{
+                'component': 'Column',
+                'props': {
+                  'size': 'is3',
+                },
               },
               {
-                "component": "Column",
-                "props": {},
-                "children": [
+                'component': 'Column',
+                'props': {},
+                'children': [
                   entityLink({
                     reactapp,
                     entitytype,
                     passport,
                     title: 'Reset password',
-                    linkSuffix: '_auth_reset'
+                    linkSuffix: '_auth_reset',
                   }),
                   {
-                    "component": "ResponsiveForm",
+                    'component': 'ResponsiveForm',
                     asyncprops: {
-                      formdata: [ 'tokendata', 'data', ]
+                      formdata: ['tokendata', 'data',],
                     },
-                    "props": {
+                    'props': {
                       flattenFormData:true,
-                      "cardForm": true,
+                      'cardForm': true,
                       // cardFormTitle:'Register',
-                      "cardFormProps": {
-                        "isFullwidth": true,
+                      'cardFormProps': {
+                        'isFullwidth': true,
                       },
                       onSubmit: {
                         url: passport.paths[`${entitytype}_auth_reset`]+'/:token',
@@ -60,7 +60,7 @@ module.exports = (periodic) => {
                           {
                             key: ':token',
                             val: 'token',
-                          }
+                          },
                         ],
                         options: {
                           method: 'POST',
@@ -78,11 +78,11 @@ module.exports = (periodic) => {
                       hiddenFields: [
                         {
                           form_name: 'token',
-                          form_val: 'token'
+                          form_val: 'token',
                         },
                         {
                           form_name: 'entitytype',
-                          form_static_val: entitytype||reactapp.settings.login.options.headers.entitytype
+                          form_static_val: entitytype||reactapp.settings.login.options.headers.entitytype,
                         },
                       ],
                       'validations': [
@@ -101,84 +101,84 @@ module.exports = (periodic) => {
                           },
                         },
                       ],
-                      "formgroups": [
+                      'formgroups': [
                         {
-                          "gridProps": {},
-                          "formElements": [ {
-                            "type": "text",
-                            "label": "Email",
-                            "name": "user.email",
+                          'gridProps': {},
+                          'formElements': [{
+                            'type': 'text',
+                            'label': 'Email',
+                            'name': 'user.email',
                             disabled: true,
                             // "submitOnEnter": true,
-                            "passProps": {
-                              "type": "email",
+                            'passProps': {
+                              'type': 'email',
                               state: 'isDisabled',
                             },
-                            "layoutProps": {
+                            'layoutProps': {
                               // "horizontalform": true
-                            }
-                          }]
+                            },
+                          },],
                         },
                         {
-                          "gridProps": {},
-                          "formElements": [ {
-                            "type": "text",
-                            "label": "Password",
-                            "name": "password",
+                          'gridProps': {},
+                          'formElements': [{
+                            'type': 'text',
+                            'label': 'Password',
+                            'name': 'password',
                             // "submitOnEnter": true,
-                            "passProps": {
-                              "type": "password"
+                            'passProps': {
+                              'type': 'password',
                             },
-                            "layoutProps": {
+                            'layoutProps': {
                               // "horizontalform": true
-                            }
-                          }]
+                            },
+                          },],
                         },
                         {
-                          "gridProps": {},
-                          "formElements": [ {
-                            "type": "text",
-                            "label": "Confirm password",
-                            "name": "confirmpassword",
-                            "submitOnEnter": true,
-                            "passProps": {
-                              "type": "password"
+                          'gridProps': {},
+                          'formElements': [{
+                            'type': 'text',
+                            'label': 'Confirm password',
+                            'name': 'confirmpassword',
+                            'submitOnEnter': true,
+                            'passProps': {
+                              'type': 'password',
                             },
-                            "layoutProps": {
+                            'layoutProps': {
                               // "horizontalform": true
-                            }
-                          }]
+                            },
+                          },],
                         },
                         hrline,
                         {
-                          "gridProps": {
+                          'gridProps': {
                             style: {
                               justifyContent: 'center',
-                            }
+                            },
                           },
-                          "formElements": [
+                          'formElements': [
                             {
-                              "type": "submit",
-                              "value": "Reset",
+                              'type': 'submit',
+                              'value': 'Reset',
                               // "placeholder": "Remember Me",
-                              "name": "reset",
-                              "passProps": {
-                                "color": "isPrimary"
+                              'name': 'reset',
+                              'passProps': {
+                                'color': 'isPrimary',
                               },
-                              "layoutProps": {
+                              'layoutProps': {
                                 formItemStyle: {
-                                  justifyContent: 'center'
+                                  justifyContent: 'center',
                                 },
-                                "horizontalform": true
-                              }
+                                'horizontalform': true,
+                              },
                             },
                             {
-                              "type": "layout",
+                              'type': 'layout',
                               value: {
                                 component: 'FormHorizontal',
                                 props: {
                                   style: {
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
                                   },
                                 },
                                 children: [
@@ -194,39 +194,39 @@ module.exports = (periodic) => {
                                       },
                                     },
                                     children: 'Login',
-                                  }
-                                ]
+                                  },
+                                ],
                                     
                               },
-                              "layoutProps": {
+                              'layoutProps': {
                                 formItemStyle: {
-                                  justifyContent: 'center'
+                                  justifyContent: 'center',
                                 },
                                 style: {
-                                  justifyContent: 'center'
+                                  justifyContent: 'center',
                                 },
                                 // "horizontalform": true
-                              }
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  }
-                ]
+                              },
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                ],
               },
               {
-                "component": "Column",
-                "props": {
-                  "size": "is3"
-                }
-              }
-              ]
-            }]
-          }]
-        }]
+                'component': 'Column',
+                'props': {
+                  'size': 'is3',
+                },
+              },
+              ],
+            },],
+          },],
+        },],
       },
-      "resources": {
+      'resources': {
         // tokendata: `/auth/asyncreset/:token?format=json&entitytype=${entitytype||reactapp.settings.login.options.headers.entitytype}`,
         tokendata: passport.paths[ entitytype+'_auth_reset' ]+'/get_token_data/:token',
       },
@@ -234,14 +234,13 @@ module.exports = (periodic) => {
         'title': `Reset Password | ${reactapp.settings.name}`,
         'navLabel': 'Reset Password',
       },
-      "onFinish": "render"
+      'onFinish': 'render',
     };
-  }
-
+  };
   return {
     containers: (passportSettings.include_manifests) ? {
       [ path.join(reactapp.manifest_prefix, passport.paths[ 'account_auth_reset' ]) + '/:token' ]: getContainerManifest('account'),
-      [ path.join(reactapp.manifest_prefix, passport.paths[ 'user_auth_reset' ]) + '/:token' ]: getContainerManifest('user')
-    }:{},
+      [ path.join(reactapp.manifest_prefix, passport.paths[ 'user_auth_reset' ]) + '/:token' ]: getContainerManifest('user'),
+    } : {},
   };
 };

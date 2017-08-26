@@ -290,7 +290,7 @@ function getQueryParams(req, res) {
 function getControllerData(req, res) {
   res.send(routeUtils.formatResponse({
     result: 'success',
-    data: Object.assign({},req.params,req.query,req.controllerData),
+    data: Object.assign({}, req.params, req.query, req.controllerData),
   }));
 }
 

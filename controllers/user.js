@@ -35,12 +35,12 @@ function forgot(req, res, next) {
   const loginRedirectURL = (loginPath.indexOf('?') !== -1) ? loginPath + '&msg=forgot' : loginPath + '?msg=forgot';
 
   utilities.account.forgotPassword({
-      req,
-      email: req.body.email,
-      entitytype,
-      sendEmail: true,
-      ra: req.query.ra,
-    })
+    req,
+    email: req.body.email,
+    entitytype,
+    sendEmail: true,
+    ra: req.query.ra,
+  })
     .then(result => {
       // console.log({ result });
       if (utilities.controller.jsonReq(req)) {
@@ -64,10 +64,10 @@ function resetPassword(req, res, next) {
   const loginRedirectURL = (loginPath.indexOf('?') !== -1) ? loginPath + '&msg=reset' : loginPath + '?msg=reset';
 
   utilities.account.getToken({
-      req,
-      token: req.params.token,
-      entitytype,
-    })
+    req,
+    token: req.params.token,
+    entitytype,
+  })
     .then(result => {
       return utilities.account.resetPassword({
         req,
@@ -99,11 +99,11 @@ function completeRegistration(req, res, next) {
   const loginRedirectURL = req.session.return_url || regComplete;
   
   utilities.account.completeRegistration({
-      req,
-      user: req.user,
-      entitytype,
-      sendEmail: true,
-    })
+    req,
+    user: req.user,
+    entitytype,
+    sendEmail: true,
+  })
     .then(result => {
       if (utilities.controller.jsonReq(req)) {
         res.send(routeUtils.formatResponse({
@@ -125,11 +125,11 @@ function resendActivation(req, res, next) {
   const activationURL = utilities.paths[ `${entitytype}_auth_complete` ] + '?msg=resent_activation';//req.originalUrl +((req.originalUrl.indexOf('?')!==-1)?'':'?')+ '?msg=resent_activation';
   // console.log({ activationURL });
   utilities.account.resendActivation({
-      user: req.user,
-      entitytype,
-      sendEmail: true,
-      ra: req.query.ra,
-    })
+    user: req.user,
+    entitytype,
+    sendEmail: true,
+    ra: req.query.ra,
+  })
     .then(result => {
       if (utilities.controller.jsonReq(req)) {
         res.send(routeUtils.formatResponse({
@@ -152,14 +152,14 @@ function getToken(req, res, next) {
   const loginRedirectURL = (loginPath.indexOf('?')) ? loginPath + '&msg=reset' : loginPath + '?msg=reset';
 
   utilities.account.getToken({
-      req,
-      token: req.params.token,
-      entitytype,
-    })
+    req,
+    token: req.params.token,
+    entitytype,
+  })
     .then(result => {
       req.controllerData = Object.assign({}, req.controllerData, {
         reset_token: result.reset_token,
-        user:{email:result.user.email}
+        user:{ email:result.user.email, },
       });
       next();
     })
@@ -180,7 +180,7 @@ function create(req, res, next) {
   const loginRedirectURL = routeUtils.route_prefix(passportSettings.redirect[entitytype].logged_in_homepage);
   let dbCreatedUser;
 
-  utilities.account.fastRegister({ user, entitytype, sendEmail: true, ra: req.query.ra })
+  utilities.account.fastRegister({ user, entitytype, sendEmail: true, ra: req.query.ra, })
     .then(newDBCreatedUser => {
       dbCreatedUser = (newDBCreatedUser && typeof newDBCreatedUser.toJSON === 'function') ? newDBCreatedUser.toJSON() : newDBCreatedUser;
       const newUser = Object.assign({}, dbCreatedUser, { password: undefined, });

@@ -55,7 +55,7 @@ function validate(options) {
 
 function getEmailPaths(options) {
   const passportLocals = periodic.locals.extensions.get('periodicjs.ext.passport');  
-  const { user, ra, routeSuffix } = options; //routeSuffix='_auth_complete'
+  const { user, ra, routeSuffix, } = options; //routeSuffix='_auth_complete'
   const emailUser = Object.assign({}, (typeof user.toJSON === 'function') ? user.toJSON() : user);
   emailUser.password = '******';
   emailUser.apikey = '******';
@@ -78,8 +78,8 @@ function getEmailPaths(options) {
 function emailForgotPasswordLink(options) {
   return new Promise((resolve, reject) => {
     try {
-      const { user, ra } = options;
-      const { emailUser, basepath, url, } = getEmailPaths(Object.assign({routeSuffix:'_auth_reset'}, options));
+      // const { user, ra, } = options;
+      const { emailUser, basepath, url, } = getEmailPaths(Object.assign({ routeSuffix:'_auth_reset', }, options));
       const forgotEmail = {
         from: periodic.settings.periodic.emails.server_from_address,
         to: emailUser.email,
@@ -107,8 +107,8 @@ function emailForgotPasswordLink(options) {
 function resetPasswordNotification(options) {
   return new Promise((resolve, reject) => {
     try {
-      const { user, ra } = options;
-      const { emailUser, basepath, url, } = getEmailPaths(Object.assign({routeSuffix:'_auth_reset'}, options));
+      // const { user, ra, } = options;
+      const { emailUser, basepath, url, } = getEmailPaths(Object.assign({ routeSuffix:'_auth_reset',  }, options));
       const resetPasswordEmail = {
         from: periodic.settings.periodic.emails.server_from_address,
         to: emailUser.email,
@@ -136,12 +136,14 @@ function resetPasswordNotification(options) {
 function accountUpdateNotification(options) {
   return new Promise((resolve, reject) => {
     try {
-      const passportLocals = periodic.locals.extensions.get('periodicjs.ext.passport');
-      const { user, } = options;
-      const emailUser = Object.assign({}, (typeof user.toJSON==='function')?user.toJSON(): user);
+      // const passportLocals = periodic.locals.extensions.get('periodicjs.ext.passport');
+      // const { user, } = options;
+      // const emailUser = Object.assign({}, (typeof user.toJSON==='function')?user.toJSON(): user);
 
-      emailUser.password = '******';
-      emailUser.apikey = '******';
+      // emailUser.password = '******';
+      // emailUser.apikey = '******';
+      const { emailUser, basepath, url, } = getEmailPaths(Object.assign({ routeSuffix:'_auth_reset', }, options));
+      
       const resetPasswordEmail = {
         from: periodic.settings.periodic.emails.server_from_address,
         to: emailUser.email,
@@ -152,8 +154,8 @@ function accountUpdateNotification(options) {
         emailtemplatedata: {
           appname: periodic.settings.name,
           hostname: periodic.settings.application.hostname || periodic.settings.name,
-          basepath: passportLocals.paths[`${emailUser.entitytype}_auth_reset`],
-          url: periodic.settings.application.url,
+          basepath,
+          url,
           protocol: periodic.settings.application.protocol,
           user:emailUser,
           // update_message: 'welcome', 
@@ -169,8 +171,8 @@ function accountUpdateNotification(options) {
 function emailWelcomeMessage(options) {
   return new Promise((resolve, reject) => {
     try {
-      const { user, ra } = options;
-      const { emailUser, basepath, url, } = getEmailPaths(Object.assign({routeSuffix:'_auth_complete'}, options));
+      // const { user, ra, } = options;
+      const { emailUser, basepath, url, } = getEmailPaths(Object.assign({ routeSuffix:'_auth_complete',  }, options));
       const welcomeEmail = {
         from: periodic.settings.periodic.emails.server_from_address,
         to: emailUser.email,
@@ -224,9 +226,9 @@ function generateToken(options) {
       user.extensionattributes = Object.assign({}, user.extensionattributes);
       user.extensionattributes.passport = Object.assign({}, user.extensionattributes.passport, passportAttributes);
       coreDataModel.update({
-          updatedoc: user,
-          depopulate: false,
-        })
+        updatedoc: user,
+        depopulate: false,
+      })
         .then(resolve)
         .catch(reject);
     } catch (e) {
@@ -343,7 +345,7 @@ function checkActivationToken(options) {
 
 
 function forgotPassword(options) {
-  const { req, entitytype, email, sendEmail, ra } = options;
+  const { req, entitytype, email, sendEmail, ra, } = options;
   return new Promise((resolve, reject) => {
     try {
       const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype, });
@@ -357,7 +359,7 @@ function forgotPassword(options) {
         .then(updatedUser => {
           // console.log({ updatedUser });
           if (sendEmail) {
-            return emailForgotPasswordLink({ user: updatedUserAccount, ra });
+            return emailForgotPasswordLink({ user: updatedUserAccount, ra, });
           } else {
             return true;
           }
@@ -391,9 +393,9 @@ function resetPassword(options) {
         .then(validatedUser => {
           updatedUserAccount = validatedUser;
           coreDataModel.update({
-              updatedoc: validatedUser,
-              depopulate: false,
-            })
+            updatedoc: validatedUser,
+            depopulate: false,
+          })
             .then(changedPWUser => {
               return changedPWUser;
             })
@@ -448,9 +450,9 @@ function completeRegistration(options) {
           updatedUserAccount = Object.assign({}, validatedUser, updatedUserData);
           // console.log({ updatedUserAccount });
           coreDataModel.update({
-              updatedoc: updatedUserAccount,
-              depopulate: false,
-            })
+            updatedoc: updatedUserAccount,
+            depopulate: false,
+          })
             .then(changedPWUser => {
               return changedPWUser;
             })
@@ -509,7 +511,7 @@ function resendActivation(options) {
 }
 
 function fastRegister(options) {
-  const { user, entitytype = 'user', sendEmail, ra } = options;
+  const { user, entitytype = 'user', sendEmail, ra, } = options;
   const coreDataModel = utilAuth.getAuthCoreDataModel({ entitytype, });
 
   return new Promise((resolve, reject) => {
@@ -528,7 +530,7 @@ function fastRegister(options) {
           dbCreatedUser = createdUser;
 
           if (sendEmail) {
-            return emailWelcomeMessage({ user: createdUser, ra});
+            return emailWelcomeMessage({ user: createdUser, ra,  });
           } else {
             return true;
           }
