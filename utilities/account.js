@@ -4,10 +4,15 @@ const periodic = require('periodicjs');
 const moment = require('moment');
 const utilAuth = require('./auth');
 const utilToken = require('./token');
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const complexity = require('complexity');
 const passportSettings = periodic.settings.extensions['periodicjs.ext.passport'];
+let bcrypt;
+try {
+  bcrypt = require('bcrypt');
+} catch (e) {
+  bcrypt = require('bcrypt-nodejs');
+}
 
 function checkUserPassword(options) {
   const { user, } = options;

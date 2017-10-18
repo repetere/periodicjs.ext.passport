@@ -1,10 +1,15 @@
 'use strict';
 const periodic = require('periodicjs');
 const moment = require('moment');
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const logger = periodic.logger;
 const passportSettings = periodic.settings.extensions['periodicjs.ext.passport'];
+let bcrypt;
+try {
+  bcrypt = require('bcrypt');
+} catch (e) {
+  bcrypt = require('bcrypt-nodejs');
+}
 
 function encode(data) {
   return jwt.sign(data, passportSettings.registration.token.secret);
