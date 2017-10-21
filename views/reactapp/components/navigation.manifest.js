@@ -1,40 +1,34 @@
 'use strict';
+// const path = require('path');
+
 module.exports = (periodic) => {
-  let reactadmin = periodic.app.controller.extension.reactadmin;
+  const reactappLocals = periodic.locals.extensions.get('periodicjs.ext.reactapp');
+  const reactapp = reactappLocals.reactapp();
+  
   return {
-    "wrapper": {
-      "style": {}
+    wrapper: {
+      style: {},
     },
-    "container": {
-      "style": {}
+    container: {
+      style: {},
     },
-    "layout": {
-      "component": "Menu",
-      "props": {
-        "style": {}
+    layout: {
+      component: 'Menu',
+      props: {
+        style: {},
       },
-      "children": [
-        {
-          component: "SubMenuLinks",
-          children: [
+      children: [
+        reactappLocals.server_manifest.core_navigation.getSidebarNav({
+          title: 'Login',
+          links: [
             {
-              "component": "MenuLabel",
-              "children": "Login"
+              'href': `${reactapp.manifest_prefix}extension/oauth2server/standard/clients`,
+              'label': 'OAUTH2 Clients',
+              'id': 'oauth2server-clients',
             },
-            {
-              "component": "MenuAppLink",
-              "props": {
-                "href": `${reactadmin.manifest_prefix}extension/oauth2server/standard/clients`,
-                "label": "OAUTH2 Clients",
-                "id": "oauth2server-clients"
-              }
-            },
-            // login
-            // register
-            // forgot password
           ],
-        },
-      ]
-    }
+        }),
+      ],
+    },
   };
 };
