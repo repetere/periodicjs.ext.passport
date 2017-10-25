@@ -108,7 +108,8 @@ module.exports = {
       invalid_credentials: 'Invalid credentials',
     },
     reactapp: {
-      include_manifests:true,
+      include_manifests: true,
+      include_core_data_entity_options:true,
     },
     oauth: {
       facebook: {

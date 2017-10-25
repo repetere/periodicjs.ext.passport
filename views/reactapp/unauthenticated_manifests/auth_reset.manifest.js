@@ -35,13 +35,15 @@ module.exports = (periodic) => {
                 'component': 'Column',
                 'props': {},
                 'children': [
-                  entityLink({
-                    reactapp,
-                    entitytype,
-                    passport,
-                    title: 'Reset password',
-                    linkSuffix: '_auth_reset',
-                  }),
+                  (passportSettings.include_core_data_entity_options)
+                    ? entityLink({
+                      reactapp,
+                      entitytype,
+                      passport,
+                      title: 'Reset password',
+                      linkSuffix: '_auth_reset',
+                    })
+                    : null,
                   {
                     'component': 'ResponsiveForm',
                     asyncprops: {

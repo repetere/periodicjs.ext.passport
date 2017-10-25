@@ -35,14 +35,16 @@ module.exports = (periodic) => {
               {
                 'component': 'Column',
                 'props': {},
-                'children': [ 
-                  entityLink({
-                    reactapp,
-                    entitytype,
-                    passport,
-                    title: 'Complete Account Registration',
-                    linkSuffix: '_auth_complete',
-                  }),
+                'children': [
+                  (passportSettings.include_core_data_entity_options)
+                    ? entityLink({
+                      reactapp,
+                      entitytype,
+                      passport,
+                      title: 'Complete Account Registration',
+                      linkSuffix: '_auth_complete',
+                    })
+                    : null,
                   {
                     'component': 'ResponsiveForm',
                     asyncprops: {

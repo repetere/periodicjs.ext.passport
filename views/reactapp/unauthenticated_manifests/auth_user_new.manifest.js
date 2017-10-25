@@ -36,13 +36,15 @@ module.exports = (periodic) => {
                 'component': 'Column',
                 'props': {},
                 'children': [
-                  entityLink({
+                  (passportSettings.include_core_data_entity_options)
+                  ? entityLink({
                     reactapp,
                     entitytype,
                     passport,
                     title: 'Register',
                     linkSuffix: '_auth_register',
-                  }),
+                  })
+                  : null,
                   {
                     'component': 'ResponsiveForm',
                     'props': {

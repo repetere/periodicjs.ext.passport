@@ -34,13 +34,15 @@ module.exports = (periodic) => {
                 'component': 'Column',
                 'props': {},
                 'children': [ 
-                  entityLink({
+                  (passportSettings.include_core_data_entity_options)
+                  ? entityLink({
                     reactapp,
                     entitytype,
                     passport,
                     title: 'Recover Password',
                     linkSuffix: '_auth_forgot',
-                  }),
+                  })
+                  : null,
                   {
                     'component': 'ResponsiveForm',
                     'props': {
