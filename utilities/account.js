@@ -320,7 +320,13 @@ function checkActivationToken(options) {
           resolve((typeof user.toJSON === 'function') ? user.toJSON() : user);
         }
       } else {
-        coreDataModel.load({ query: { 'extensionattributes.passport.user_activation_token_link': token, }, })
+        coreDataModel.load({
+          query: (periodic.settings.databases.standard.db === 'sequelize') ?
+          { 
+            'extensionattributes': { like: `%${token}%`, },  
+          }  
+          : { 'extensionattributes.passport.user_activation_token_link': token, },
+        })
           .then(DBuser => {
             if (!DBuser) {
               throw new Error('Invalid token');
@@ -346,8 +352,6 @@ function checkActivationToken(options) {
     }
   });
 }
-
-
 
 function forgotPassword(options) {
   const { req, entitytype, email, sendEmail, ra, } = options;

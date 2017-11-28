@@ -1,6 +1,6 @@
 'use strict';
 const periodic = require('periodicjs');
-const moment = require('moment');
+// const moment = require('moment');
 const passportSettings = periodic.settings.extensions['periodicjs.ext.passport'];
 
 /**
@@ -113,7 +113,13 @@ function localLoginVerifyCallback(req, username, password, done) {
   authenticateUser({
     req,
     existingUserQuery: {
-      $or: [{
+      $or: (periodic.settings.databases.standard.db === 'sequelize')
+      ? [{
+        name: username,
+      }, {
+        email: username,
+      },]
+      :[{
         name: {
           $regex: new RegExp('^' + usernameRegex + '$', 'i'),
         },
@@ -121,7 +127,7 @@ function localLoginVerifyCallback(req, username, password, done) {
         email: {
           $regex: new RegExp('^' + usernameRegex + '$', 'i'),
         },
-      }, ],
+      },],
     },
     noUserCallback: () => {
       return done(null, false, {
@@ -137,9 +143,9 @@ function localLoginVerifyCallback(req, username, password, done) {
         //   userPassword: password,
         // });
         periodic.utilities.auth.comparePassword({
-            candidatePassword: user.password,
-            userPassword: password,
-          })
+          candidatePassword: user.password,
+          userPassword: password,
+        })
           .then(isMatch => {
             if (isMatch) {
               if (passportSettings.timeout.use_limiter) {
@@ -162,7 +168,7 @@ function localLoginVerifyCallback(req, username, password, done) {
 }
 
 function linkSocialAccount(options) {
-  logger.silly({ options })
+  logger.silly({ options, });
     // var done = options.donecallback,
     // 	findsocialaccountquery = options.findsocialaccountquery,
     // 	socialaccountattributes = options.socialaccountattributes,
@@ -225,22 +231,22 @@ function linkSocialAccount(options) {
   return new Promise((resolve, reject) => {
     try {
       const { req, findSocialAccountQuery, newAccountData, linkAccountService, linkAccountAttributes, entitytype, } = options;
-      const userRequest = Object.assign({}, { entitytype }, req.body, req.query, req.controllerData);
+      const userRequest = Object.assign({}, { entitytype, }, req.body, req.query, req.controllerData);
       const coreDataModel = getAuthCoreDataModel(userRequest);
 
       coreDataModel.load({
-          query: findSocialAccountQuery,
-        })
+        query: findSocialAccountQuery,
+      })
         .then(user => {
           if (!user || !user._id) {
             newAccountData.extensionattributes = Object.assign({}, {
               passport: {
                 [linkAccountService]: linkAccountAttributes,
-              }
+              },
             });
             coreDataModel.create({
-                newdoc: newAccountData,
-              })
+              newdoc: newAccountData,
+            })
               .then(user => {
                 resolve(user);
               })
@@ -250,9 +256,9 @@ function linkSocialAccount(options) {
               [linkAccountService]: linkAccountAttributes,
             });
             coreDataModel.update({
-                updatedoc: user,
-                depopulate: true,
-              })
+              updatedoc: user,
+              depopulate: true,
+            })
               .then(user => {
                 resolve(user);
               })
@@ -264,7 +270,7 @@ function linkSocialAccount(options) {
       reject(e);
     }
   });
-};
+}
 
 /**
  * this function is a generic handler for passport authentication, it allows for the same authentication logic to be used between single sign-on auth and local auth
@@ -282,8 +288,8 @@ function authenticateUser(options) {
   // const util = require('util')
   // console.log('existingUserQuery', util.inspect(existingUserQuery,{depth:10}));
   coreDataModel.load({
-      query: existingUserQuery,
-    })
+    query: existingUserQuery,
+  })
     .then(user => {
       if (!user || !user._id) {
         noUserCallback();
@@ -299,7 +305,7 @@ function authenticateUser(options) {
 }
 
 function getEntityTypeFromReq(options) {
-  const { req = {}, accountPath, userPath } = options;
+  const { req = {}, accountPath, userPath, } = options;
   const reqCustomBody = Object.assign({
     entitytype: (accountPath && req.originalUrl && req.originalUrl.indexOf(accountPath) > -1) ?
       'account' :
