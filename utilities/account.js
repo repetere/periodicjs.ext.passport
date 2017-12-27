@@ -20,11 +20,11 @@ function checkUserPassword(options) {
     try {
       if (passportSettings.registration.require_password) {
         if (user.password !== user[passportSettings.registration.matched_password_field]) {
-          return reject(new Error('Passwords do not match'));
+          return reject('Passwords do not match');
         } else if (passportSettings.registration.use_complexity && user.password && !complexity.check(user.password, passportSettings.registration.complexity_settings[passportSettings.registration.use_complexity_setting])) {
           const complexityErrors = complexity.checkError(user.password, passportSettings.registration.complexity_settings[passportSettings.registration.use_complexity_setting]);
           const complexityErrArray = Object.keys(complexityErrors).filter(complexError => complexityErrors[complexError] === false);
-          return reject(new Error(`Password does not meet complexity requirements (missing: ${complexityErrArray.toString()})`));
+          return reject(`Password does not meet complexity requirements (missing: ${complexityErrArray.toString()})`);
         } else {
           periodic.utilities.auth.encryptPassword({ password: user.password, })
             .then(passwordHash => {
