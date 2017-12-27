@@ -357,6 +357,10 @@ function forgotPassword(options) {
       let updatedUserAccount = {};
       coreDataModel.load({ query: { email, }, })
         .then(user => {
+          if (!user) {
+            if (passportSettings.notifications.invalid_email) reject(passportSettings.notifications.invalid_email);
+            else resolve(true);
+          }
           updatedUserAccount = user;
           // console.log({ user });
           return generateToken({ user, });
