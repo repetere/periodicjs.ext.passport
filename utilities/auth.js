@@ -114,20 +114,20 @@ function localLoginVerifyCallback(req, username, password, done) {
     req,
     existingUserQuery: {
       $or: (periodic.settings.databases.standard.db === 'sequelize')
-      ? [{
-        name: username,
-      }, {
-        email: username,
-      },]
-      :[{
-        name: {
-          $regex: new RegExp('^' + usernameRegex + '$', 'i'),
-        },
-      }, {
-        email: {
-          $regex: new RegExp('^' + usernameRegex + '$', 'i'),
-        },
-      },],
+        ? [{
+          name: username,
+        }, {
+          email: username,
+        }, ]
+        :[{
+          name: {
+            $regex: new RegExp('^' + usernameRegex + '$', 'i'),
+          },
+        }, {
+          email: {
+            $regex: new RegExp('^' + usernameRegex + '$', 'i'),
+          },
+        }, ],
     },
     noUserCallback: () => {
       return done(null, false, {
@@ -168,65 +168,65 @@ function localLoginVerifyCallback(req, username, password, done) {
 }
 
 function linkSocialAccount(options) {
-  logger.silly({ options, });
-    // var done = options.donecallback,
-    // 	findsocialaccountquery = options.findsocialaccountquery,
-    // 	socialaccountattributes = options.socialaccountattributes,
-    // 	newaccountdata = options.newaccountdata,
-    // 	linkaccountservice = options.linkaccountservice,
-    // 	requestobj = options.requestobj;
-    // User.findOne(findsocialaccountquery,
-    // 	function (err, existingUser) {
-    // 		logger.silly({ existingUser });
-    // 		// console.log({ User });
-    // 		if (err) {
-    // 			return done(err);
-    // 		}
-    // 		else if (existingUser) {
-    // 			logger.debug('ext - controller/auth.js - already has an account, trying to connect account');
-    // 			existingUser.attributes = merge(existingUser.attributes, socialaccountattributes);
-    // 			existingUser.markModified('attributes');
-    // 			existingUser.save(done);
-    // 		}
-    // 		else if(requestobj.user){
-    // 			mongoose.model('Account').findOne({ _id: requestobj.user._id }, (err, existingAccount) => {
-    // 				// console.log({err, existingAccount})
-    // 				if (err) {
-    // 					return done(err);
-    // 				}
-    // 				else if (existingAccount) {
-    // 					logger.debug('ext - controller/auth.js - already has an account, trying to connect account');
-    // 					existingAccount.attributes = merge(existingAccount.attributes, socialaccountattributes);
-    // 					existingAccount.markModified('attributes');
-    // 					existingAccount.save(done);
-    // 				}
-    // 				else {
-    // 					logger.debug('ext - controller/auth.js - creating new ' + linkaccountservice + ' user');
-    // 					newaccountdata.attributes = socialaccountattributes;
-    // 					mongoose.model('Account').create(newaccountdata, done);
-    // 				}
-    // 			});
-    // 		}	
-    // 		else if (requestobj.user && !requestobj.session) {
-    // 			logger.debug('ext - controller/auth.js - already has is logged in, link account requestobj.user', requestobj.user);
-    // 			requestobj.user.linkaccount = true;
-    // 			requestobj.user.linkaccountservice = linkaccountservice;
-    // 			requestobj.user.linkaccountdata = socialaccountattributes;
-    // 			done(null, requestobj.user);
-    // 		}
-    // 		else if (requestobj.user) {
-    // 			logger.debug('ext - controller/auth.js - already has is logged in, link account requestobj.user', requestobj.user);
-    // 			requestobj.session.linkaccount = true;
-    // 			requestobj.session.linkaccountservice = linkaccountservice;
-    // 			requestobj.session.linkaccountdata = socialaccountattributes;
-    // 			done(null, requestobj.user);
-    // 		}
-    // 		else {
-    // 			logger.debug('ext - controller/auth.js - creating new ' + linkaccountservice + ' user');
-    // 			newaccountdata.attributes = socialaccountattributes;
-    // 			User.create(newaccountdata, done);
-    // 		}
-    // 	});
+  // periodic.logger.silly({ options, });
+  // var done = options.donecallback,
+  // 	findsocialaccountquery = options.findsocialaccountquery,
+  // 	socialaccountattributes = options.socialaccountattributes,
+  // 	newaccountdata = options.newaccountdata,
+  // 	linkaccountservice = options.linkaccountservice,
+  // 	requestobj = options.requestobj;
+  // User.findOne(findsocialaccountquery,
+  // 	function (err, existingUser) {
+  // 		logger.silly({ existingUser });
+  // 		// console.log({ User });
+  // 		if (err) {
+  // 			return done(err);
+  // 		}
+  // 		else if (existingUser) {
+  // 			logger.debug('ext - controller/auth.js - already has an account, trying to connect account');
+  // 			existingUser.attributes = merge(existingUser.attributes, socialaccountattributes);
+  // 			existingUser.markModified('attributes');
+  // 			existingUser.save(done);
+  // 		}
+  // 		else if(requestobj.user){
+  // 			mongoose.model('Account').findOne({ _id: requestobj.user._id }, (err, existingAccount) => {
+  // 				// console.log({err, existingAccount})
+  // 				if (err) {
+  // 					return done(err);
+  // 				}
+  // 				else if (existingAccount) {
+  // 					logger.debug('ext - controller/auth.js - already has an account, trying to connect account');
+  // 					existingAccount.attributes = merge(existingAccount.attributes, socialaccountattributes);
+  // 					existingAccount.markModified('attributes');
+  // 					existingAccount.save(done);
+  // 				}
+  // 				else {
+  // 					logger.debug('ext - controller/auth.js - creating new ' + linkaccountservice + ' user');
+  // 					newaccountdata.attributes = socialaccountattributes;
+  // 					mongoose.model('Account').create(newaccountdata, done);
+  // 				}
+  // 			});
+  // 		}	
+  // 		else if (requestobj.user && !requestobj.session) {
+  // 			logger.debug('ext - controller/auth.js - already has is logged in, link account requestobj.user', requestobj.user);
+  // 			requestobj.user.linkaccount = true;
+  // 			requestobj.user.linkaccountservice = linkaccountservice;
+  // 			requestobj.user.linkaccountdata = socialaccountattributes;
+  // 			done(null, requestobj.user);
+  // 		}
+  // 		else if (requestobj.user) {
+  // 			logger.debug('ext - controller/auth.js - already has is logged in, link account requestobj.user', requestobj.user);
+  // 			requestobj.session.linkaccount = true;
+  // 			requestobj.session.linkaccountservice = linkaccountservice;
+  // 			requestobj.session.linkaccountdata = socialaccountattributes;
+  // 			done(null, requestobj.user);
+  // 		}
+  // 		else {
+  // 			logger.debug('ext - controller/auth.js - creating new ' + linkaccountservice + ' user');
+  // 			newaccountdata.attributes = socialaccountattributes;
+  // 			User.create(newaccountdata, done);
+  // 		}
+  // 	});
 
   return new Promise((resolve, reject) => {
     try {
@@ -291,6 +291,7 @@ function authenticateUser(options) {
     query: existingUserQuery,
   })
     .then(user => {
+      // console.log({ user });
       if (!user || !user._id) {
         noUserCallback();
       } else if (passportSettings.timeout.use_limiter) {
