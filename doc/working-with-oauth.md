@@ -44,10 +44,10 @@ How this impacts oauth2client
 $p.locals.extensions.get('periodicjs.ext.oauth2client').oauth
 ```javascript
 { selectedUserAuthToken: { square: null }, // can create auth headers with user selected
-  clientAuthToken: { square: [Function] }, // returns middleware function with client auth headers on req quest
+  clientAuthToken: { square: [Function] }, //hold header for clients in passport configuration
   oauth2callback: [Function: oauth2callback], //return oauth callback request
   user_auth_request: [Function: user_auth_request], // returns middleware function with bearer headers on req request
-  client_auth_request: [Function: client_auth_request],
+  client_auth_request: [Function: client_auth_request], // returns middleware function with client auth headers on req quest
   get_auth_tokens: [Function: get_auth_tokens],
   getProfileFromAccessToken: [Function: getProfileFromAccessToken],
   oauthLoginVerifyCallback: [Function: oauthLoginVerifyCallback] }
