@@ -3,7 +3,7 @@ Adding Oauth Client for OAuth2Client
 add client token and secret to passport configuration under $p.settings.extensions['periodicjs.ext.passport'].oauth.oauth2client
 
 example:
-```json
+```javascript
 { routing:
    { authenication_route_prefix: 'auth',
      login: 'login',
